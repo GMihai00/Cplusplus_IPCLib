@@ -32,6 +32,6 @@
 *.app
 
 #bin folder
-bin/*
+bin/
 
-*.vs/*
+.vs/

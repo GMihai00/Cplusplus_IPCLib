@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\net">
+      <UniqueIdentifier>{7c0be56f-68c1-4535-8972-4273ed41b475}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\utile">
+      <UniqueIdentifier>{55c7a39d-b39d-40e4-a4ff-baa20afb6a3a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\net">
+      <UniqueIdentifier>{b6e258b2-e878-4775-8a7e-f0ef2a9d5e67}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\utile">
+      <UniqueIdentifier>{69cc6b4a-3f65-4555-a622-355c93c5d682}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\security">
+      <UniqueIdentifier>{20132b4b-76dd-4bec-b0d2-365da40b3ed6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\security">
+      <UniqueIdentifier>{9da68ac1-d1c7-4384-9a09-34d6a4938f18}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="net\Client.hpp">
+      <Filter>Header Files\net</Filter>
+    </ClInclude>
+    <ClInclude Include="net\Connection.hpp">
+      <Filter>Header Files\net</Filter>
+    </ClInclude>
+    <ClInclude Include="net\Message.hpp">
+      <Filter>Header Files\net</Filter>
+    </ClInclude>
+    <ClInclude Include="net\Server.hpp">
+      <Filter>Header Files\net</Filter>
+    </ClInclude>
+    <ClInclude Include="MessageTypes.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utile\MessageIdProvider.hpp">
+      <Filter>Header Files\utile</Filter>
+    </ClInclude>
+    <ClInclude Include="utile\IPCDataTypes.hpp">
+      <Filter>Header Files\utile</Filter>
+    </ClInclude>
+    <ClInclude Include="net\ProxyReply.hpp">
+      <Filter>Header Files\net</Filter>
+    </ClInclude>
+    <ClInclude Include="utile\IPAdressHelpers.hpp">
+      <Filter>Header Files\utile</Filter>
+    </ClInclude>
+    <ClInclude Include="net\VehicleTrackerMessage.hpp">
+      <Filter>Header Files\net</Filter>
+    </ClInclude>
+    <ClInclude Include="net\ProxyRedirect.hpp">
+      <Filter>Header Files\net</Filter>
+    </ClInclude>
+    <ClInclude Include="utile\ErrorCodes.hpp">
+      <Filter>Header Files\utile</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientDisconnectObserver.hpp">
+      <Filter>Header Files\net</Filter>
+    </ClInclude>
+    <ClInclude Include="IClientDisconnectObserver.hpp">
+      <Filter>Header Files\net</Filter>
+    </ClInclude>
+    <ClInclude Include="IConnection.hpp">
+      <Filter>Header Files\net</Filter>
+    </ClInclude>
+    <ClInclude Include="security\RSA.hpp">
+      <Filter>Header Files\security</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="IPC.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="utile\IPAdressHelpers.cpp">
+      <Filter>Source Files\utile</Filter>
+    </ClCompile>
+    <ClCompile Include="security\RSA.cpp">
+      <Filter>Source Files\security</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
