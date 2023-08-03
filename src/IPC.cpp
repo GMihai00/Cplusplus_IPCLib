@@ -6,8 +6,5 @@
 #include "MessageTypes.hpp"
 #include "utile/IPCDataTypes.hpp"
 #include "utile/MessageIdProvider.hpp"
-#include "net/ProxyReply.hpp"
 #include "utile/IPAdressHelpers.hpp"
-#include "net/VehicleTrackerMessage.hpp"
-#include "net/ProxyRedirect.hpp"
 #include "security/RSA.hpp"

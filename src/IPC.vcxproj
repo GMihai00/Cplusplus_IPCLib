@@ -160,11 +160,6 @@
     <ClCompile Include="utile\IPAdressHelpers.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Common\Common.vcxproj">
-      <Project>{49c8f1b8-b740-417a-8e55-a729a6dfb496}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="ClientDisconnectObserver.hpp" />
     <ClInclude Include="IClientDisconnectObserver.hpp" />
     <ClInclude Include="IConnection.hpp" />
@@ -172,15 +167,13 @@
     <ClInclude Include="net\Client.hpp" />
     <ClInclude Include="net\Connection.hpp" />
     <ClInclude Include="net\Message.hpp" />
-    <ClInclude Include="net\ProxyRedirect.hpp" />
-    <ClInclude Include="net\ProxyReply.hpp" />
     <ClInclude Include="net\Server.hpp" />
-    <ClInclude Include="net\VehicleTrackerMessage.hpp" />
     <ClInclude Include="security\RSA.hpp" />
     <ClInclude Include="utile\ErrorCodes.hpp" />
     <ClInclude Include="utile\IPAdressHelpers.hpp" />
     <ClInclude Include="utile\IPCDataTypes.hpp" />
     <ClInclude Include="utile\MessageIdProvider.hpp" />
+    <ClInclude Include="utile\ThreadSafeQueue.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

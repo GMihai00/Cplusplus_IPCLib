@@ -1,21 +1,22 @@
 #pragma once
-#ifndef IPC_NET_MESSAGE_HPP
-#define IPC_NET_MESSAGE_HPP
 
 #include <iostream>
 #include <vector>
-#include <algorithm>
-#include <type_traits>
 #include <cstdint>
-#include <cstring>
 #include <memory>
 #include <type_traits>
-#include <optional>
 
 namespace ipc
 {
     namespace net
     {
+        template <typename T>
+        struct IsCDataType {
+            static constexpr bool value = std::is_arithmetic<T>::value || std::is_same<T, char>::value ||
+                std::is_same<T, wchar_t>::value || std::is_same<T, char16_t>::value ||
+                std::is_same<T, char32_t>::value;
+        };
+
         template <typename T>
         struct MessageHeader
         {
@@ -44,36 +45,20 @@ namespace ipc
         
             friend std::ostream& operator << (std::ostream& os, const Message<T>& msg)
             {
-                os  << "ID:" << msg.header.id 
-                    << " Size:" << msg.header.size
-                    << " Type:" << int(msg.header.type);
+                os  << "ID: " << msg.header.id 
+                    << " Size: " << msg.header.size
+                    << " Type: " << int(msg.header.type);
                 return os;
             }
         
             template<typename DataType>
             friend Message<T>& operator << (Message<T>& msg, const DataType& data)
             {
-                static_assert(std::is_standard_layout<DataType>::value, "Data can not be pushed");
+                static_assert(IsCDataType<DataType>::value && !std::is_pointer<DataType>::value, "Data can not be pushed");
 
-                size_t sizeBeforePush = msg.body.size();
-                msg.body.resize(sizeBeforePush + sizeof(DataType));
-                std::memcpy(msg.body.data() + sizeBeforePush, &data, sizeof(DataType));
-                msg.header.size = msg.size();
-            
-                return msg;
-            }
-        
-            template<typename DataType>
-            friend Message<T>& operator << (Message<T>& msg, const std::vector<DataType>& dataVec)
-            {
-                static_assert(std::is_standard_layout<DataType>::value, "Data can not be pushed");
-
-                size_t sizeBeforePush = msg.body.size();
-                msg.body.resize(sizeBeforePush + (sizeof(DataType) * dataVec.size()));
-                std::memcpy(
-                    msg.body.data() + sizeBeforePush,
-                    dataVec.data(),
-                    (sizeof(DataType) * dataVec.size()));
+                size_t size_before_push = msg.body.size();
+                msg.body.resize(size_before_push + sizeof(DataType));
+                std::memcpy(msg.body.data() + size_before_push, &data, sizeof(DataType));
                 msg.header.size = msg.size();
             
                 return msg;
@@ -82,69 +67,22 @@ namespace ipc
             template<typename DataType>
             friend Message<T>& operator >> (Message<T>& msg, DataType& data)
             {
-                static_assert(std::is_standard_layout<DataType>::value, "Data can not be poped");
+                static_assert(IsCDataType<DataType>::value && !std::is_pointer<DataType>::value, "Data can not be poped");
              
-                if (msg.body.size() < sizeof(DataType))
+                if (msg.body.size() >= sizeof(DataType))
                 {
-                    std::cerr << "WARN [MESSAGE] Tried reading data, but it was insufficient\n";
-                    return msg;
+                    size_t size_after_pop = msg.body.size() - sizeof(DataType);
+                    std::memcpy(&data, msg.body.data() + size_after_pop, sizeof(DataType));
+                    msg.body.resize(size_after_pop);
+                    msg.header.size = msg.size();
+                }
+                else
+                {
+                    throw std::runtime_error("Failed to read data, insufficient bytes");
                 }
 
-                size_t sizeAfterPop = msg.body.size() - sizeof(DataType);
-                std::memcpy(&data, msg.body.data() + sizeAfterPop, sizeof(DataType));
-                msg.body.resize(sizeAfterPop);
-                msg.header.size = msg.size();
-
                 return msg;
             }
-
-            friend Message<T>& operator >> (Message<T>& msg, std::string& data)
-            {
-                if (msg.body.size() < sizeof(char) * data.size())
-                {
-                    std::cerr << "WARN [MESSAGE] Tried reading data, but it was insufficient\n";
-                    return msg;
-                }
-
-                size_t sizeAfterPop = msg.body.size() - sizeof(char) * data.size();
-                std::memcpy(data.data(), msg.body.data() + sizeAfterPop, sizeof(char) * data.size());
-                msg.body.resize(sizeAfterPop);
-                msg.header.size = msg.size();
-
-                return msg;
-            }
-
-            template<typename DataType>
-            friend Message<T>& operator >> (Message<T>& msg, std::vector<DataType>& dataVec)
-            {
-                static_assert(std::is_standard_layout<DataType>::value, "Data can not be poped");
-               
-                if (msg.body.size() < sizeof(DataType) * dataVec.size())
-                {
-                    std::cerr << "WARN [MESSAGE] Tried reading data, but it was insufficient\n";
-                    return msg;
-                }
-                
-                size_t sizeAfterPop = msg.body.size() - sizeof(DataType) * dataVec.size();
-                std::memcpy(dataVec.data(), msg.body.data() + sizeAfterPop, sizeof(DataType) * dataVec.size());
-                msg.body.resize(sizeAfterPop);
-                msg.header.size = msg.size();
-                
-                return msg;
-            }
-
-            friend Message<T>& operator << (Message<T>& msg, const std::string& data)
-            {
-                std::vector<char> convertedString(data.begin(), data.end());
-
-                size_t sizeBeforePush = msg.body.size();
-                msg.body.resize(sizeBeforePush + sizeof(char) * convertedString.size());
-                std::memcpy(msg.body.data() + sizeBeforePush, convertedString.data(), sizeof(char) * convertedString.size());
-                msg.header.size = msg.size();
-
-                return msg;
-            }
-
 
             void clear()
             {
@@ -170,7 +108,7 @@ namespace ipc
         template<typename T>
         struct OwnedMessage
         {
-            std::shared_ptr<Connection<T>> remote; // WE SEND WHOLE OBJECT OVER THE NETWORK, NOT THE POINTER;
+            std::shared_ptr<Connection<T>> remote;
             Message<T> msg;
         
             friend std::ostream& operator << (std::ostream& os, const OwnedMessage<T>& msg)
@@ -187,4 +125,3 @@ namespace ipc
         };
     } // namespace net
 } // namespace ipc
-#endif // #IPC_NET_MESSAGE_HPP

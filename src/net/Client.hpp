@@ -17,9 +17,9 @@
 #include <boost/asio/ts/internet.hpp>
 
 #include "Message.hpp"
-#include "utile/ThreadSafePriorityQueue.hpp"
+#include "../utile/ThreadSafeQueue.hpp"
 #include "Connection.hpp"
-#include "utile/Logger.hpp"
+
 #include "../utile/IPCDataTypes.hpp"
 #include "../utile/IPAdressHelpers.hpp"
 #include "..\ClientDisconnectObserver.hpp"
@@ -32,7 +32,7 @@ namespace ipc
         class Client
         {
         private:
-            common::utile::ThreadSafePriorityQueue<OwnedMessage<T>> incomingMessages_;
+            ::utile::ThreadSafeQueue<OwnedMessage<T>> incomingMessages_;
 
         protected:
             boost::asio::io_context context_;
@@ -45,7 +45,7 @@ namespace ipc
             std::atomic<bool> shuttingDown_ = false;
             boost::asio::io_context::work idleWork_; // for context to not immediatly stop
             std::unique_ptr<ipc::utile::IClientDisconnectObserver<T>> observer_; // needed for just creating connections, always nullptr
-            LOGGER("CLIENT");
+            
         public:
             Client() : idleWork_(context_)
             {
@@ -55,7 +55,7 @@ namespace ipc
             virtual ~Client() noexcept
             {
                 shuttingDown_ = true;
-                LOG_INF << "Server shutting down";
+                // LOG_INF << "Server shutting down";
                 disconnect();
                 stop();
             }
@@ -66,7 +66,7 @@ namespace ipc
 
                 if (!utile::IsIPV4(host))
                 {
-                    LOG_ERR << "Invalid IPV4 ip adress: " << host;
+                    // LOG_ERR << "Invalid IPV4 ip adress: " << host;
                     return false;
                 }
 
@@ -89,7 +89,7 @@ namespace ipc
                 }
                 catch(const std::exception& e)
                 {
-                    LOG_ERR << "Client exception: " << e.what() << '\n';
+                    // LOG_ERR << "Client exception: " << e.what() << '\n';
                     return false;
                 }
             }
@@ -171,7 +171,7 @@ namespace ipc
                 }
                 else
                 {
-                    LOG_ERR << " Answear waiting timedout";
+                    // LOG_ERR << " Answear waiting timedout";
                     return false;
                 }
             }

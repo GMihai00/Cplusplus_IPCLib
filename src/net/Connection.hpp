@@ -17,8 +17,8 @@
 #include "..\IClientDisconnectObserver.hpp"
 
 #include "Message.hpp"
-#include "utile/ThreadSafePriorityQueue.hpp"
-#include "utile/Logger.hpp"
+#include "../utile/ThreadSafeQueue.hpp"
+
 #include "..\IConnection.hpp"
 
 namespace ipc
@@ -31,9 +31,11 @@ namespace ipc
             Client
         };
 
+
         template <typename T>
         class Connection : public IConnection<T>, public std::enable_shared_from_this<Connection<T>>
         {
+            static uint32_t ID;
         protected:
             const Owner owner_;
             std::thread threadRead_;
@@ -45,17 +47,15 @@ namespace ipc
             std::condition_variable& condVarUpdate_;
             boost::asio::io_context& context_;
             boost::asio::ip::tcp::socket socket_;
-            common::utile::ThreadSafePriorityQueue<OwnedMessage<T>>& incomingMessages_;
-            common::utile::ThreadSafePriorityQueue<Message<T>> outgoingMessages_;
+            ::utile::ThreadSafeQueue<OwnedMessage<T>>& incomingMessages_;
+            ::utile::ThreadSafeQueue<Message<T>> outgoingMessages_;
             Message<T> incomingTemporaryMessage_;
             std::atomic_bool isReading_;
             std::atomic_bool isWriting_;
             std::atomic_bool shuttingDown_ = false;
-            uint32_t id_;
             std::string ipAdress_;
-
+            uint32_t id_;
             std::unique_ptr<ipc::utile::IClientDisconnectObserver<T>>& observer_;
-            LOGGER("CONNECTION-UNDEFINED");
 
         private:
             struct compareConnections {
@@ -78,7 +78,7 @@ namespace ipc
                     if (errcode)
                     {
                         
-                        LOG_ERR << "Error while reading data err: " << errcode.value() << errcode.message();
+                        // LOG_ERR << "Error while reading data err: " << errcode.value() << errcode.message();
                         disconnect();
                         return false;
                     }
@@ -90,7 +90,7 @@ namespace ipc
             Connection(Owner owner,
                 boost::asio::io_context& context,
                 boost::asio::ip::tcp::socket socket,
-                common::utile::ThreadSafePriorityQueue<OwnedMessage<T>>& incomingMessages,
+                ::utile::ThreadSafeQueue<OwnedMessage<T>>& incomingMessages,
                 std::condition_variable& condVarUpdate,
                 std::unique_ptr<ipc::utile::IClientDisconnectObserver<T>>& observer) :
                 owner_{ owner },
@@ -101,7 +101,7 @@ namespace ipc
                 observer_{observer},
                 isWriting_{false},
                 isReading_{false},
-                id_{0}
+                id_{ ++Connection<T>::ID }
             {
                 threadWrite_ = std::thread([this]() { writeMessages(); });
                 threadRead_ = std::thread([this]() { readMessages(); });
@@ -141,7 +141,7 @@ namespace ipc
             {
                 if (owner_ == Owner::Client)
                 {
-                    LOG_SET_NAME("CONNECTION-SERVER");
+                    // LOG_SET_NAME("CONNECTION-SERVER");
                     std::function<void(std::error_code errcode, boost::asio::ip::tcp::endpoint endpoint)> connectCallback;
                     if (isReading_)
                     {
@@ -149,7 +149,7 @@ namespace ipc
                         {
                             if (errcode)
                             {
-                                LOG_ERR << "FAILED TO CONNECT TO SERVER: " << errcode.message();
+                                // LOG_ERR << "FAILED TO CONNECT TO SERVER: " << errcode.message();
                                 socket_.close();
                             }
                         };
@@ -160,12 +160,12 @@ namespace ipc
                         {
                             if (!errcode)
                             {
-                                LOG_DBG <<"Started reading messages:";
+                                // LOG_DBG <<"Started reading messages:";
                                 condVarRead_.notify_one();
                             }
                             else
                             {
-                                LOG_ERR << "FAILED TO CONNECT TO SERVER: " << errcode.message();
+                                // LOG_ERR << "FAILED TO CONNECT TO SERVER: " << errcode.message();
                                 socket_.close();
                             }
                         };
@@ -195,20 +195,18 @@ namespace ipc
                 return false;
             }
     
-            bool connectToClient(uint32_t id)
+            bool connectToClient()
             {
                 if (owner_ == Owner::Server)
                 {
                     if (socket_.is_open())
                     {
-                        id_ = id;
-                        LOG_SET_NAME("CONNECTION-" + std::to_string(id_));
                         std::function<void()> connectCallback;
                         if (!isReading_)
                         {
                             connectCallback = [this]()
                             {
-                                LOG_DBG <<"Started reading messages";
+                                // LOG_DBG <<"Started reading messages";
                                 condVarRead_.notify_one();
                             };
                         }
@@ -266,7 +264,7 @@ namespace ipc
                 if (!readData(vBuffer, sizeof(MessageHeader<T>))) { return false; }
 
                 std::memcpy(&incomingTemporaryMessage_.header, vBuffer.data(), sizeof(MessageHeader<T>));
-                LOG_DBG << "Finished reading header for message: " << incomingTemporaryMessage_;
+                // LOG_DBG << "Finished reading header for message: " << incomingTemporaryMessage_;
                 return true;
             }
     
@@ -277,7 +275,7 @@ namespace ipc
                 if (!readData(vBuffer, sizeof(uint8_t) * incomingTemporaryMessage_.header.size)) { return false; }
 
                 incomingTemporaryMessage_ << vBuffer;
-                LOG_DBG << "Finished reading message: " << incomingTemporaryMessage_;
+                // LOG_DBG << "Finished reading message: " << incomingTemporaryMessage_;
                 return true;
             }
     
@@ -299,7 +297,7 @@ namespace ipc
                         ));
                 }
                 incomingTemporaryMessage_.clear();
-                LOG_DBG << "Added message to incoming queue";
+                // LOG_DBG << "Added message to incoming queue";
             }
 
             void send(const Message<T>& msg)
@@ -307,7 +305,7 @@ namespace ipc
                 std::function<void()> postCallback;
                 std::pair<Message<T>, bool> pair = std::make_pair(msg, msg.header.hasPriority);
                 outgoingMessages_.push(pair);
-                LOG_DBG <<"Adding message to outgoing queue: " << msg;
+                // LOG_DBG <<"Adding message to outgoing queue: " << msg;
                 if (isWriting_)
                 {
                     postCallback = [this, msg]()
@@ -318,7 +316,7 @@ namespace ipc
                 {
                     postCallback = [this, msg]()
                     {
-                        LOG_DBG <<"Started writing messages";
+                        // LOG_DBG <<"Started writing messages";
                         condVarWrite_.notify_one();
                     };
                 }
@@ -330,7 +328,7 @@ namespace ipc
                 }
                 else
                 {
-                    LOG_WARN << "Failed to post message, client is disconnected";
+                    // LOG_WARN << "Failed to post message, client is disconnected";
                 }
             }
     
@@ -355,12 +353,12 @@ namespace ipc
                         auto outgoingMsg = outgoingMessages_.pop();
                         if (!outgoingMsg)
                         {
-                            LOG_ERR << "Failed to get image from queue";
+                            // LOG_ERR << "Failed to get image from queue";
                             return;
                         } 
                         const auto& outgoingMessage = outgoingMsg.value().first;
 
-                        LOG_DBG << "Started writing message: " << outgoingMessage;
+                        // LOG_DBG << "Started writing message: " << outgoingMessage;
                         if (!writeHeader(outgoingMessage)) { outgoingMessages_.clear(); break; }
 
                         if (outgoingMessage.header.size > 0)
@@ -369,7 +367,7 @@ namespace ipc
                         }
                         else
                         {
-                            LOG_DBG << "Finished writing message ";
+                            // LOG_DBG << "Finished writing message ";
                         }
                     }
                     isWriting_ = false;
@@ -383,11 +381,11 @@ namespace ipc
         
                 if (errcode)
                 {
-                    LOG_ERR << "Failed to write message header: " << errcode.message();
+                    // LOG_ERR << "Failed to write message header: " << errcode.message();
                     disconnect();
                     return false;
                 }
-                LOG_DBG << "Finished writing header";
+                // LOG_DBG << "Finished writing header";
                 return true;
             }
     
@@ -398,11 +396,11 @@ namespace ipc
         
                 if (errcode)
                 {
-                    LOG_ERR << "Failed to write message body: " << errcode.message();
+                    // LOG_ERR << "Failed to write message body: " << errcode.message();
                     disconnect();
                     return false;
                 }
-                LOG_DBG << "Finished writing message";
+                // LOG_DBG << "Finished writing message";
                 return true;
             }
     
@@ -416,7 +414,20 @@ namespace ipc
                     boost::asio::post(context_, [this]() { socket_.close(); });
                 }
             }
+
+            bool operator<(const Connection<T>& other) const {
+                return id_ < other.id_;
+            }
+
+            void get_id() const
+            {
+                return id_;
+            }
         };
+
+        template <typename T>
+        uint32_t Connection<T>::ID = 0;
+
     }   // namespace net
 }   // namespace ipc
 #endif // #IPC_NET_CONNECTION_HPP

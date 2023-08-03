@@ -1,5 +1,4 @@
-#ifndef IPC_UTILE_MESSAGEIDPROVIDER_HPP
-#define IPC_UTILE_MESSAGEIDPROVIDER_HPP
+#pragma once
 
 #include "../MessageTypes.hpp"
 #include <map>
@@ -21,10 +20,9 @@ namespace utile
         uint16_t provideId(T type)
         {
             if (messageToId.find(type) == messageToId.end())
-                messageToId.insert(type 0 );
+                messageToId.insert({ type, 0 });
             return messageToId[type]++;
         }
     };
 } // namespace utile
 } // namespace ipc
-#endif // #IPC_UTILE_MESSAGEIDPROVIDER_HPP
