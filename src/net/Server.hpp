@@ -21,7 +21,6 @@
 #include "Connection.hpp"
 
 #include "../utile/IPCDataTypes.hpp"
-#include "../utile/IPAdressHelpers.hpp"
 #include "..\ClientDisconnectObserver.hpp"
 
 namespace ipc
@@ -30,7 +29,7 @@ namespace ipc
     {
 
         template<typename T>
-        class Server
+        class server
         {
         protected:
             ::utile::ThreadSafeQueue<OwnedMessage<T>> m_incomingMessagesQueue;
@@ -98,7 +97,7 @@ namespace ipc
                             // LOG_INF << "Attempting to connect to " << socket.remote_endpoint();
                             std::shared_ptr<Connection<T>> newConnection =
                                 std::make_shared<Connection<T>>(
-                                    Owner::Server,
+                                    Owner::server,
                                     m_context,
                                     std::move(socket),
                                     m_incomingMessagesQueue,
@@ -145,9 +144,9 @@ namespace ipc
 
         public:
 
-            Server(const utile::IP_ADRESS& host, ipc::utile::PORT port) try
+            server(const utile::IP_ADRESS& host, ipc::utile::PORT port) try
             {
-                m_disconnect_callback = std::bind(&Server::disconnect_callback, this, std::placeholders::_1);
+                m_disconnect_callback = std::bind(&server::disconnect_callback, this, std::placeholders::_1);
                 m_observer_disconnect = std::make_unique<ipc::utile::ClientDisconnectObserver<T>>(m_disconnect_callback);
 
                 boost::asio::ip::tcp::endpoint m_endpoint(boost::asio::ip::address::from_string(host), port);
@@ -160,7 +159,7 @@ namespace ipc
                 throw std::runtime_error("Failed to create server err: " + std::string(err.what()));
             }
 
-            virtual ~Server() noexcept
+            virtual ~server() noexcept
             {
                 m_shutting_down = true;
 
@@ -209,7 +208,7 @@ namespace ipc
                 }
                 catch(const std::exception& err)
                 {
-                    throw std::runtime_error("Server exception: " + std::string(err.what()));
+                    throw std::runtime_error("server exception: " + std::string(err.what()));
                 }
             }
     

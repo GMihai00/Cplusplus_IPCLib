@@ -157,19 +157,17 @@
   <ItemGroup>
     <ClCompile Include="IPC.cpp" />
     <ClCompile Include="security\RSA.cpp" />
-    <ClCompile Include="utile\IPAdressHelpers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ClientDisconnectObserver.hpp" />
     <ClInclude Include="IClientDisconnectObserver.hpp" />
     <ClInclude Include="IConnection.hpp" />
     <ClInclude Include="MessageTypes.hpp" />
-    <ClInclude Include="net\Client.hpp" />
+    <ClInclude Include="net\client.hpp" />
     <ClInclude Include="net\Connection.hpp" />
     <ClInclude Include="net\Message.hpp" />
-    <ClInclude Include="net\Server.hpp" />
+    <ClInclude Include="net\server.hpp" />
     <ClInclude Include="security\RSA.hpp" />
-    <ClInclude Include="utile\ErrorCodes.hpp" />
     <ClInclude Include="utile\IPAdressHelpers.hpp" />
     <ClInclude Include="utile\IPCDataTypes.hpp" />
     <ClInclude Include="utile\MessageIdProvider.hpp" />

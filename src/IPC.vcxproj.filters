@@ -33,7 +33,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="net\Client.hpp">
+    <ClInclude Include="net\client.hpp">
       <Filter>Header Files\net</Filter>
     </ClInclude>
     <ClInclude Include="net\Connection.hpp">
@@ -42,7 +42,7 @@
     <ClInclude Include="net\Message.hpp">
       <Filter>Header Files\net</Filter>
     </ClInclude>
-    <ClInclude Include="net\Server.hpp">
+    <ClInclude Include="net\server.hpp">
       <Filter>Header Files\net</Filter>
     </ClInclude>
     <ClInclude Include="MessageTypes.hpp">
@@ -55,9 +55,6 @@
       <Filter>Header Files\utile</Filter>
     </ClInclude>
     <ClInclude Include="utile\IPAdressHelpers.hpp">
-      <Filter>Header Files\utile</Filter>
-    </ClInclude>
-    <ClInclude Include="utile\ErrorCodes.hpp">
       <Filter>Header Files\utile</Filter>
     </ClInclude>
     <ClInclude Include="ClientDisconnectObserver.hpp">
@@ -79,9 +76,6 @@
   <ItemGroup>
     <ClCompile Include="IPC.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="utile\IPAdressHelpers.cpp">
-      <Filter>Source Files\utile</Filter>
     </ClCompile>
     <ClCompile Include="security\RSA.cpp">
       <Filter>Source Files\security</Filter>

@@ -92,7 +92,7 @@ namespace ipc
                 boost::asio::ip::tcp::socket socket,
                 ::utile::ThreadSafeQueue<OwnedMessage<T>>& incomingMessages,
                 std::condition_variable& condVarUpdate,
-                std::unique_ptr<ipc::utile::IClientDisconnectObserver<T>>& observer) :
+                std::unique_ptr<ipc::utile::IClientDisconnectObserver<T>>& observer = nullptr) :
                 owner_{ owner },
                 context_{ context },
                 socket_{ std::move(socket) },

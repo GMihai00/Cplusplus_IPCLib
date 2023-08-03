@@ -18,7 +18,7 @@ namespace utile
     public:
         ThreadSafeQueue() = default;
         ThreadSafeQueue(const ThreadSafeQueue&) = delete;
-        virtual ~ThreadSafeQueue() { m_queue.clear(); }
+        virtual ~ThreadSafeQueue() { clear(); }
 
         std::optional<T> pop()
         {
@@ -33,10 +33,10 @@ namespace utile
             return t;
         }
 
-        void push(const T& operation)
+        void push(const T& elem)
         {
             std::scoped_lock lock(m_mutexWrite);
-            m_queue.push(std::move(operation));
+            m_queue.push(std::move(elem));
         }
 
         bool empty()
@@ -49,6 +49,13 @@ namespace utile
         {
             std::shared_lock lock(m_mutexRead);
             return m_queue.size();
+        }
+
+        void clear()
+        {
+            std::unique_lock lock(m_mutexRead);
+            while (!m_queue.empty())
+                m_queue.pop();
         }
     };
 } // namespace utile

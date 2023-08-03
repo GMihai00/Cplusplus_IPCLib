@@ -1,12 +1,10 @@
 #pragma once
-#ifndef IPC_NET_CLIENT_HPP
-#define IPC_NET_CLIENT_HPP
 
 #include <iostream>
 #include <memory>
 #include <thread>
 #include <mutex>
-#include <vector>
+
 #include <optional>
 #include <condition_variable>
 #include <chrono>
@@ -21,7 +19,6 @@
 #include "Connection.hpp"
 
 #include "../utile/IPCDataTypes.hpp"
-#include "../utile/IPAdressHelpers.hpp"
 #include "..\ClientDisconnectObserver.hpp"
 
 namespace ipc
@@ -29,160 +26,116 @@ namespace ipc
     namespace net
     {
         template<typename T>
-        class Client
+        class client
         {
         private:
-            ::utile::ThreadSafeQueue<OwnedMessage<T>> incomingMessages_;
-
-        protected:
-            boost::asio::io_context context_;
-            std::thread threadContext_;
-            std::mutex mutexUpdate_;
+            ::utile::ThreadSafeQueue<OwnedMessage<T>> m_answears_recieved;
+            boost::asio::io_context m_context;
+            std::thread m_thread_context;
+            std::mutex m_mutex_get;
             std::mutex mutexGet_;
-            std::shared_mutex mutexConnection_;
-            std::condition_variable condVarUpdate_;
-            std::unique_ptr<Connection<T>> connection_;
-            std::atomic<bool> shuttingDown_ = false;
-            boost::asio::io_context::work idleWork_; // for context to not immediatly stop
-            std::unique_ptr<ipc::utile::IClientDisconnectObserver<T>> observer_; // needed for just creating connections, always nullptr
-            
-        public:
-            Client() : idleWork_(context_)
+            std::shared_mutex mutexm_connection;
+            std::condition_variable m_cond_var_get;
+            std::unique_ptr<Connection<T>> m_connection;
+            std::atomic<bool> m_shutting_down = false;
+            boost::asio::io_context::work m_idle_work;
+        private:
+
+            bool is_connected()
             {
-                threadContext_ = std::thread([this]() { context_.run(); });
+                std::shared_lock lock(mutexm_connection);
+
+                return m_connection && m_connection->isConnected();
+            }
+        public:
+            client() : m_idle_work(m_context)
+            {
+                m_thread_context = std::thread([this]() { m_context.run(); });
             }
 
-            virtual ~Client() noexcept
+            virtual ~client() noexcept
             {
-                shuttingDown_ = true;
-                // LOG_INF << "Server shutting down";
+                m_shutting_down = true;
                 disconnect();
-                stop();
+
+                m_context.stop();
+
+                m_cond_var_get.notify_one();
+                if (m_thread_context.joinable())
+                    m_thread_context.join();
             }
     
             bool connect(const utile::IP_ADRESS& host, const ipc::utile::PORT port)
             {
-                std::unique_lock lock(mutexConnection_);
-
-                if (!utile::IsIPV4(host))
-                {
-                    // LOG_ERR << "Invalid IPV4 ip adress: " << host;
-                    return false;
-                }
+                std::unique_lock lock(mutexm_connection);
 
                 try
                 {
-                    boost::asio::ip::tcp::resolver resolver(context_);
+                    boost::asio::ip::tcp::resolver resolver(m_context);
                     boost::asio::ip::tcp::resolver::results_type endpoints =
                         resolver.resolve(host, std::to_string(port));
 
-                    connection_ = std::make_unique<Connection<T>>(
-                        Owner::Client,
-                        context_,
-                        boost::asio::ip::tcp::socket(context_),
-                        incomingMessages_,
-                        condVarUpdate_,
-                        observer_);
+                    m_connection = std::make_unique<Connection<T>>(
+                        Owner::client,
+                        m_context,
+                        boost::asio::ip::tcp::socket(m_context),
+                        m_answears_recieved,
+                        m_cond_var_get);
             
-                    return connection_->connectToServer(endpoints);
+                    return m_connection->connectToServer(endpoints);
 
                 }
                 catch(const std::exception& e)
                 {
-                    // LOG_ERR << "Client exception: " << e.what() << '\n';
+                    // LOG_ERR << "client exception: " << e.what() << '\n';
                     return false;
                 }
             }
     
             void disconnect()
             {
-                if (isConnected())
+                if (is_connected())
                 {
-                    Message<T> disconnectMessage;
-                    disconnectMessage.header.disconnecting = true;
+                    m_connection->disconnect();
 
-                    send(disconnectMessage);
-
-                    waitForAnswear(1000);
-
-                    connection_->disconnect();
-
-                    incomingMessages_.clear();
+                    m_answears_recieved.clear();
                 }
-                connection_.reset();
-            }
-    
-            void stop()
-            {
-                context_.stop();
-
-                condVarUpdate_.notify_one();
-                if (threadContext_.joinable())
-                    threadContext_.join();
-            }
-
-            bool isConnected()
-            {
-                std::shared_lock lock(mutexConnection_);
-
-                return connection_ && connection_->isConnected();
-            }
-    
-            bool answearRecieved()
-            {
-                std::shared_lock lock(mutexConnection_);
-
-                return !incomingMessages_.empty();
-            }
-
-            std::optional<std::pair<OwnedMessage<T>, bool>> getLastUnreadAnswear()
-            {
-                std::scoped_lock lock(mutexGet_);
-
-                return incomingMessages_.pop();
+                m_connection.reset();
             }
     
             void send(const Message<T>& msg)
 	        {
-		        if (isConnected())
-			        connection_->send(msg);
+		        if (is_connected())
+			        m_connection->send(msg);
 	        }
 
-            bool waitForAnswear(uint32_t timeout = 0)
+            std::optional<std::pair<OwnedMessage<T>, bool>> wait_for_answear(uint32_t timeout = 0)
             {
                 if (timeout == 0)
                 {
-                    std::unique_lock<std::mutex> ulock(mutexUpdate_);
-                    if (incomingMessages_.empty() && !shuttingDown_)
-                        condVarUpdate_.wait(ulock, [&] { return !incomingMessages_.empty() || shuttingDown_; });
+                    std::unique_lock<std::mutex> ulock(m_mutex_get);
+                    if (m_answears_recieved.empty() && !m_shutting_down)
+                        m_cond_var_get.wait(ulock, [&] { return !m_answears_recieved.empty() || m_shutting_down; });
 
-                    return !shuttingDown_;
+                    return m_answears_recieved.pop();
                 }
 
-                std::unique_lock<std::mutex> ulock(mutexUpdate_);
-                if (!incomingMessages_.empty() || shuttingDown_)
+                std::unique_lock<std::mutex> ulock(m_mutex_get);
+                if (!m_answears_recieved.empty() || m_shutting_down)
                 {
-                    return !shuttingDown_;
+                    return m_answears_recieved.pop();
                 }
 
-                if (condVarUpdate_.wait_for(ulock, std::chrono::milliseconds(timeout), [&] { return !incomingMessages_.empty() || shuttingDown_; }))
+                if (m_cond_var_get.wait_for(ulock, std::chrono::milliseconds(timeout), [&] { return !m_answears_recieved.empty() || m_shutting_down; }))
                 {
-                    return !shuttingDown_;
+                    return m_answears_recieved.pop();
                 }
                 else
                 {
                     // LOG_ERR << " Answear waiting timedout";
-                    return false;
+                    return std::nullopt;
                 }
             }
-	
-	        uint32_t getId()
-	        {
-                std::shared_lock lock(mutexConnection_);
-
-                return connection_->getId();
-	        }
         };
     } // namespace net
 } // namespace ipc
-#endif // #IPC_NET_CLIENT_HPP
