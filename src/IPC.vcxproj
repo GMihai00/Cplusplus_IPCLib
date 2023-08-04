@@ -166,6 +166,7 @@
     <ClInclude Include="net\server.hpp" />
     <ClInclude Include="security\RSA.hpp" />
     <ClInclude Include="utile\data_types.hpp" />
+    <ClInclude Include="utile\serializable_data.hpp" />
     <ClInclude Include="utile\thread_safe_queue.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

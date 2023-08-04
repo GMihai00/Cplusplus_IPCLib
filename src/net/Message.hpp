@@ -8,6 +8,8 @@
 
 #include "connection.hpp"
 
+#include "../utile/serializable_data.hpp"
+
 namespace ipc
 {
     namespace net
@@ -88,6 +90,42 @@ namespace ipc
                 {
                     throw std::runtime_error("Failed to read data, insufficient bytes");
                 }
+
+                return msg;
+            }
+
+            friend message<T>& operator << (message<T>& msg, const serializable_data* data)
+            {
+                assert(data);
+
+                size_t size_before_push = msg.m_body.size();
+                msg.m_body.resize(size_before_push + data->size());
+                std::memcpy(msg.m_body.data() + size_before_push, &(data->deserialize()), data->size());
+                msg.m_header.m_size = msg.size();
+
+                return msg;
+            }
+
+            friend message<T>& operator >> (message<T>& msg, serializable_data* data)
+            {
+                assert(data);
+
+                if (msg.m_body.size() >= data->size())
+                {
+                    size_t size_after_pop = msg.m_body.size() - data->size();
+                    std::vector<uint8_t> intermidiate(data->size());
+                    std::memcpy(&intermidiate, msg.m_body.data() + size_after_pop, data.size());
+
+                    data->serialize(intermidiate);
+
+                    msg.m_body.resize(size_after_pop);
+                    msg.m_header.m_size = msg.size();
+                }
+                else
+                {
+                    throw std::runtime_error("Failed to read data, insufficient bytes");
+                }
+
 
                 return msg;
             }
