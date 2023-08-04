@@ -27,12 +27,12 @@ namespace ipc
         {
         private:
             static uint16_t ID;
-            uint16_t id;
         public:
-            T type{};
-            size_t size{};
+            uint16_t m_id;
+            T m_type{};
+            size_t m_size{};
 
-            message_header() : id{++ID} {
+            message_header() : m_id{++ID} {
                 if (!std::is_enum<T>::value)
                 {
                     throw(std::runtime_error("Invalid data type provided, the type is suppose to be an enum"));
@@ -43,19 +43,19 @@ namespace ipc
         template <typename T>
         struct message
         {
-            message_header<T> header{};
-            std::vector<uint8_t> body{};
+            message_header<T> m_header{};
+            std::vector<uint8_t> m_body{};
 
             size_t size() const
             {
-                return body.size();
+                return m_body.size();
             }
         
             friend std::ostream& operator << (std::ostream& os, const message<T>& msg)
             {
-                os  << "ID: " << msg.header.id 
-                    << " Size: " << msg.header.size
-                    << " Type: " << int(msg.header.type);
+                os  << "ID: " << msg.m_header.m_id 
+                    << " Size: " << msg.m_header.m_size
+                    << " Type: " << int(msg.m_header.m_type);
                 return os;
             }
         
@@ -64,10 +64,10 @@ namespace ipc
             {
                 static_assert(type_helpers::is_c_data_type<E>::value && !std::is_pointer<E>::value, "Data can not be pushed");
 
-                size_t size_before_push = msg.body.size();
-                msg.body.resize(size_before_push + sizeof(E));
-                std::memcpy(msg.body.data() + size_before_push, &data, sizeof(E));
-                msg.header.size = msg.size();
+                size_t size_before_push = msg.m_body.size();
+                msg.m_body.resize(size_before_push + sizeof(E));
+                std::memcpy(msg.m_body.data() + size_before_push, &data, sizeof(E));
+                msg.m_header.m_size = msg.size();
             
                 return msg;
             }
@@ -77,12 +77,12 @@ namespace ipc
             {
                 static_assert(type_helpers::is_c_data_type<E>::value && !std::is_pointer<E>::value, "Data can not be poped");
              
-                if (msg.body.size() >= sizeof(E))
+                if (msg.m_body.size() >= sizeof(E))
                 {
-                    size_t size_after_pop = msg.body.size() - sizeof(E);
-                    std::memcpy(&data, msg.body.data() + size_after_pop, sizeof(E));
-                    msg.body.resize(size_after_pop);
-                    msg.header.size = msg.size();
+                    size_t size_after_pop = msg.m_body.size() - sizeof(E);
+                    std::memcpy(&data, msg.m_body.data() + size_after_pop, sizeof(E));
+                    msg.m_body.resize(size_after_pop);
+                    msg.m_header.m_size = msg.size();
                 }
                 else
                 {
@@ -94,17 +94,16 @@ namespace ipc
 
             void clear()
             {
-                body.clear();
-                header.id = 0;
-                header.hasPriority = false;
-                header.size = this->size();
+                m_body.clear();
+                m_header.m_id = 0;
+                m_header.m_size = this->size();
             }
 
             message<T> clone()
             {
                 message<T> copy;
-                copy.header = this->header;
-                copy.body = this->body;
+                copy.m_header = this->m_header;
+                copy.m_body = this->m_body;
 
                 return copy;
             }
@@ -112,8 +111,8 @@ namespace ipc
             message<T> build_reply()
             {
                 message<T> reply;
-                reply.header = this->header;
-                reply.body = {};
+                reply.m_header = this->m_header;
+                reply.m_header.m_size = 0;
 
                 return reply;
             }

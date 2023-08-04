@@ -114,7 +114,7 @@ namespace ipc
                                 {
                                     if (connection->get_id() == connection_id)
                                     {
-                                        connection->connectToClient();
+                                        connection->connect_to_client();
                                     }
                                 }
                             }

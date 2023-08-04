@@ -45,43 +45,37 @@ namespace ipc
         {
             static uint32_t ID;
         protected:
-            const owner owner_;
-            std::thread threadRead_;
-            std::thread threadWrite_;
-            std::mutex mutexRead_;
-            std::mutex mutexWrite_;
-            std::condition_variable condVarRead_;
-            std::condition_variable condVarWrite_;
-            std::condition_variable& condVarUpdate_;
-            boost::asio::io_context& context_;
-            boost::asio::ip::tcp::socket socket_;
-            ::utile::thread_safe_queue<owned_message<T>>& incomingmessages_;
-            ::utile::thread_safe_queue<message<T>> outgoingmessages_;
-            message<T> incomingTemporarymessage_;
-            std::atomic_bool isReading_;
-            std::atomic_bool isWriting_;
-            std::atomic_bool shuttingDown_ = false;
-            std::string ipAdress_;
-            uint32_t id_;
-            std::unique_ptr<client_disconnect_observer<T>>& observer_;
+            const owner m_owner;
+            std::thread m_thread_read;
+            std::thread m_thread_write;
+            std::mutex m_mutex_read;
+            std::mutex m_mutex_write;
+            std::condition_variable m_cond_var_read;
+            std::condition_variable m_cond_var_write;
+            std::condition_variable& m_cond_var_update;
+            boost::asio::io_context& m_context;
+            boost::asio::ip::tcp::socket m_socket;
+            ::utile::thread_safe_queue<owned_message<T>>& m_incomming_messages;
+            ::utile::thread_safe_queue<message<T>> m_outgoing_messages;
+            message<T> m_incoming_message;
+            std::atomic_bool m_reading = false;
+            std::atomic_bool m_writing = false;
+            std::atomic_bool m_shutting_down = false;
+            std::string m_ip_adress;
+            uint32_t m_id;
+            std::unique_ptr<client_disconnect_observer<T>>& m_observer;
 
         private:
-  /*          struct compare_connections {
-                bool operator() (const connection<T>& a,const connection<T>& b) const {
-                    return a.getId() < b.getId();
-                }
-            };*/
-
-            bool readData(std::vector<uint8_t>& vBuffer, size_t toRead)
+            bool read_data(std::vector<uint8_t>& vBuffer, size_t toRead)
             {
                 size_t left = toRead;
-                while (left && !shuttingDown_)
+                while (left && !m_shutting_down)
                 {
-                    if (shuttingDown_)
+                    if (m_shutting_down)
                         return false;
             
                     boost::system::error_code errcode;
-                    size_t read = socket_.read_some(boost::asio::buffer(vBuffer.data() + (toRead - left), left), errcode);
+                    size_t read = m_socket.read_some(boost::asio::buffer(vBuffer.data() + (toRead - left), left), errcode);
             
                     if (errcode)
                     {
@@ -101,80 +95,68 @@ namespace ipc
                 ::utile::thread_safe_queue<owned_message<T>>& incomingmessages,
                 std::condition_variable& condVarUpdate,
                 std::unique_ptr<client_disconnect_observer<T>>& observer = nullptr) :
-                owner_{ owner },
-                context_{ context },
-                socket_{ std::move(socket) },
-                incomingmessages_{ incomingmessages },
-                condVarUpdate_{condVarUpdate},
-                observer_{observer},
-                isWriting_{false},
-                isReading_{false},
-                id_{ ++connection<T>::ID }
+                m_owner{ owner },
+                m_context{ context },
+                m_socket{ std::move(socket) },
+                m_incomming_messages{ incomingmessages },
+                m_cond_var_update{condVarUpdate},
+                m_observer{observer},
+                m_id{ ++connection<T>::ID }
             {
-                threadWrite_ = std::thread([this]() { writemessages(); });
-                threadRead_ = std::thread([this]() { readmessages(); });
+                m_thread_write = std::thread([this]() { write_messages(); });
+                m_thread_read = std::thread([this]() { read_messages(); });
             }
 
             virtual ~connection() noexcept
             { 
-                shuttingDown_ = true;
+                m_shutting_down = true;
 
-                condVarRead_.notify_one();
-                if (threadRead_.joinable())
-                    threadRead_.join();
+                m_cond_var_read.notify_one();
+                if (m_thread_read.joinable())
+                    m_thread_read.join();
 
-                condVarWrite_.notify_one();
-                if (threadWrite_.joinable())
-                    threadWrite_.join();
+                m_cond_var_write.notify_one();
+                if (m_thread_write.joinable())
+                    m_thread_write.join();
 
                 disconnect(); 
             }
     
-            owner getowner() const
+            std::string get_ip_adress() const
             {
-                return owner_;
+                return m_ip_adress;
             }
 
-            uint32_t getId() const
+            bool connect_to_server(const boost::asio::ip::tcp::resolver::results_type& endpoints)
             {
-                return id_;
-            }
-    
-            std::string getIpAdress() const
-            {
-                return ipAdress_;
-            }
-
-            bool connectToServer(const boost::asio::ip::tcp::resolver::results_type& endpoints)
-            {
-                if (owner_ == owner::Client)
+                if (m_owner == owner::Client)
                 {
                     // LOG_SET_NAME("connection-SERVER");
-                    std::function<void(std::error_code errcode, boost::asio::ip::tcp::endpoint endpoint)> connectCallback;
-                    if (isReading_)
+                    std::function<void(std::error_code errcode, boost::asio::ip::tcp::endpoint endpoint)> connect_callback;
+                    if (m_reading)
                     {
-                        connectCallback = [this](std::error_code errcode, boost::asio::ip::tcp::endpoint /*endpoint*/)
+                        connect_callback = [this](std::error_code errcode, boost::asio::ip::tcp::endpoint /*endpoint*/)
                         {
                             if (errcode)
                             {
                                 // LOG_ERR << "FAILED TO CONNECT TO SERVER: " << errcode.message();
-                                socket_.close();
+                                m_socket.close();
                             }
                         };
                     }
                     else
                     {
-                        connectCallback = [this](std::error_code errcode, boost::asio::ip::tcp::endpoint /*endpoint*/)
+                        connect_callback = [this](std::error_code errcode, boost::asio::ip::tcp::endpoint /*endpoint*/)
                         {
                             if (!errcode)
                             {
                                 // LOG_DBG <<"Started reading messages:";
-                                condVarRead_.notify_one();
+                                m_cond_var_read.notify_one();
                             }
                             else
                             {
                                 // LOG_ERR << "FAILED TO CONNECT TO SERVER: " << errcode.message();
-                                socket_.close();
+                                m_socket.close();
                             }
                         };
                     }
@@ -183,18 +165,18 @@ namespace ipc
                     boost::asio::ip::tcp::endpoint endpoint;
                     try
                     {
-                        endpoint = boost::asio::connect(socket_, endpoints);
+                        endpoint = boost::asio::connect(m_socket, endpoints);
                     }
                     catch (boost::system::system_error const& err)
                     {
                         ec = err.code();
                     }
                    
-                    connectCallback(ec, endpoint);
-                    if (socket_.is_open())
+                    connect_callback(ec, endpoint);
+                    if (m_socket.is_open())
                     {
-                        isReading_ = true;
-                        ipAdress_ = socket_.remote_endpoint().address().to_string();
+                        m_reading = true;
+                        m_ip_adress = m_socket.remote_endpoint().address().to_string();
                         return true;
                     }
 
@@ -203,29 +185,29 @@ namespace ipc
                 return false;
             }
     
-            bool connectToClient()
+            bool connect_to_client()
             {
-                if (owner_ == owner::Server)
+                if (m_owner == owner::Server)
                 {
-                    if (socket_.is_open())
+                    if (m_socket.is_open())
                     {
-                        std::function<void()> connectCallback;
-                        if (!isReading_)
+                        std::function<void()> connect_callback;
+                        if (!m_reading)
                         {
-                            connectCallback = [this]()
+                            connect_callback = [this]()
                             {
                                 // LOG_DBG <<"Started reading messages";
-                                condVarRead_.notify_one();
+                                m_cond_var_read.notify_one();
                             };
                         }
                         else
                         {
-                            connectCallback =[this]()
+                            connect_callback =[this]()
                             {
                             };
                         }
-                        isReading_ = true;
-                        connectCallback();
+                        m_reading = true;
+                        connect_callback();
                         return true;
                     }
                     return false;
@@ -233,88 +215,92 @@ namespace ipc
                 return false;
             }
     
-            bool isConnected() const
+            bool is_conected() const noexcept
             {
-                return socket_.is_open();
+                return m_socket.is_open();
             }
     
             std::shared_ptr<connection<T>> get_shared()
             {
-                if (shuttingDown_)
+                if (m_shutting_down)
                     return nullptr;
 
                 return this->shared_from_this();
             }
-            void readmessages()
+
+            void read_messages()
             {
-                if (!isReading_ && !shuttingDown_)
+                if (!m_reading && !m_shutting_down)
                 {
-                    std::unique_lock<std::mutex> ulock(mutexRead_);
-                    condVarRead_.wait(ulock, [this]() { return isReading_ || shuttingDown_; });
+                    std::unique_lock<std::mutex> ulock(m_mutex_read);
+                    m_cond_var_read.wait(ulock, [this]() { return m_reading || m_shutting_down; });
                     ulock.unlock();
                 }
 
-                while (!shuttingDown_)
+                while (!m_shutting_down)
                 {
-                    std::scoped_lock lock(mutexRead_);
-                    if (!readHeader()) { break; }
-                    if (!readBody()) { break; }
-                    addToIncomingmessageQueue();
-                    condVarUpdate_.notify_one();
+                    std::scoped_lock lock(m_mutex_read);
+
+                    if (!read_header()) { 
+                        break; 
+                    }
+
+                    if (!read_body()) { 
+                        break;
+                    }
+
+                    queue_message();
+
+                    m_cond_var_update.notify_one();
                 }
-                isReading_ = false;
+                m_reading = false;
             }
 
-            bool readHeader()
+            bool read_header()
             {
                 std::vector<uint8_t> vBuffer(sizeof(message_header<T>));
         
-                if (!readData(vBuffer, sizeof(message_header<T>))) { return false; }
+                if (!read_data(vBuffer, sizeof(message_header<T>))) { return false; }
 
-                std::memcpy(&incomingTemporarymessage_.header, vBuffer.data(), sizeof(message_header<T>));
-                // LOG_DBG << "Finished reading header for message: " << incomingTemporarymessage_;
+                std::memcpy(&m_incoming_message.header, vBuffer.data(), sizeof(message_header<T>));
+                // LOG_DBG << "Finished reading header for message: " << m_incoming_message;
                 return true;
             }
     
-            bool readBody()
+            bool read_body()
             {
-                std::vector<uint8_t> vBuffer(incomingTemporarymessage_.header.size * sizeof(uint8_t));
+                std::vector<uint8_t> vBuffer(m_incoming_message.header.size * sizeof(uint8_t));
     
-                if (!readData(vBuffer, sizeof(uint8_t) * incomingTemporarymessage_.header.size)) { return false; }
+                if (!read_data(vBuffer, sizeof(uint8_t) * m_incoming_message.header.size)) { return false; }
 
-                incomingTemporarymessage_ << vBuffer;
-                // LOG_DBG << "Finished reading message: " << incomingTemporarymessage_;
+                m_incoming_message << vBuffer;
+                // LOG_DBG << "Finished reading message: " << m_incoming_message;
                 return true;
             }
     
-            void addToIncomingmessageQueue()
+            void queue_message()
             {
-                if (owner_ == owner::Server)
+                if (m_owner == owner::Server)
                 {
-                    const auto& pair = std::make_pair(
-                        owned_message<T>{get_shared(), incomingTemporarymessage_},
-                        incomingTemporarymessage_.header.hasPriority);
-                    incomingmessages_.push(pair);
+                    const auto& msg = owned_message<T>{get_shared(), m_incoming_message};
+                    m_incomming_messages.push(msg);
                 }
                 else
                 {
-                    incomingmessages_.push(
-                        std::make_pair(
-                            owned_message<T>{nullptr, incomingTemporarymessage_},
-                            incomingTemporarymessage_.header.hasPriority
-                        ));
+                    m_incomming_messages.push(owned_message<T>{nullptr, m_incoming_message});
                 }
-                incomingTemporarymessage_.clear();
+
+                m_incoming_message.clear();
                 // LOG_DBG << "Added message to incoming queue";
             }
 
-            void send(const message<T>& msg)
+            void send(const message<T>& msg)  noexcept
             {
                 std::function<void()> postCallback;
                 std::pair<message<T>, bool> pair = std::make_pair(msg, msg.header.hasPriority);
-                outgoingmessages_.push(pair);
+                m_outgoing_messages.push(pair);
                 // LOG_DBG <<"Adding message to outgoing queue: " << msg;
-                if (isWriting_)
+                if (m_writing)
                 {
                     postCallback = [this, msg]()
                     {
@@ -325,67 +311,67 @@ namespace ipc
                     postCallback = [this, msg]()
                     {
                         // LOG_DBG <<"Started writing messages";
-                        condVarWrite_.notify_one();
+                        m_cond_var_write.notify_one();
                     };
                 }
-                isWriting_ = true;
+                m_writing = true;
 
-                if (isConnected())
+                if (is_conected())
                 {
-                    boost::asio::post(context_, postCallback);
+                    boost::asio::post(m_context, postCallback);
                 }
                 else
                 {
-                    // LOG_WARN << "Failed to post message, client is disconnected";
+                    // LOG_WARN << "Failed to post message, client is dis_conected";
                 }
             }
     
-            void writemessages()
+            void write_messages() noexcept
             {
-                while (!shuttingDown_)
+                while (!m_shutting_down)
                 {
-                    if (!isWriting_ && !shuttingDown_)
+                    if (!m_writing && !m_shutting_down)
                     {
-                        std::unique_lock<std::mutex> ulock(mutexWrite_);
-                        condVarWrite_.wait(ulock, [this]() { return isWriting_ || shuttingDown_; });
+                        std::unique_lock<std::mutex> ulock(m_mutex_write);
+                        m_cond_var_write.wait(ulock, [this]() { return m_writing || m_shutting_down; });
                         ulock.unlock();
                     }
 
-                    while (!outgoingmessages_.empty())
+                    while (!m_outgoing_messages.empty())
                     {
-                        std::scoped_lock lock(mutexWrite_);
+                        std::scoped_lock lock(m_mutex_write);
 
-                        if (shuttingDown_)
+                        if (m_shutting_down)
                             break;
 
-                        auto outgoingMsg = outgoingmessages_.pop();
+                        auto outgoingMsg = m_outgoing_messages.pop();
                         if (!outgoingMsg)
                         {
                             // LOG_ERR << "Failed to get image from queue";
                             return;
                         } 
-                        const auto& outgoingmessage = outgoingMsg.value().first;
+                        const auto& outgoing_message = outgoingMsg.value().first;
 
-                        // LOG_DBG << "Started writing message: " << outgoingmessage;
-                        if (!writeHeader(outgoingmessage)) { outgoingmessages_.clear(); break; }
+                        // LOG_DBG << "Started writing message: " << outgoing_message;
+                        if (!write_header(outgoing_message)) { m_outgoing_messages.clear(); break; }
 
-                        if (outgoingmessage.header.size > 0)
+                        if (outgoing_message.header.size > 0)
                         {
-                            if (!writeBody(outgoingmessage)) { outgoingmessages_.clear(); break; }
+                            if (!write_body(outgoing_message)) { m_outgoing_messages.clear(); break; }
                         }
                         else
                         {
                             // LOG_DBG << "Finished writing message ";
                         }
                     }
-                    isWriting_ = false;
+                    m_writing = false;
                 }
             }
     
-            bool writeHeader(const message<T>& outgoingmessage)
+            bool write_header(const message<T>& outgoing_message)  noexcept
             {
                 boost::system::error_code errcode;
-                boost::asio::write(socket_, boost::asio::buffer(&outgoingmessage.header, sizeof(message_header<T>)), errcode);
+                boost::asio::write(m_socket, boost::asio::buffer(&outgoing_message.header, sizeof(message_header<T>)), errcode);
         
                 if (errcode)
                 {
@@ -397,10 +383,10 @@ namespace ipc
                 return true;
             }
     
-            bool writeBody(const message<T>& outgoingmessage)
+            bool write_body(const message<T>& outgoing_message) noexcept
             {
                 boost::system::error_code errcode;
-                boost::asio::write(socket_, boost::asio::buffer(outgoingmessage.body.data(), sizeof(uint8_t) * outgoingmessage.size()), errcode);
+                boost::asio::write(m_socket, boost::asio::buffer(outgoing_message.body.data(), sizeof(uint8_t) * outgoing_message.size()), errcode);
         
                 if (errcode)
                 {
@@ -412,24 +398,24 @@ namespace ipc
                 return true;
             }
     
-            void disconnect()
+            void disconnect() const noexcept 
             {
-                if (isConnected())
+                if (is_conected())
                 {
-                    if (observer_)
-                        observer_->notify(this->shared_from_this());
+                    if (m_observer)
+                        m_observer->notify(this->shared_from_this());
 
-                    boost::asio::post(context_, [this]() { socket_.close(); });
+                    boost::asio::post(m_context, [this]() { m_socket.close(); });
                 }
             }
 
             bool operator<(const connection<T>& other) const {
-                return id_ < other.id_;
+                return m_id < other.m_id;
             }
 
-            void get_id() const
+            void get_id() const noexcept
             {
-                return id_;
+                return m_id;
             }
         };
 

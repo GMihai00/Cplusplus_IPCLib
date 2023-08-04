@@ -43,7 +43,7 @@ namespace ipc
             {
                 std::shared_lock lock(m_mutex_connection);
 
-                return m_connection && m_connection->isConnected();
+                return m_connection && m_connection->is_connected();
             }
         public:
             client() : m_idle_work(m_context)
@@ -80,7 +80,7 @@ namespace ipc
                         m_answears_recieved,
                         m_cond_var_get);
             
-                    return m_connection->connectToServer(endpoints);
+                    return m_connection->connect_to_server(endpoints);
 
                 }
                 catch(const std::exception& e)

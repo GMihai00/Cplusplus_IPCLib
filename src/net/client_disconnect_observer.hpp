@@ -20,7 +20,7 @@ namespace ipc
 			client_disconnect_observer(const std::function<void(std::shared_ptr<connection<T>>)>& callback)
 				: callback_(callback) {}
 			~client_disconnect_observer() = default;
-			void notify(std::shared_ptr<connection<T>> client)
+			void notify(std::shared_ptr<connection<T>> client) const
 			{
 				if (callback_)
 					callback_(client);
