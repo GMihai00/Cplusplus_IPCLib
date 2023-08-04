@@ -36,45 +36,30 @@
     <ClInclude Include="net\client.hpp">
       <Filter>Header Files\net</Filter>
     </ClInclude>
-    <ClInclude Include="net\Connection.hpp">
+    <ClInclude Include="net\connection.hpp">
       <Filter>Header Files\net</Filter>
     </ClInclude>
-    <ClInclude Include="net\Message.hpp">
+    <ClInclude Include="net\message.hpp">
       <Filter>Header Files\net</Filter>
     </ClInclude>
     <ClInclude Include="net\server.hpp">
       <Filter>Header Files\net</Filter>
     </ClInclude>
-    <ClInclude Include="MessageTypes.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="utile\MessageIdProvider.hpp">
+    <ClInclude Include="utile\data_types.hpp">
       <Filter>Header Files\utile</Filter>
-    </ClInclude>
-    <ClInclude Include="utile\IPCDataTypes.hpp">
-      <Filter>Header Files\utile</Filter>
-    </ClInclude>
-    <ClInclude Include="utile\IPAdressHelpers.hpp">
-      <Filter>Header Files\utile</Filter>
-    </ClInclude>
-    <ClInclude Include="ClientDisconnectObserver.hpp">
-      <Filter>Header Files\net</Filter>
-    </ClInclude>
-    <ClInclude Include="IClientDisconnectObserver.hpp">
-      <Filter>Header Files\net</Filter>
-    </ClInclude>
-    <ClInclude Include="IConnection.hpp">
-      <Filter>Header Files\net</Filter>
     </ClInclude>
     <ClInclude Include="security\RSA.hpp">
       <Filter>Header Files\security</Filter>
     </ClInclude>
-    <ClInclude Include="utile\ThreadSafeQueue.hpp">
+    <ClInclude Include="utile\thread_safe_queue.hpp">
       <Filter>Header Files\utile</Filter>
+    </ClInclude>
+    <ClInclude Include="net\client_disconnect_observer.hpp">
+      <Filter>Header Files\net</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="IPC.cpp">
+    <ClCompile Include="ipc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="security\RSA.cpp">

@@ -6,25 +6,33 @@
 #include <memory>
 #include <type_traits>
 
+#include "connection.hpp"
+
 namespace ipc
 {
     namespace net
     {
-        template <typename T>
-        struct IsCDataType {
-            static constexpr bool value = std::is_arithmetic<T>::value || std::is_same<T, char>::value ||
-                std::is_same<T, wchar_t>::value || std::is_same<T, char16_t>::value ||
-                std::is_same<T, char32_t>::value;
-        };
+        namespace type_helpers
+        {
+            template <typename T>
+            struct is_c_data_type {
+                static constexpr bool value = std::is_arithmetic<T>::value || std::is_same<T, char>::value ||
+                    std::is_same<T, wchar_t>::value || std::is_same<T, char16_t>::value ||
+                    std::is_same<T, char32_t>::value;
+            };
+        }
 
         template <typename T>
-        struct MessageHeader
+        struct message_header
         {
+        private:
+            static uint16_t ID;
+            uint16_t id;
+        public:
             T type{};
-            uint16_t id{};
             size_t size{};
 
-            MessageHeader() {
+            message_header() : id{++ID} {
                 if (!std::is_enum<T>::value)
                 {
                     throw(std::runtime_error("Invalid data type provided, the type is suppose to be an enum"));
@@ -33,9 +41,9 @@ namespace ipc
         };
     
         template <typename T>
-        struct Message
+        struct message
         {
-            MessageHeader<T> header{};
+            message_header<T> header{};
             std::vector<uint8_t> body{};
 
             size_t size() const
@@ -43,7 +51,7 @@ namespace ipc
                 return body.size();
             }
         
-            friend std::ostream& operator << (std::ostream& os, const Message<T>& msg)
+            friend std::ostream& operator << (std::ostream& os, const message<T>& msg)
             {
                 os  << "ID: " << msg.header.id 
                     << " Size: " << msg.header.size
@@ -51,28 +59,28 @@ namespace ipc
                 return os;
             }
         
-            template<typename DataType>
-            friend Message<T>& operator << (Message<T>& msg, const DataType& data)
+            template<typename E>
+            friend message<T>& operator << (message<T>& msg, const E& data)
             {
-                static_assert(IsCDataType<DataType>::value && !std::is_pointer<DataType>::value, "Data can not be pushed");
+                static_assert(type_helpers::is_c_data_type<E>::value && !std::is_pointer<E>::value, "Data can not be pushed");
 
                 size_t size_before_push = msg.body.size();
-                msg.body.resize(size_before_push + sizeof(DataType));
-                std::memcpy(msg.body.data() + size_before_push, &data, sizeof(DataType));
+                msg.body.resize(size_before_push + sizeof(E));
+                std::memcpy(msg.body.data() + size_before_push, &data, sizeof(E));
                 msg.header.size = msg.size();
             
                 return msg;
             }
         
-            template<typename DataType>
-            friend Message<T>& operator >> (Message<T>& msg, DataType& data)
+            template<typename E>
+            friend message<T>& operator >> (message<T>& msg, E& data)
             {
-                static_assert(IsCDataType<DataType>::value && !std::is_pointer<DataType>::value, "Data can not be poped");
+                static_assert(type_helpers::is_c_data_type<E>::value && !std::is_pointer<E>::value, "Data can not be poped");
              
-                if (msg.body.size() >= sizeof(DataType))
+                if (msg.body.size() >= sizeof(E))
                 {
-                    size_t size_after_pop = msg.body.size() - sizeof(DataType);
-                    std::memcpy(&data, msg.body.data() + size_after_pop, sizeof(DataType));
+                    size_t size_after_pop = msg.body.size() - sizeof(E);
+                    std::memcpy(&data, msg.body.data() + size_after_pop, sizeof(E));
                     msg.body.resize(size_after_pop);
                     msg.header.size = msg.size();
                 }
@@ -92,31 +100,43 @@ namespace ipc
                 header.size = this->size();
             }
 
-            Message<T> clone()
+            message<T> clone()
             {
-                Message<T> copy;
+                message<T> copy;
                 copy.header = this->header;
                 copy.body = this->body;
 
                 return copy;
             }
+
+            message<T> build_reply()
+            {
+                message<T> reply;
+                reply.header = this->header;
+                reply.body = {};
+
+                return reply;
+            }
         };
     
         template <typename T>
-        class Connection;
+        uint16_t message_header<T>::ID = 0;
+
+        template <typename T>
+        class connection;
 
         template<typename T>
-        struct OwnedMessage
+        struct owned_message
         {
-            std::shared_ptr<Connection<T>> remote;
-            Message<T> msg;
+            std::shared_ptr<connection<T>> remote;
+            message<T> msg;
         
-            friend std::ostream& operator << (std::ostream& os, const OwnedMessage<T>& msg)
+            friend std::ostream& operator << (std::ostream& os, const owned_message<T>& msg)
             {
                 os << msg.msg();
                 return os;
             }
-            OwnedMessage(const std::shared_ptr<Connection<T>>& remotec, const Message<T>& msgc) :
+            owned_message(const std::shared_ptr<connection<T>>& remotec, const message<T>& msgc) :
                 remote{ remotec },
                 msg {msgc}
             {

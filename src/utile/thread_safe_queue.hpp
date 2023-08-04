@@ -9,16 +9,16 @@
 namespace utile
 {
     template<typename T>
-    class ThreadSafeQueue
+    class thread_safe_queue
     {
     private:
         std::shared_mutex m_mutexRead;
         std::mutex m_mutexWrite;
         std::queue<T> m_queue;
     public:
-        ThreadSafeQueue() = default;
-        ThreadSafeQueue(const ThreadSafeQueue&) = delete;
-        virtual ~ThreadSafeQueue() { clear(); }
+        thread_safe_queue() = default;
+        thread_safe_queue(const thread_safe_queue&) = delete;
+        virtual ~thread_safe_queue() { clear(); }
 
         std::optional<T> pop()
         {

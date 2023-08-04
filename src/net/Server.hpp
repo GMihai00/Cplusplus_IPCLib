@@ -16,12 +16,12 @@
 #include <boost/asio/ts/buffer.hpp>
 #include <boost/asio/ts/internet.hpp>
 
-#include "utile/ThreadSafeQueue.hpp"
-#include "Message.hpp"
-#include "Connection.hpp"
+#include "utile/thread_safe_queue.hpp"
+#include "message.hpp"
+#include "connection.hpp"
 
-#include "../utile/IPCDataTypes.hpp"
-#include "..\ClientDisconnectObserver.hpp"
+#include "../utile/data_types.hpp"
+#include "client_disconnect_observer.hpp"
 
 namespace ipc
 {
@@ -32,7 +32,10 @@ namespace ipc
         class server
         {
         protected:
-            ::utile::ThreadSafeQueue<OwnedMessage<T>> m_incomingMessagesQueue;
+            ::utile::thread_safe_queue<owned_message<T>> m_recieved_messages_queue;
+            boost::asio::ip::tcp::endpoint m_endpoint;
+            std::optional<boost::asio::ip::tcp::acceptor> m_connection_accepter = std::nullopt;
+            std::set<std::shared_ptr<connection<T>>> m_connections;
             boost::asio::io_context m_context;
             std::thread m_thread_context;
             std::thread threadUpdate_;
@@ -41,14 +44,11 @@ namespace ipc
             std::mutex m_mutex_start;
             std::mutex m_mutex_update;
             std::mutex m_mutex_send;
-            std::optional<boost::asio::ip::tcp::acceptor> m_connection_accepter = std::nullopt;
 
-            std::set<std::shared_ptr<Connection<T>>> m_connections;
             std::atomic<bool> m_shutting_down = false;
-            boost::asio::ip::tcp::endpoint m_endpoint;
 
-            std::unique_ptr<ipc::utile::IClientDisconnectObserver<T>> m_observer_disconnect;
-            std::function<void(std::shared_ptr<ipc::net::IConnection<T>>)> m_disconnect_callback;
+            std::unique_ptr<client_disconnect_observer<T>> m_observer_disconnect;
+            std::function<void(std::shared_ptr<connection<T>>)> m_disconnect_callback;
 
         private:
 
@@ -56,8 +56,8 @@ namespace ipc
             {
                 std::unique_lock<std::mutex> ulock(m_mutex_update);
 
-                if (m_incomingMessagesQueue.empty() && !m_context.stopped() && !m_shutting_down)
-                    m_cond_var_update.wait(ulock, [&] { return (!m_incomingMessagesQueue.empty() && !m_context.stopped()) || m_shutting_down; });
+                if (m_recieved_messages_queue.empty() && !m_context.stopped() && !m_shutting_down)
+                    m_cond_var_update.wait(ulock, [&] { return (!m_recieved_messages_queue.empty() && !m_context.stopped()) || m_shutting_down; });
 
                 if (m_shutting_down)
                 {
@@ -65,7 +65,7 @@ namespace ipc
                 }
 
                 // LOG_DBG << "UPDATING: Handling new message";
-                auto maybeMsg = m_incomingMessagesQueue.pop();
+                auto maybeMsg = m_recieved_messages_queue.pop();
 
                 if (maybeMsg.has_value())
                 {
@@ -75,7 +75,7 @@ namespace ipc
                     {
                         if (msg.msg.header.disconnecting == false)
                         {
-                            onMessage(msg.remote, msg.msg);
+                            onmessage(msg.remote, msg.msg);
                         }
                         else
                         {
@@ -95,19 +95,19 @@ namespace ipc
                         if (!errcode)
                         {
                             // LOG_INF << "Attempting to connect to " << socket.remote_endpoint();
-                            std::shared_ptr<Connection<T>> newConnection =
-                                std::make_shared<Connection<T>>(
-                                    Owner::server,
+                            std::shared_ptr<connection<T>> newconnection =
+                                std::make_shared<connection<T>>(
+                                    owner::server,
                                     m_context,
                                     std::move(socket),
-                                    m_incomingMessagesQueue,
+                                    m_recieved_messages_queue,
                                     m_cond_var_update,
                                     m_observer_disconnect);
 
-                            if (on_client_connect(newConnection))
+                            if (on_client_connect(newconnection))
                             {
-                                auto connection_id = newConnection->get_id();
-                                m_connections.insert(std::shared_ptr<Connection<T>>(std::move(newConnection)));
+                                auto connection_id = newconnection->get_id();
+                                m_connections.insert(std::shared_ptr<connection<T>>(std::move(newconnection)));
 
                                 // could be refactored
                                 for (const auto& connection : m_connections)
@@ -120,25 +120,23 @@ namespace ipc
                             }
                             else
                             {
-                                // LOG_WARN << "Connection has been denied";
+                                // LOG_WARN << "connection has been denied";
                             }
                         }
                         else
                         {
-                            // LOG_ERR << "Connection Error " << errcode.message();
+                            // LOG_ERR << "connection Error " << errcode.message();
                         }
 
                         wait_for_client_connection();
                     });
             }
 
-            void disconnect_callback(std::shared_ptr<ipc::net::IConnection<T>> connection) noexcept
+            void disconnect_callback(std::shared_ptr<connection<T>> connection) noexcept
             {
-                std::shared_ptr<ipc::net::Connection<T>> connectionPtr =
-                    std::dynamic_pointer_cast<ipc::net::Connection<T>>(connection);
-                if (connectionPtr)
+                if (connection)
                 {
-                    on_client_disconnect(connectionPtr);
+                    on_client_disconnect(connection);
                 }
             }
 
@@ -147,7 +145,7 @@ namespace ipc
             server(const utile::IP_ADRESS& host, ipc::utile::PORT port) try
             {
                 m_disconnect_callback = std::bind(&server::disconnect_callback, this, std::placeholders::_1);
-                m_observer_disconnect = std::make_unique<ipc::utile::ClientDisconnectObserver<T>>(m_disconnect_callback);
+                m_observer_disconnect = std::make_unique<client_disconnect_observer<T>>(m_disconnect_callback);
 
                 boost::asio::ip::tcp::endpoint m_endpoint(boost::asio::ip::address::from_string(host), port);
 
@@ -224,7 +222,7 @@ namespace ipc
                 m_cond_var_update.notify_one();
             }
     
-            void message_client(std::shared_ptr<Connection<T>> client, const Message<T>& msg) noexcept
+            void message_client(std::shared_ptr<connection<T>> client, const message<T>& msg) noexcept
             {
                 std::scoped_lock lock(m_mutex_send);
 
@@ -252,16 +250,16 @@ namespace ipc
             }
     
         protected:
-            virtual bool on_client_connect([[maybe_unused]]  std::shared_ptr<Connection<T>> client) noexcept
+            virtual bool on_client_connect([[maybe_unused]]  std::shared_ptr<connection<T>> client) noexcept
             {
                 return false;
             }
     
-            virtual void on_client_disconnect([[maybe_unused]]  std::shared_ptr<Connection<T>> client) noexcept
+            virtual void on_client_disconnect([[maybe_unused]]  std::shared_ptr<connection<T>> client) noexcept
             {
             }
     
-            virtual void on_message([[maybe_unused]] std::shared_ptr<Connection<T>> client, [[maybe_unused]] Message<T>& msg) noexcept
+            virtual void on_message([[maybe_unused]] std::shared_ptr<connection<T>> client, [[maybe_unused]] message<T>& msg) noexcept
             {
             }
         };

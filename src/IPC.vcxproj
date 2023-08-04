@@ -155,23 +155,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="IPC.cpp" />
+    <ClCompile Include="ipc.cpp" />
     <ClCompile Include="security\RSA.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ClientDisconnectObserver.hpp" />
-    <ClInclude Include="IClientDisconnectObserver.hpp" />
-    <ClInclude Include="IConnection.hpp" />
-    <ClInclude Include="MessageTypes.hpp" />
     <ClInclude Include="net\client.hpp" />
-    <ClInclude Include="net\Connection.hpp" />
-    <ClInclude Include="net\Message.hpp" />
+    <ClInclude Include="net\client_disconnect_observer.hpp" />
+    <ClInclude Include="net\connection.hpp" />
+    <ClInclude Include="net\message.hpp" />
     <ClInclude Include="net\server.hpp" />
     <ClInclude Include="security\RSA.hpp" />
-    <ClInclude Include="utile\IPAdressHelpers.hpp" />
-    <ClInclude Include="utile\IPCDataTypes.hpp" />
-    <ClInclude Include="utile\MessageIdProvider.hpp" />
-    <ClInclude Include="utile\ThreadSafeQueue.hpp" />
+    <ClInclude Include="utile\data_types.hpp" />
+    <ClInclude Include="utile\thread_safe_queue.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

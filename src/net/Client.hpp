@@ -14,12 +14,11 @@
 #include <boost/asio/ts/buffer.hpp>
 #include <boost/asio/ts/internet.hpp>
 
-#include "Message.hpp"
-#include "../utile/ThreadSafeQueue.hpp"
-#include "Connection.hpp"
+#include "message.hpp"
+#include "../utile/thread_safe_queue.hpp"
+#include "connection.hpp"
 
-#include "../utile/IPCDataTypes.hpp"
-#include "..\ClientDisconnectObserver.hpp"
+#include "../utile/data_types.hpp"
 
 namespace ipc
 {
@@ -29,21 +28,20 @@ namespace ipc
         class client
         {
         private:
-            ::utile::ThreadSafeQueue<OwnedMessage<T>> m_answears_recieved;
+            ::utile::thread_safe_queue<owned_message<T>> m_answears_recieved;
             boost::asio::io_context m_context;
             std::thread m_thread_context;
             std::mutex m_mutex_get;
-            std::mutex mutexGet_;
-            std::shared_mutex mutexm_connection;
+            std::shared_mutex m_mutex_connection;
             std::condition_variable m_cond_var_get;
-            std::unique_ptr<Connection<T>> m_connection;
+            std::unique_ptr<connection<T>> m_connection;
             std::atomic<bool> m_shutting_down = false;
             boost::asio::io_context::work m_idle_work;
         private:
 
             bool is_connected()
             {
-                std::shared_lock lock(mutexm_connection);
+                std::shared_lock lock(m_mutex_connection);
 
                 return m_connection && m_connection->isConnected();
             }
@@ -67,7 +65,7 @@ namespace ipc
     
             bool connect(const utile::IP_ADRESS& host, const ipc::utile::PORT port)
             {
-                std::unique_lock lock(mutexm_connection);
+                std::unique_lock lock(m_mutex_connection);
 
                 try
                 {
@@ -75,8 +73,8 @@ namespace ipc
                     boost::asio::ip::tcp::resolver::results_type endpoints =
                         resolver.resolve(host, std::to_string(port));
 
-                    m_connection = std::make_unique<Connection<T>>(
-                        Owner::client,
+                    m_connection = std::make_unique<connection<T>>(
+                        owner::client,
                         m_context,
                         boost::asio::ip::tcp::socket(m_context),
                         m_answears_recieved,
@@ -103,13 +101,13 @@ namespace ipc
                 m_connection.reset();
             }
     
-            void send(const Message<T>& msg)
+            void send(const message<T>& msg)
 	        {
 		        if (is_connected())
 			        m_connection->send(msg);
 	        }
 
-            std::optional<std::pair<OwnedMessage<T>, bool>> wait_for_answear(uint32_t timeout = 0)
+            std::optional<owned_message<T>> wait_for_answear(uint32_t timeout = 0)
             {
                 if (timeout == 0)
                 {
