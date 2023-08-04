@@ -1,12 +1,9 @@
 #pragma once
 #include <string>
 
-namespace ipc
+namespace utile
 {
-	namespace utile
-	{
-		typedef uint16_t PORT;
-		typedef std::string IP_ADRESS;
+	typedef uint16_t PORT;
+	typedef std::string IP_ADRESS;
 
-	} // namespace utile
-} // namespace ipc
+} // namespace utile
