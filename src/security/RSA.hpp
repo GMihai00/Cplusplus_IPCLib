@@ -5,26 +5,30 @@
 #include <openssl/pem.h>
 #include <memory>
 #include <optional>
+#include <vector>
 
-namespace security
+namespace ipc
 {
-	class RSAWrapper
+	namespace security
 	{
-	private:
-		std::string m_publicKeyStr;
-		RSA* m_keyPair;
-		bool m_isPrivateKeyAvailable = false;
+		class rsa_wrapper
+		{
+		private:
+			std::string m_public_key_str;
+			RSA* m_key_pair;
+			bool m_is_private_key_available = false;
 
-		RSA* generateKeyPair(std::string& publicKey);
-		RSA* readPublicKeyFromString(const std::string& publicKeyStr);
-	public:
-		RSAWrapper();
-		RSAWrapper(const std::string& publicKeyStr);
-		~RSAWrapper() noexcept;
+			RSA* generate_key_pair(std::string& public_key);
+			RSA* read_public_key_from_string(const std::string& public_key_str);
+		public:
+			rsa_wrapper();
+			rsa_wrapper(const std::string& publicKeyStr);
+			~rsa_wrapper() noexcept;
 
-		std::optional<std::string> encryptMessage(const std::string& message);
-		std::optional<std::string> decryptMessage(const std::string& encryptedMessage);
-		std::string getPublicKeyAsString();
-	};
-	typedef std::shared_ptr<RSAWrapper> RSAWrapperPtr;
-}
+			std::optional<std::vector<uint8_t>> encrypt_message(const std::vector<uint8_t>& message);
+			std::optional<std::vector<uint8_t>> decrypt_message(const std::vector<uint8_t>& message);
+
+			std::string get_public_key_as_string();
+		};
+	} // namespace security
+} // namespace ipc

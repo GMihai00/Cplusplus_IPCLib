@@ -48,7 +48,7 @@
     <ClInclude Include="utile\data_types.hpp">
       <Filter>Header Files\utile</Filter>
     </ClInclude>
-    <ClInclude Include="security\RSA.hpp">
+    <ClInclude Include="security\rsa.hpp">
       <Filter>Header Files\security</Filter>
     </ClInclude>
     <ClInclude Include="utile\thread_safe_queue.hpp">
@@ -65,7 +65,7 @@
     <ClCompile Include="ipc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="security\RSA.cpp">
+    <ClCompile Include="security\rsa.cpp">
       <Filter>Source Files\security</Filter>
     </ClCompile>
   </ItemGroup>
