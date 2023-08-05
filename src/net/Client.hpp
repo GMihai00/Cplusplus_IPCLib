@@ -20,6 +20,7 @@
 
 #include "../utile/data_types.hpp"
 
+#include "client_disconnect_observer.hpp"
 
 namespace net
 {
@@ -36,7 +37,7 @@ namespace net
         std::unique_ptr<connection<T>> m_connection;
         std::atomic<bool> m_shutting_down = false;
         boost::asio::io_context::work m_idle_work;
-    private:
+        std::unique_ptr<client_disconnect_observer<T>> m_observer;
 
         bool is_connected()
         {
@@ -47,6 +48,7 @@ namespace net
     public:
         client() : m_idle_work(m_context)
         {
+            m_observer = nullptr;
             m_thread_context = std::thread([this]() { m_context.run(); });
         }
 
@@ -73,11 +75,12 @@ namespace net
                     resolver.resolve(host, std::to_string(port));
 
                 m_connection = std::make_unique<connection<T>>(
-                    owner::client,
+                    owner::Client,
                     m_context,
                     boost::asio::ip::tcp::socket(m_context),
                     m_answears_recieved,
-                    m_cond_var_get);
+                    m_cond_var_get,
+                    m_observer);
             
                 return m_connection->connect_to_server(endpoints);
 

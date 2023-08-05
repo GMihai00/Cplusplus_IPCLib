@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include <thread>
+#include <chrono>
 #include "security/rsa.hpp"
 
 #include "net/client.hpp"
@@ -21,8 +23,17 @@ int main()
 {
     security::rsa_wrapper a;
 
-    net::server<VehicleDetectionMessages> b("", 5);
+    net::server<VehicleDetectionMessages> server("127.0.0.1", 500);
 
-    net::client<VehicleDetectionMessages> c();
-    std::cout << "Hello World!\n";
+    net::client<VehicleDetectionMessages> client;
+
+    client.connect("127.0.0.1", 500);
+
+    while (true)
+    {
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
+        std::cout << "waiting\n";
+    }
+
+    return 0;
 }

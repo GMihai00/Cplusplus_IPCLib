@@ -62,7 +62,7 @@ namespace net
         template<typename E>
         friend message<T>& operator << (message<T>& msg, const E& data)
         {
-            static_assert(type_helpers::is_c_data_type<E>::value && !std::is_pointer<E>::value, "Data can not be pushed");
+            static_assert(!type_helpers::is_c_data_type<E>::value || std::is_pointer<E>::value, "Data can not be pushed");
 
             size_t size_before_push = msg.m_body.size();
             msg.m_body.resize(size_before_push + sizeof(E));
@@ -75,7 +75,7 @@ namespace net
         template<typename E>
         friend message<T>& operator >> (message<T>& msg, E& data)
         {
-            static_assert(type_helpers::is_c_data_type<E>::value && !std::is_pointer<E>::value, "Data can not be poped");
+            static_assert(!type_helpers::is_c_data_type<E>::value || std::is_pointer<E>::value, "Data can not be poped");
              
             if (msg.m_body.size() >= sizeof(E))
             {

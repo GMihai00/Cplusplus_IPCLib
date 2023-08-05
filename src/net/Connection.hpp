@@ -92,7 +92,7 @@ namespace net
             boost::asio::ip::tcp::socket socket,
             ::utile::thread_safe_queue<owned_message<T>>& incomingmessages,
             std::condition_variable& condVarUpdate,
-            std::unique_ptr<client_disconnect_observer<T>>& observer = nullptr) :
+            std::unique_ptr<client_disconnect_observer<T>>& observer) :
             m_owner{ owner },
             m_context{ context },
             m_socket{ std::move(socket) },
@@ -213,7 +213,7 @@ namespace net
             return false;
         }
     
-        bool is_conected() const noexcept
+        bool is_connected() const noexcept
         {
             return m_socket.is_open();
         }
@@ -260,16 +260,16 @@ namespace net
         
             if (!read_data(vBuffer, sizeof(message_header<T>))) { return false; }
 
-            std::memcpy(&m_incoming_message.header, vBuffer.data(), sizeof(message_header<T>));
+            std::memcpy(&m_incoming_message.m_header, vBuffer.data(), sizeof(message_header<T>));
             // LOG_DBG << "Finished reading header for message: " << m_incoming_message;
             return true;
         }
     
         bool read_body()
         {
-            std::vector<uint8_t> vBuffer(m_incoming_message.header.size * sizeof(uint8_t));
+            std::vector<uint8_t> vBuffer(m_incoming_message.m_header.m_size * sizeof(uint8_t));
     
-            if (!read_data(vBuffer, sizeof(uint8_t) * m_incoming_message.header.size)) { return false; }
+            if (!read_data(vBuffer, sizeof(uint8_t) * m_incoming_message.m_header.m_size)) { return false; }
 
             m_incoming_message << vBuffer;
             // LOG_DBG << "Finished reading message: " << m_incoming_message;
@@ -314,13 +314,13 @@ namespace net
             }
             m_writing = true;
 
-            if (is_conected())
+            if (is_connected())
             {
                 boost::asio::post(m_context, postCallback);
             }
             else
             {
-                // LOG_WARN << "Failed to post message, client is dis_conected";
+                // LOG_WARN << "Failed to post message, client is dis_connected";
             }
         }
     
@@ -348,12 +348,12 @@ namespace net
                         // LOG_ERR << "Failed to get image from queue";
                         return;
                     } 
-                    const auto& outgoing_message = outgoingMsg.value().first;
+                    const auto& outgoing_message = outgoingMsg.value();
 
                     // LOG_DBG << "Started writing message: " << outgoing_message;
                     if (!write_header(outgoing_message)) { m_outgoing_messages.clear(); break; }
 
-                    if (outgoing_message.header.size > 0)
+                    if (outgoing_message.m_header.m_size > 0)
                     {
                         if (!write_body(outgoing_message)) { m_outgoing_messages.clear(); break; }
                     }
@@ -369,7 +369,7 @@ namespace net
         bool write_header(const message<T>& outgoing_message)  noexcept
         {
             boost::system::error_code errcode;
-            boost::asio::write(m_socket, boost::asio::buffer(&outgoing_message.header, sizeof(message_header<T>)), errcode);
+            boost::asio::write(m_socket, boost::asio::buffer(&outgoing_message.m_header, sizeof(message_header<T>)), errcode);
         
             if (errcode)
             {
@@ -384,7 +384,7 @@ namespace net
         bool write_body(const message<T>& outgoing_message) noexcept
         {
             boost::system::error_code errcode;
-            boost::asio::write(m_socket, boost::asio::buffer(outgoing_message.body.data(), sizeof(uint8_t) * outgoing_message.size()), errcode);
+            boost::asio::write(m_socket, boost::asio::buffer(outgoing_message.m_body.data(), sizeof(uint8_t) * outgoing_message.size()), errcode);
         
             if (errcode)
             {
@@ -398,7 +398,7 @@ namespace net
     
         void disconnect() noexcept 
         {
-            if (is_conected())
+            if (is_connected())
             {
                 if (m_observer)
                     m_observer->notify(this->shared_from_this());
