@@ -2,7 +2,7 @@
 
 #include <thread>
 #include <chrono>
-#include "security/rsa.hpp"
+//#include "security/rsa.hpp"
 
 #include "net/client.hpp"
 #include "net/server.hpp"
@@ -21,7 +21,7 @@ enum class VehicleDetectionMessages : uint8_t
 
 int main()
 {
-    security::rsa_wrapper a;
+    //security::rsa_wrapper a;
 
     net::server<VehicleDetectionMessages> server("127.0.0.1", 500);
 
@@ -31,8 +31,20 @@ int main()
 
     while (true)
     {
-        std::this_thread::sleep_for(std::chrono::microseconds(100));
-        std::cout << "waiting\n";
+        net::message<VehicleDetectionMessages> msg{};
+
+        msg.m_header.m_type = VehicleDetectionMessages::ACK;
+
+        msg << 5;
+
+        client.send(msg);
+
+        auto ans = client.wait_for_answear(500);
+
+        if (ans == std::nullopt)
+        {
+            std::cout << "Failed to recieve message\n";
+        }
     }
 
     return 0;

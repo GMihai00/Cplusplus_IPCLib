@@ -103,8 +103,8 @@ namespace net
                                 m_recieved_messages_queue,
                                 m_cond_var_update,
                                 m_observer_disconnect);
-
-                        if (on_client_connect(newconnection))
+                        
+                        if (can_client_connect(newconnection))
                         {
                             auto connection_id = newconnection->get_id();
                             m_connections.insert(std::shared_ptr<connection<T>>(std::move(newconnection)));
@@ -115,6 +115,7 @@ namespace net
                                 if (connection->get_id() == connection_id)
                                 {
                                     connection->connect_to_client();
+                                    on_client_connect(connection);
                                 }
                             }
                         }
@@ -147,7 +148,7 @@ namespace net
             m_disconnect_callback = std::bind(&server::disconnect_callback, this, std::placeholders::_1);
             m_observer_disconnect = std::make_unique<client_disconnect_observer<T>>(m_disconnect_callback);
 
-            boost::asio::ip::tcp::endpoint m_endpoint(boost::asio::ip::address::from_string(host), port);
+            m_endpoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(host), port);
 
             threadUpdate_ = std::thread([&]() { while (!m_shutting_down) { update(); }});
             m_thread_context = std::thread([this]() { while (!m_shutting_down) { wait_for_start(); }});
@@ -250,9 +251,14 @@ namespace net
         }
     
     protected:
-        virtual bool on_client_connect([[maybe_unused]]  std::shared_ptr<connection<T>> client) noexcept
+        virtual bool can_client_connect([[maybe_unused]] std::shared_ptr<connection<T>> client) noexcept
         {
-            return false;
+            return true;
+        }
+
+        virtual void on_client_connect([[maybe_unused]]  std::shared_ptr<connection<T>> client) noexcept
+        {
+
         }
     
         virtual void on_client_disconnect([[maybe_unused]]  std::shared_ptr<connection<T>> client) noexcept

@@ -295,8 +295,8 @@ namespace net
         void send(const message<T>& msg)  noexcept
         {
             std::function<void()> postCallback;
-            std::pair<message<T>, bool> pair = std::make_pair(msg, msg.header.hasPriority);
-            m_outgoing_messages.push(pair);
+            const message<T>& msg_cpy = msg.clone();
+            m_outgoing_messages.push(msg_cpy);
             // LOG_DBG <<"Adding message to outgoing queue: " << msg;
             if (m_writing)
             {

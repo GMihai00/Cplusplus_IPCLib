@@ -85,7 +85,7 @@ namespace net
                 return m_connection->connect_to_server(endpoints);
 
             }
-            catch(const std::exception& e)
+            catch(const std::exception& /*e*/)
             {
                 // LOG_ERR << "client exception: " << e.what() << '\n';
                 return false;
