@@ -2,50 +2,54 @@
 
 #include <thread>
 #include <chrono>
+#include <memory>
 //#include "security/rsa.hpp"
 
 #include "net/client.hpp"
 #include "net/server.hpp"
 #include "net/message.hpp"
 
-enum class VehicleDetectionMessages : uint8_t
+constexpr auto IP_SERVER = "127.0.0.1";
+constexpr auto PORT_SERVER = 500;
+
+void attach_clients(const uint32_t nr_clients)
 {
-    ACK, // for connection, it contains coordinates
-    NACK,
-    VDB, // Vehicle Data Broadcast - latitude longitude, latitude longitude
-    VCDR, // Vehicle Client Detection Result - number of vehicles detected
-    REDIRECT, // FOR PROXY REDIRECTION
-    PUBLIC_KEY_REQ, // TO GET THE PUBLIC KEY
-    SECURE_CONNECT // FOR ESTABLISHING CONNECTION BETWEEN JMS AND TO
-};
+    // TO DO
+    // spawn clients using executable 
+}
+
+void stress_test()
+{
+    for (auto i = 1; i <= 10000; i *= 100)
+    {
+        attach_clients(i);
+    }
+}
+
+void data_validity_test()
+{
+    // TO DO
+}
+
+void secure_connect_test()
+{
+    // TO DO
+}
+
+void costum_data_sending_test()
+{
+    // TO DO
+}
+
+void big_data_sending_test()
+{
+    // TO DO this r.n. should fail I think, no fragmenting implemented
+}
+
 
 int main()
 {
-    //security::rsa_wrapper a;
-
-    net::server<VehicleDetectionMessages> server("127.0.0.1", 500);
-
-    net::client<VehicleDetectionMessages> client;
-
-    client.connect("127.0.0.1", 500);
-
-    while (true)
-    {
-        net::message<VehicleDetectionMessages> msg{};
-
-        msg.m_header.m_type = VehicleDetectionMessages::ACK;
-
-        msg << 5;
-
-        client.send(msg);
-
-        auto ans = client.wait_for_answear(500);
-
-        if (ans == std::nullopt)
-        {
-            std::cout << "Failed to recieve message\n";
-        }
-    }
+    stress_test();
 
     return 0;
 }

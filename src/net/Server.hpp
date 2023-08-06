@@ -164,9 +164,11 @@ namespace net
 
             stop();
 
+            m_cond_var_start.notify_one();
             if (m_thread_context.joinable())
                 m_thread_context.join();
 
+            m_cond_var_update.notify_one();
             if (threadUpdate_.joinable())
                 threadUpdate_.join();
         }
@@ -179,6 +181,9 @@ namespace net
                 return;
 
             m_cond_var_start.wait(ulock, [&] { return true; });
+
+            if (m_shutting_down)
+                return;
 
             m_context.run();
         }
@@ -218,9 +223,11 @@ namespace net
                 m_connection_accepter->close();
             }
 
-            m_context.stop();
+            if (!m_context.stopped())
+                m_context.stop();
 
-            m_cond_var_update.notify_one();
+            // I think it's a good ideea to remove already existing connections on stop, to be tested
+            m_connections.clear();
         }
     
         void message_client(std::shared_ptr<connection<T>> client, const message<T>& msg) noexcept
