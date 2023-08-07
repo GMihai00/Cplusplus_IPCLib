@@ -97,7 +97,7 @@ namespace net
                         // LOG_INF << "Attempting to connect to " << socket.remote_endpoint();
                         std::shared_ptr<connection<T>> newconnection =
                             std::make_shared<connection<T>>(
-                                owner::server,
+                                owner::Server,
                                 m_context,
                                 std::move(socket),
                                 m_recieved_messages_queue,
@@ -131,6 +131,21 @@ namespace net
 
                     wait_for_client_connection();
                 });
+        }
+
+        void wait_for_start() noexcept
+        {
+            std::unique_lock<std::mutex> ulock(m_mutex_start);
+
+            if (m_shutting_down)
+                return;
+
+            m_cond_var_start.wait(ulock, [&] { return true; });
+
+            if (m_shutting_down)
+                return;
+
+            m_context.run();
         }
 
         void disconnect_callback(std::shared_ptr<connection<T>> connection) noexcept
@@ -173,22 +188,7 @@ namespace net
                 threadUpdate_.join();
         }
 
-        void wait_for_start() noexcept
-        {
-            std::unique_lock<std::mutex> ulock(m_mutex_start);
-
-            if (m_shutting_down)
-                return;
-
-            m_cond_var_start.wait(ulock, [&] { return true; });
-
-            if (m_shutting_down)
-                return;
-
-            m_context.run();
-        }
-
-        void start() noexcept
+        void start()
         {
             if (!m_context.stopped())
             {
@@ -230,7 +230,9 @@ namespace net
             m_connections.clear();
         }
     
-        void message_client(std::shared_ptr<connection<T>> client, const message<T>& msg) noexcept
+    protected:
+
+        void message_client(std::shared_ptr<connection<T>> client, const message<T>& msg)
         {
             std::scoped_lock lock(m_mutex_send);
 
@@ -239,7 +241,7 @@ namespace net
                 throw std::runtime_error("Can not send message, server is stoped");
             }
 
-            if (client && client->isConnected())
+            if (client && client->is_connected())
             {
                 client->send(msg);
             }
@@ -248,7 +250,7 @@ namespace net
                 on_client_disconnect(client);
 
                 m_connections.erase(client);
-                   
+
                 client.reset();
             }
             else
@@ -256,8 +258,7 @@ namespace net
                 // LOG_ERR << "Invalid client disconnect";
             }
         }
-    
-    protected:
+
         virtual bool can_client_connect([[maybe_unused]] std::shared_ptr<connection<T>> client) noexcept
         {
             return true;
@@ -272,6 +273,7 @@ namespace net
         {
         }
     
+        // task can be handle in a async matter to think about a way to make this happen maybe create another sepparate class
         virtual void on_message([[maybe_unused]] std::shared_ptr<connection<T>> client, [[maybe_unused]] message<T>& msg) noexcept
         {
         }

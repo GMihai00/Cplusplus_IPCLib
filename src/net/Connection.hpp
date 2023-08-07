@@ -16,7 +16,7 @@
 
 #include "message.hpp"
 #include "../utile/thread_safe_queue.hpp"
-
+#include "../utile/data_types.hpp"
 
 namespace net
 {
@@ -120,7 +120,7 @@ namespace net
             disconnect(); 
         }
     
-        std::string get_ip_adress() const
+        utile::IP_ADRESS get_ip_adress() const
         {
             return m_ip_adress;
         }
@@ -411,7 +411,7 @@ namespace net
             return m_id < other.m_id;
         }
 
-        void get_id() const noexcept
+        uint32_t get_id() const noexcept
         {
             return m_id;
         }

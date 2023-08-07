@@ -6,10 +6,21 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IPC", "IPC.vcxproj", "{DF49742E-E610-4153-A5CA-DCE52F361602}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testing", "testing\testing.vcxproj", "{BAAB0EA2-B8BF-4634-AC76-9E6DB353FAED}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5CA657A3-AF05-4F9D-9C41-C848C2136603} = {5CA657A3-AF05-4F9D-9C41-C848C2136603}
+		{C32E05D4-1933-47D6-820F-F76A7A200720} = {C32E05D4-1933-47D6-820F-F76A7A200720}
+		{DF49742E-E610-4153-A5CA-DCE52F361602} = {DF49742E-E610-4153-A5CA-DCE52F361602}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testing_client", "testing\testing_client\testing_client.vcxproj", "{C32E05D4-1933-47D6-820F-F76A7A200720}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DF49742E-E610-4153-A5CA-DCE52F361602} = {DF49742E-E610-4153-A5CA-DCE52F361602}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testing_server", "testing\testing_server\testing_server.vcxproj", "{5CA657A3-AF05-4F9D-9C41-C848C2136603}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DF49742E-E610-4153-A5CA-DCE52F361602} = {DF49742E-E610-4153-A5CA-DCE52F361602}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
