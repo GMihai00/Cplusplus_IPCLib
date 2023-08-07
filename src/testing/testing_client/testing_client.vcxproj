@@ -162,6 +162,8 @@
   <ItemGroup>
     <ClInclude Include="..\common\command_line_parser.hpp" />
     <ClInclude Include="..\common\message_types.hpp" />
+    <ClInclude Include="..\common\observer.hpp" />
+    <ClInclude Include="..\common\timer.hpp" />
     <ClInclude Include="test_client.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
