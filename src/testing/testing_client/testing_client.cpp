@@ -1,20 +1,47 @@
-// testing_client.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include <iostream>
+#include <map>
 
-int main()
+#include "../common/command_line_parser.hpp"
+#include "test_client.hpp"
+
+
+typedef std::function<void(test_client&, const utile::IP_ADRESS&, const utile::PORT, const int timeout)> actionfn;
+
+const std::map<std::string, actionfn> ACTION_MAP =
 {
-    std::cout << "Hello World!\n";
+
+};
+
+std::string_view get_option_or_quit(utile::command_line_parser& cmd_parser, std::string name)
+{
+	auto maybe_option = cmd_parser.get_option(name);
+
+	if (maybe_option == std::nullopt)
+		exit(ERROR_NOT_FOUND);
+
+	return maybe_option.value();
 }
 
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
+int main(int argc, char* argv[])
+{
+    utile::command_line_parser cmd_parser(argc, argv);
+	
+	auto action = std::string(get_option_or_quit(cmd_parser, "--cmd"));
+	auto server_ip = utile::IP_ADRESS(get_option_or_quit(cmd_parser, "--srv_ip"));
+	auto server_port = std::stoi(std::string(get_option_or_quit(cmd_parser, "--srv_port")));
+	auto timeout = std::stoi(std::string(get_option_or_quit(cmd_parser, "--timeout")));
 
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
+	if (auto it = ACTION_MAP.find(action); it != ACTION_MAP.end())
+	{
+		test_client client;
+		it->second(client, server_ip, server_port, timeout);
+	}
+	else
+	{
+		std::cerr << "Invalid action found: " << action;
+		return ERROR_NOT_FOUND;
+	}
+
+	return 0;
+}
+

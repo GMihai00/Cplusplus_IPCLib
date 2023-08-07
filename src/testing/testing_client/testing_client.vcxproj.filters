@@ -13,10 +13,33 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\utile">
+      <UniqueIdentifier>{64d58604-00c2-4b5b-89fe-196d3a962f4a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\utile">
+      <UniqueIdentifier>{00e0bd32-b084-4f32-9a40-5b7ead0e071e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="testing_client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\commnad_line_parser.cpp">
+      <Filter>Source Files\utile</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="test_client.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\message_types.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\command_line_parser.hpp">
+      <Filter>Header Files\utile</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
