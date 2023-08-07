@@ -14,9 +14,17 @@ void succes_exit()
 
 void ok_test_run(test_client& client, const utile::IP_ADRESS& srv_ip, const utile::PORT srv_port, const uint16_t timeout)
 {
-	if (!client.connect(srv_ip, srv_port))
+	try
 	{
-		std::cerr << "Failed to connect to the server";
+		if (!client.connect(srv_ip, srv_port))
+		{
+			std::cerr << "Failed to connect to the server";
+			exit(5);
+		}
+	}
+	catch (const std::exception& err)
+	{
+		std::cerr << err.what();
 		exit(5);
 	}
 

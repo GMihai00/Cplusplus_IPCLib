@@ -10,7 +10,7 @@
 #include "net/message.hpp"
 
 constexpr auto IP_SERVER = "127.0.0.1";
-constexpr auto PORT_SERVER = 500;
+constexpr auto PORT_SERVER = 5000;
 
 void attach_clients(const uint32_t nr_clients)
 {

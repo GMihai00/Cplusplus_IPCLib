@@ -38,7 +38,7 @@ namespace net
         std::set<std::shared_ptr<connection<T>>> m_connections;
         boost::asio::io_context m_context;
         std::thread m_thread_context;
-        std::thread threadUpdate_;
+        std::thread m_thread_update;
         std::condition_variable m_cond_var_update;
         std::condition_variable m_cond_var_start;
         std::mutex m_mutex_start;
@@ -56,9 +56,7 @@ namespace net
         void update() noexcept
         {
             std::unique_lock<std::mutex> ulock(m_mutex_update);
-
-            if (m_recieved_messages_queue.empty() && !m_context.stopped() && !m_shutting_down)
-                m_cond_var_update.wait(ulock, [&] { return (!m_recieved_messages_queue.empty() && !m_context.stopped()) || m_shutting_down; });
+            m_cond_var_update.wait(ulock, [&] { return (!m_recieved_messages_queue.empty() && !m_context.stopped()) || m_shutting_down; });
 
             if (m_shutting_down)
             {
@@ -96,7 +94,7 @@ namespace net
                 {
                     if (!errcode)
                     {
-                        // LOG_INF << "Attempting to connect to " << socket.remote_endpoint();
+                        std::cout << "Attempting to connect to " << socket.remote_endpoint() << std::endl;
                         std::shared_ptr<connection<T>> newconnection =
                             std::make_shared<connection<T>>(
                                 owner::Server,
@@ -123,12 +121,12 @@ namespace net
                         }
                         else
                         {
-                            // LOG_WARN << "connection has been denied";
+                            std::cout << "connection has been denied\n";
                         }
                     }
                     else
                     {
-                        // LOG_ERR << "connection Error " << errcode.message();
+                        std::cerr << "Connection error: " << errcode.message() << std::endl;
                     }
 
                     wait_for_client_connection();
@@ -142,11 +140,12 @@ namespace net
             if (m_shutting_down)
                 return;
 
-            m_cond_var_start.wait(ulock, [&] { return true; });
+            m_cond_var_start.wait(ulock, [this] { return m_context.stopped() || m_shutting_down; });
 
             if (m_shutting_down)
                 return;
 
+            m_context.restart();
             m_context.run();
         }
 
@@ -167,7 +166,9 @@ namespace net
 
             m_endpoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(host), port);
 
-            threadUpdate_ = std::thread([&]() { while (!m_shutting_down) { update(); }});
+            m_context.stop();
+
+            m_thread_update = std::thread([&]() { while (!m_shutting_down) { update(); }});
             m_thread_context = std::thread([this]() { while (!m_shutting_down) { wait_for_start(); }});
         }
         catch (const std::exception& err)
@@ -186,14 +187,16 @@ namespace net
                 m_thread_context.join();
 
             m_cond_var_update.notify_one();
-            if (threadUpdate_.joinable())
-                threadUpdate_.join();
+            if (m_thread_update.joinable())
+                m_thread_update.join();
         }
 
         void start()
         {
             if (!m_context.stopped())
             {
+                // ISSUE HERE WITH STOPPED!!!
+                std::cout << "Server already started\n";
                 return;
             }
 

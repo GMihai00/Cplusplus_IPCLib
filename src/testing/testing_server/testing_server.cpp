@@ -28,6 +28,21 @@ int main(int argc, char* argv[])
 		test_server server(server_ip, server_port);
 
 		server.start();
+
+		std::cout << "Server started\n";
+
+		// in case cond var attempt fails and smth is done on the main thread on server side or on another obj
+		// PS this should not happen
+		//while (true)
+		//{
+		//	Sleep(500);
+		//}
+
+		std::condition_variable cond_infinit_run;
+		std::mutex mutext_infinit_run;
+
+		std::unique_lock ulock(mutext_infinit_run);
+		cond_infinit_run.wait(ulock);
 	}
 	catch (const std::exception& err)
 	{

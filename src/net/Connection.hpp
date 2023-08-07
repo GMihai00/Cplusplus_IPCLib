@@ -122,6 +122,7 @@ namespace net
             disconnect(); 
         }
     
+        // this is not working properly
         utile::IP_ADRESS get_ip_adress() const
         {
             return m_ip_adress;
@@ -139,7 +140,7 @@ namespace net
                     {
                         if (errcode)
                         {
-                            // LOG_ERR << "FAILED TO CONNECT TO SERVER: " << errcode.message();
+                            std::cerr << "FAILED TO CONNECT TO SERVER: " << errcode.message();
                             m_socket.close();
                         }
                     };
@@ -150,12 +151,12 @@ namespace net
                     {
                         if (!errcode)
                         {
-                            // LOG_DBG <<"Started reading messages:";
+                            std::cerr <<"Started reading messages:";
                             m_cond_var_read.notify_one();
                         }
                         else
                         {
-                            // LOG_ERR << "FAILED TO CONNECT TO SERVER: " << errcode.message();
+                            std::cerr << "FAILED TO CONNECT TO SERVER: " << errcode.message();
                             m_socket.close();
                         }
                     };

@@ -86,10 +86,9 @@ namespace net
                 return m_connection->connect_to_server(endpoints);
 
             }
-            catch(const std::exception& /*e*/)
+            catch(const std::exception& err)
             {
-                // LOG_ERR << "client exception: " << e.what() << '\n';
-                return false;
+                throw std::runtime_error("Failed to connect to client server err: " + std::string(err.what()));
             }
         }
     
@@ -121,8 +120,7 @@ namespace net
             if (timeout == 0)
             {
                 std::unique_lock<std::mutex> ulock(m_mutex_get);
-                if (m_answears_recieved.empty() && !m_shutting_down)
-                    m_cond_var_get.wait(ulock, [&] { return !m_answears_recieved.empty() || m_shutting_down; });
+                m_cond_var_get.wait(ulock, [&] { return !m_answears_recieved.empty() || m_shutting_down; });
 
                 return m_answears_recieved.pop();
             }
