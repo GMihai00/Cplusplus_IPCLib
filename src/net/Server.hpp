@@ -32,6 +32,7 @@ namespace net
     {
     protected:
         ::utile::thread_safe_queue<owned_message<T>> m_recieved_messages_queue;
+        // TO DO ADD DATA STRUCTURE TO STORE ASYNC REQUESTS
         boost::asio::ip::tcp::endpoint m_endpoint;
         std::optional<boost::asio::ip::tcp::acceptor> m_connection_accepter = std::nullopt;
         std::set<std::shared_ptr<connection<T>>> m_connections;
@@ -43,6 +44,7 @@ namespace net
         std::mutex m_mutex_start;
         std::mutex m_mutex_update;
         std::mutex m_mutex_send;
+        std::mutex m_mutex_send_async;
 
         std::atomic<bool> m_shutting_down = false;
 
@@ -232,6 +234,34 @@ namespace net
     
     protected:
 
+        void async_message_client(std::shared_ptr<connection<T>> client, const message<T>& msg)
+        {
+            std::scoped_lock lock(m_mutex_send_async);
+
+            if (m_context.stopped())
+            {
+                throw std::runtime_error("Can not send message, server is stoped");
+            }
+
+
+            if (client && client->is_connected())
+            {
+                client->send_async(msg);
+            }
+            else if (client)
+            {
+                on_client_disconnect(client);
+
+                m_connections.erase(client);
+
+                client.reset();
+            }
+            else
+            {
+                // LOG_ERR << "Invalid client disconnect";
+            }
+        }
+
         void message_client(std::shared_ptr<connection<T>> client, const message<T>& msg)
         {
             std::scoped_lock lock(m_mutex_send);
@@ -274,6 +304,13 @@ namespace net
         }
     
         // task can be handle in a async matter to think about a way to make this happen maybe create another sepparate class
+        // maybe instead I could have a send_async and on_async_message and have it call on_message and que up futures inside  
+        // will have to add apart from queue a set of pending tasks or smth alike
+        virtual void on_message_async([[maybe_unused]] std::shared_ptr<connection<T>> client, [[maybe_unused]] message<T>& msg) noexcept
+        {
+            // TO DO, TO BE DISCUSSED IF I CAN JUST HAVE IT RUN ON_MESSAGE INSTEAD
+        }
+
         virtual void on_message([[maybe_unused]] std::shared_ptr<connection<T>> client, [[maybe_unused]] message<T>& msg) noexcept
         {
         }

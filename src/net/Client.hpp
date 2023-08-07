@@ -29,6 +29,7 @@ namespace net
     {
     private:
         ::utile::thread_safe_queue<owned_message<T>> m_answears_recieved;
+        // TO DO ADD DATA STRUCTURE TO STORE ASYNC ANSWEARS
         boost::asio::io_context m_context;
         std::thread m_thread_context;
         std::mutex m_mutex_get;
@@ -108,6 +109,12 @@ namespace net
 		    if (is_connected())
 			    m_connection->send(msg);
 	    }
+
+        void send_async(const message<T>& msg)
+        {
+            if (is_connected())
+                m_connection->send_async(msg);
+        }
 
         std::optional<owned_message<T>> wait_for_answear(uint32_t timeout = 0)
         {

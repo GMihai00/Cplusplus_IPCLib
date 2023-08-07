@@ -53,6 +53,8 @@ namespace net
         std::condition_variable& m_cond_var_update;
         boost::asio::io_context& m_context;
         boost::asio::ip::tcp::socket m_socket;
+
+        // TO DO ADD DATA STRUCTURES TO STORE ASYNC REQUESTS/ANSWEARS
         ::utile::thread_safe_queue<owned_message<T>>& m_incomming_messages;
         ::utile::thread_safe_queue<message<T>> m_outgoing_messages;
         message<T> m_incoming_message;
@@ -322,6 +324,11 @@ namespace net
             {
                 // LOG_WARN << "Failed to post message, client is dis_connected";
             }
+        }
+
+        void send_async(const message<T>& msg) noexcept
+        {
+           // TO DO
         }
     
         void write_messages() noexcept
