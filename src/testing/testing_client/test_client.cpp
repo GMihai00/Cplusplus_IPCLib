@@ -6,6 +6,8 @@
 
 void test_client::send_ok_test_message()
 {
+	std::cout << "Sending ok test message\n";
+
 	net::message<TestingMessage> msg;
 	msg.m_header.m_type = TestingMessage::TEST;
 

@@ -41,10 +41,10 @@
     <ClInclude Include="..\common\command_line_parser.hpp">
       <Filter>Header Files\utile</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\observer.hpp">
+    <ClInclude Include="..\..\utile\observer.hpp">
       <Filter>Header Files\utile</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\timer.hpp">
+    <ClInclude Include="..\..\utile\timer.hpp">
       <Filter>Header Files\utile</Filter>
     </ClInclude>
   </ItemGroup>

@@ -159,6 +159,7 @@
     <ClCompile Include="security\rsa.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="logger.hpp" />
     <ClInclude Include="net\client.hpp" />
     <ClInclude Include="net\client_disconnect_observer.hpp" />
     <ClInclude Include="net\connection.hpp" />
@@ -166,8 +167,10 @@
     <ClInclude Include="net\server.hpp" />
     <ClInclude Include="security\rsa.hpp" />
     <ClInclude Include="utile\data_types.hpp" />
+    <ClInclude Include="utile\observer.hpp" />
     <ClInclude Include="utile\serializable_data.hpp" />
     <ClInclude Include="utile\thread_safe_queue.hpp" />
+    <ClInclude Include="utile\timer.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

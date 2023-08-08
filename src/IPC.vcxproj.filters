@@ -60,6 +60,15 @@
     <ClInclude Include="utile\serializable_data.hpp">
       <Filter>Header Files\utile</Filter>
     </ClInclude>
+    <ClInclude Include="utile\observer.hpp">
+      <Filter>Header Files\utile</Filter>
+    </ClInclude>
+    <ClInclude Include="utile\timer.hpp">
+      <Filter>Header Files\utile</Filter>
+    </ClInclude>
+    <ClInclude Include="logger.hpp">
+      <Filter>Header Files\utile</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ipc.cpp">

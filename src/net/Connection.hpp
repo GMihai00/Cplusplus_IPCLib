@@ -151,7 +151,7 @@ namespace net
                     {
                         if (!errcode)
                         {
-                            std::cerr <<"Started reading messages:";
+                            std::cout <<"Started reading messages\n";
                             m_cond_var_read.notify_one();
                         }
                         else

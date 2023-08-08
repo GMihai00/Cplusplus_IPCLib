@@ -164,10 +164,10 @@
     <ClCompile Include="test_client.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\utile\observer.hpp" />
+    <ClInclude Include="..\..\utile\timer.hpp" />
     <ClInclude Include="..\common\command_line_parser.hpp" />
     <ClInclude Include="..\common\message_types.hpp" />
-    <ClInclude Include="..\common\observer.hpp" />
-    <ClInclude Include="..\common\timer.hpp" />
     <ClInclude Include="test_client.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -30,6 +30,7 @@ void test_server::do_idle_work()
 
 void test_server::on_message(std::shared_ptr<net::connection<TestingMessage>> client, net::message<TestingMessage>& msg) noexcept
 {
+	std::cout << "Recieved new message of type: " << (int)TestingMessage::TEST << '\n';
 	switch (msg.m_header.m_type)
 	{
 	case TestingMessage::TEST:
