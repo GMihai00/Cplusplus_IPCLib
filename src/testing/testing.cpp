@@ -53,9 +53,11 @@ std::vector<DWORD> attach_clients(const uint32_t nr_clients, const std::wstring&
     return g_process_manager.create_processes_from_same_directory(cmds);
 }
 
-int stress_test(const int nr_clients, const std::wstring& task, const int timeout)
+int general_test(const int nr_clients, const std::wstring& task, const int timeout)
 {
-    std::cout << __FUNCTION__ << " " << nr_clients << std::endl;
+    std::cout << __FUNCTION__ << " " << "nr_clients: " << nr_clients;
+    std::wcout << L" task: " << task << std::endl;
+
     auto server_pid = start_server();
 
     if (server_pid == 0)
@@ -71,10 +73,10 @@ int stress_test(const int nr_clients, const std::wstring& task, const int timeou
         std::cerr << "Failed to start all clients";
         return ERROR_INTERNAL_ERROR;
     }
-    
+
     //takes time for client to initialize
     // trebuie regandita asta cu sleep, in multe cazuri still not enough somehow
-    Sleep(5000);
+    Sleep(timeout);
     g_process_manager.close_processes(client_pids, timeout);
 
     // I QUESS POT SA PUN EVENT DE WIN PE STOP DE CLIENT SI SA NUMAR CATE EVENTS AU FOST PRIMITE INAPOI PE UN THREAD SEPARAT
@@ -82,6 +84,23 @@ int stress_test(const int nr_clients, const std::wstring& task, const int timeou
     //AICI AR TREBUI SA ADAUG METODA SA ASTEPT DUPA TOATE PROCESELE DUPA EXIT CODE SI SA VERIFIC CA A FOST CU SUCCES
 
     g_process_manager.close_process(server_pid, 1000);
+    return 0;
+}
+
+int stress_test()
+{
+    uint32_t nr_clients = 1;
+    do
+    {
+        if (auto ret = general_test(nr_clients, L"test", 5000); ret != 0)
+        {
+            std::cout << "Stress test failed";
+            return ret;
+        }
+
+        nr_clients *= 10;
+    } while (nr_clients < 100);
+
     return 0;
 }
 
@@ -100,26 +119,29 @@ void costum_data_sending_test()
     // TO DO
 }
 
-void big_data_sending_test()
+int big_data_sending_test()
 {
-    // TO DO this r.n. should fail I think, no fragmenting implemented
+    if (auto ret = general_test(10, L"big_data", 10000); ret != 0)
+    {
+        std::cout << "Big data test failed";
+        return ret;
+    }
+    return 0;
 }
 
 
 int main()
 {
-
-    uint32_t nr_clients = 1;
-    do
+    int ret = 0;
+    if (ret = stress_test(); ret)
     {
-        if (auto ret = stress_test(nr_clients, L"test", 5000); ret != 0)
-        {
-            std::cout << "Stress test failed";
-            return ret;
-        }
+        return ret;
+    }
 
-        nr_clients *= 10;
-    } while (nr_clients < 100);
+    if (ret = big_data_sending_test(); ret)
+    {
+        return ret;
+    }
 
     return 0;
 }

@@ -15,7 +15,7 @@ private:
 
     void approve_request(std::shared_ptr<net::connection<TestingMessage>> client, net::message<TestingMessage>& msg);
     void reject_request(std::shared_ptr<net::connection<TestingMessage>> client, net::message<TestingMessage>& msg);
-
+    void send_back_big_data(std::shared_ptr<net::connection<TestingMessage>> client, net::message<TestingMessage>& msg);
     void do_idle_work();
 public:
 	test_server(const utile::IP_ADRESS& host, utile::PORT port);

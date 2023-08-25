@@ -92,6 +92,23 @@ namespace net
             return msg;
         }
 
+        friend message<T>& operator >> (message<T>& msg, std::vector<uint8_t>& bytes)
+        {
+            if (msg.m_body.size() >= sizeof(uint8_t) * bytes.size())
+            {
+                size_t size_after_pop = msg.m_body.size() - sizeof(uint8_t) * bytes.size();
+                std::memcpy(bytes.data(), msg.m_body.data() + size_after_pop, sizeof(uint8_t) * bytes.size());
+                msg.m_body.resize(size_after_pop);
+                msg.m_header.m_size = msg.size();
+            }
+            else
+            {
+                throw std::runtime_error("Failed to read data, insufficient bytes");
+            }
+
+            return msg;
+        }
+
         friend message<T>& operator << (message<T>& msg, const serializable_data* data)
         {
             assert(data);
@@ -162,7 +179,7 @@ namespace net
             message<T> reply;
             reply.m_header = this->m_header;
             reply.m_header.m_size = 0;
-
+            
             return reply;
         }
     };

@@ -92,10 +92,11 @@ namespace win_helpers
 
     std::vector<DWORD> win_process_manager::create_processes_from_same_directory(const std::vector<command_line>& cmds)
     {
+        std::mutex mutex_vector;
         std::vector<DWORD> pids;
         std::atomic_bool ok = true;
 
-        std::for_each(std::execution::par, cmds.begin(), cmds.end(), [this, &pids, &ok](const command_line& cmd) {
+        std::for_each(std::execution::par, cmds.begin(), cmds.end(), [this, &pids, &ok, &mutex_vector](const command_line& cmd) {
             if (ok)
             {
                 auto pid = create_process_from_same_directory(cmd);
@@ -105,6 +106,7 @@ namespace win_helpers
                 }
                 else
                 {
+                    std::lock_guard<std::mutex> lock(mutex_vector);
                     pids.push_back(pid);
                 }
             }

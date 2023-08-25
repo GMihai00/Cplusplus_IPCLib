@@ -29,6 +29,8 @@ void test_client::send_nok_test_message()
 
 void test_client::send_big_data_test_message()
 {
+	std::cout << "Sending big data message\n";
+
 	net::message<TestingMessage> msg;
 	msg.m_header.m_type = TestingMessage::BIG_DATA;
 

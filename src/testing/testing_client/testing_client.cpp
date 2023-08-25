@@ -61,9 +61,85 @@ void ok_test_run(test_client& client, const utile::IP_ADRESS& srv_ip, const util
 
 }
 
+void big_data_run(test_client& client, const utile::IP_ADRESS& srv_ip, const utile::PORT srv_port, const uint16_t timeout)
+{
+	try
+	{
+		if (!client.connect(srv_ip, srv_port))
+		{
+			std::cerr << "Failed to connect to the server";
+			exit(5);
+		}
+	}
+	catch (const std::exception& err)
+	{
+		std::cerr << err.what();
+		exit(5);
+	}
+
+
+	std::function<void()> quit_fct = std::bind(succes_exit);
+	std::shared_ptr<utile::observer<>> obs_exit = std::make_shared<utile::observer<>>(quit_fct);
+
+	utile::timer<> timer_exit(timeout);
+
+	if (timeout)
+	{
+		timer_exit.subscribe(obs_exit);
+		timer_exit.resume();
+	}
+
+	while (true)
+	{
+		client.send_big_data_test_message();
+
+		auto ans = client.wait_for_answear(5000);
+
+		if (ans == std::nullopt)
+		{
+			std::cerr << "Test failed timeout reciving answear";
+			exit(ERROR_TIMEOUT);
+		}
+
+		auto& msg = ans.value().m_msg;
+		if (msg.m_header.m_type == TestingMessage::NACK)
+		{
+			std::cerr << "Message should of been valid but was found invalid";
+			exit(ERROR_INVALID_CATEGORY);
+		}
+
+		std::vector<uint8_t> data(msg.size());
+
+		// std::cout << "MESSAGE SIZE RECIEVED: " << data.size() << std::endl;
+
+		msg >> data;
+
+		int nr_diferent_values = 0;
+		size_t last_poz = -1;
+		for (size_t it = 1; it < data.size(); it++)
+		{
+			if (static_cast<uint8_t>(data[it] - 1) != data[it - 1])
+			{
+				nr_diferent_values++;
+				last_poz = it;
+			}
+		}
+
+		if (nr_diferent_values)
+		{
+			std::cout << "FOUND DIFFERNT VALUES NR: " << nr_diferent_values << std::endl;
+			std::cout << "LAST CHAR PAIR FOUND: " << (int)data[last_poz] << " " << (int)data[last_poz - 1];
+			Sleep(10000);
+			exit(5);
+		}
+	}
+
+}
+
 const std::map<std::string, actionfn> ACTION_MAP =
 {
-	{ "test", ok_test_run }
+	{ "test", ok_test_run },
+	{ "big_data", big_data_run }
 };
 
 std::string_view get_option_or_quit(utile::command_line_parser& cmd_parser, std::string name)
