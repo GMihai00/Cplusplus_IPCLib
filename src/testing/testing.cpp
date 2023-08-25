@@ -73,6 +73,7 @@ int stress_test(const int nr_clients, const std::wstring& task, const int timeou
     }
     
     //takes time for client to initialize
+    // trebuie regandita asta cu sleep, in multe cazuri still not enough somehow
     Sleep(5000);
     g_process_manager.close_processes(client_pids, timeout);
 
@@ -108,11 +109,17 @@ void big_data_sending_test()
 int main()
 {
 
-    if (auto ret = stress_test(10, L"test", 5000); ret != 0)
+    uint32_t nr_clients = 1;
+    do
     {
-        std::cout << "Stress test failed";
-        return ret;
-    }
+        if (auto ret = stress_test(nr_clients, L"test", 5000); ret != 0)
+        {
+            std::cout << "Stress test failed";
+            return ret;
+        }
+
+        nr_clients *= 10;
+    } while (nr_clients < 100);
 
     return 0;
 }
