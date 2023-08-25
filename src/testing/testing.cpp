@@ -43,23 +43,14 @@ std::vector<DWORD> attach_clients(const uint32_t nr_clients, const std::wstring&
     cmd.m_arguments.push_back(L"--timeout");
     cmd.m_arguments.push_back(std::to_wstring(timeout));
 
-    std::vector<DWORD> client_pids;
+    std::vector<win_helpers::command_line> cmds;
+
     for (uint32_t it = 0; it < nr_clients; it++)
     {
-        if (auto ret = g_process_manager.create_process_from_same_directory(cmd); ret == 0)
-        {
-            std::cout << "FAILED TO CREATE CLIENT" << std::endl;
-            for (const auto& pid : client_pids)
-                g_process_manager.close_process(pid, 0);
-            return {};
-        }
-        else
-        {
-            client_pids.push_back(ret);
-        }
+        cmds.push_back(cmd);
     }
 
-    return client_pids;
+    return g_process_manager.create_processes_from_same_directory(cmds);
 }
 
 int stress_test(const int nr_clients, const std::wstring& task, const int timeout)

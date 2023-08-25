@@ -6,6 +6,7 @@
 #include <string>
 #include <sstream>
 #include <filesystem>
+#include <mutex>
 
 namespace win_helpers
 {
@@ -34,6 +35,7 @@ namespace win_helpers
         win_process_manager(win_process_manager&) = delete;
         win_process_manager(win_process_manager&&) = delete;
 
+        std::vector<DWORD> create_processes_from_same_directory(const std::vector<command_line>& cmds);
         DWORD create_process_from_same_directory(const command_line& cmd);
         void close_all_processes();
         void close_process(const DWORD pid, const DWORD timeout);
@@ -42,6 +44,7 @@ namespace win_helpers
     private:
         std::filesystem::path get_working_directory();
 
+        std::mutex m_mutex_map;
         std::unordered_map<DWORD, HANDLE> m_running_processes;
     };
 }

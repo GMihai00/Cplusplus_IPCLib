@@ -2,6 +2,7 @@
 #include <iostream>
 #include <algorithm>
 #include <execution>
+#include <atomic>
 
 namespace win_helpers
 {
@@ -83,8 +84,33 @@ namespace win_helpers
 
         CloseHandle(pi.hThread);
 
+        std::lock_guard<std::mutex> lock(m_mutex_map);
         m_running_processes.emplace(pi.dwProcessId, pi.hProcess);
+
         return pi.dwProcessId;
+    }
+
+    std::vector<DWORD> win_process_manager::create_processes_from_same_directory(const std::vector<command_line>& cmds)
+    {
+        std::vector<DWORD> pids;
+        std::atomic_bool ok = true;
+
+        std::for_each(std::execution::par, cmds.begin(), cmds.end(), [this, &pids, &ok](const command_line& cmd) {
+            if (ok)
+            {
+                auto pid = create_process_from_same_directory(cmd);
+                if (pid == 0)
+                {
+                    ok = false;
+                }
+                else
+                {
+                    pids.push_back(pid);
+                }
+            }
+        });
+
+        return pids;
     }
 
     void win_process_manager::close_all_processes()
@@ -137,6 +163,7 @@ namespace win_helpers
             if (auto it = m_running_processes.find(pid); it != m_running_processes.end())
             {
                 v.push_back(it->second);
+                std::lock_guard<std::mutex> lock(m_mutex_map);
                 m_running_processes.erase(pid);
             }
         });
@@ -150,11 +177,9 @@ namespace win_helpers
                 // std::cerr << "Error terminating process: " << details::GetLastErrorAsString() << std::endl;
                 return;
             }
-            CloseHandle(h);
-            
-        });
 
-       
+            CloseHandle(h);
+        });
     }
 
     win_process_manager::~win_process_manager()
