@@ -36,8 +36,8 @@ namespace win_helpers
 
         DWORD create_process_from_same_directory(const command_line& cmd);
         void close_all_processes();
-        void close_process(const DWORD pid, const int timeout);
-        void close_processes(const std::vector<DWORD>& pids, const int timeout);
+        void close_process(const DWORD pid, const DWORD timeout);
+        void close_processes(const std::vector<DWORD>& pids, const DWORD timeout);
         ~win_process_manager();
     private:
         std::filesystem::path get_working_directory();

@@ -44,10 +44,11 @@ std::vector<DWORD> attach_clients(const uint32_t nr_clients, const std::wstring&
     cmd.m_arguments.push_back(std::to_wstring(timeout));
 
     std::vector<DWORD> client_pids;
-    for (auto it = 0; it < nr_clients; it++)
+    for (uint32_t it = 0; it < nr_clients; it++)
     {
         if (auto ret = g_process_manager.create_process_from_same_directory(cmd); ret == 0)
         {
+            std::cout << "FAILED TO CREATE CLIENT" << std::endl;
             for (const auto& pid : client_pids)
                 g_process_manager.close_process(pid, 0);
             return {};
@@ -80,8 +81,9 @@ int stress_test(const int nr_clients, const std::wstring& task, const int timeou
         return ERROR_INTERNAL_ERROR;
     }
     
-    Sleep(timeout);
-    g_process_manager.close_processes(client_pids, 0);
+    //takes time for client to initialize
+    Sleep(5000);
+    g_process_manager.close_processes(client_pids, timeout);
 
     // I QUESS POT SA PUN EVENT DE WIN PE STOP DE CLIENT SI SA NUMAR CATE EVENTS AU FOST PRIMITE INAPOI PE UN THREAD SEPARAT
 

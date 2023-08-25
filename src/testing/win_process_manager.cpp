@@ -1,6 +1,7 @@
 #include "win_process_manager.hpp"
 #include <iostream>
 #include <algorithm>
+#include <execution>
 
 namespace win_helpers
 {
@@ -31,7 +32,7 @@ namespace win_helpers
         wchar_t pBuf[MAX_PATH];
         size_t len = sizeof(pBuf);
 
-        int bytes = GetModuleFileName(NULL, pBuf, len);
+        int bytes = GetModuleFileName(NULL, pBuf, static_cast<DWORD>(len));
         if (!bytes)
         {
             std::cerr << "Failed to get path to current running process";
@@ -94,44 +95,66 @@ namespace win_helpers
                 return pair.second;
             });
 
-        WaitForMultipleObjects(m_running_processes.size(), v.data(), FALSE, 1000);
+        WaitForMultipleObjects(m_running_processes.size(), v.data(), FALSE, (DWORD)1000);
+
+        std::for_each(std::execution::par, v.begin(), v.end(), [](const HANDLE& h) {
+            if (!TerminateProcess(h, 0)) {
+                // std::cerr << "Error terminating process: " << details::GetLastErrorAsString() << std::endl;
+                return;
+            }
+            CloseHandle(h);
+        });
     }
 
-    void win_process_manager::close_process(const DWORD pid, const int timeout)
+    void win_process_manager::close_process(const DWORD pid, const DWORD timeout)
     {
         HANDLE h;
         if (auto it = m_running_processes.find(pid); it == m_running_processes.end())
             return;
         else
+        {
             h = it->second;
+            m_running_processes.erase(pid);
+        }
 
-        std::cout << "Attempting to close process with pid: " << static_cast<int>(pid);
+        std::cout << "Attempting to close process with pid: " << static_cast<int>(pid) << std::endl;
 
         WaitForSingleObject(h, timeout);
 
         if (!TerminateProcess(h, 0)) {
-            std::cerr << "Error terminating process: " << details::GetLastErrorAsString() << std::endl;
+            // std::cerr << "Error terminating process: " << details::GetLastErrorAsString() << std::endl;
             return;
         }
 
         CloseHandle(h);
-
-        m_running_processes.erase(pid);
     }
 
-    void win_process_manager::close_processes(const std::vector<DWORD>& pids, const int timeout)
+    void win_process_manager::close_processes(const std::vector<DWORD>& pids, const DWORD timeout)
     {
         std::vector<HANDLE> v;
 
         std::for_each(pids.begin(), pids.end(), [this, &v](const DWORD& pid) {
-                
             if (auto it = m_running_processes.find(pid); it != m_running_processes.end())
+            {
                 v.push_back(it->second);
-            });
+                m_running_processes.erase(pid);
+            }
+        });
 
-        std::cout << "Attempting to close " << v.size() << " processes";
+        std::cout << "Attempting to close " << v.size() << " processes" << std::endl;
 
         WaitForMultipleObjects(v.size(), v.data(), FALSE, timeout);
+
+        std::for_each(std::execution::par, v.begin(), v.end(), [this](const HANDLE& h) {
+            if (!TerminateProcess(h, 0)) {
+                // std::cerr << "Error terminating process: " << details::GetLastErrorAsString() << std::endl;
+                return;
+            }
+            CloseHandle(h);
+            
+        });
+
+       
     }
 
     win_process_manager::~win_process_manager()

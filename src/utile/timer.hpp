@@ -25,7 +25,7 @@ namespace utile
 		std::map<std::shared_ptr<observer<Args...>>, std::tuple<Args...>> m_attached_observers;
 	public:
 		timer() = delete;
-		timer(const uint16_t& timeout)
+		timer(const uint16_t& timeout) : m_time_left(timeout / 1000)
 		{
 			m_timer_thread = std::thread([this]() {
 				while (!m_should_stop)
@@ -84,8 +84,8 @@ namespace utile
 
 		void reset(const uint16_t timeout = 0)
 		{
-			if (timeout != 0)
-				m_time_left = timeout;
+			if (timeout / 1000 != 0)
+				m_time_left = timeout / 1000;
 
 			m_expired = false;
 		}
