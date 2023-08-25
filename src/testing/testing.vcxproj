@@ -160,6 +160,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="testing.cpp" />
+    <ClCompile Include="win_process_manager.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="win_process_manager.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

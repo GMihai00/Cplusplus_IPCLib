@@ -93,6 +93,7 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
+		// SHOULD SIGNAL ERROR EVENT I QUESS
 		std::cerr << "Invalid action found: " << action;
 		return ERROR_NOT_FOUND;
 	}

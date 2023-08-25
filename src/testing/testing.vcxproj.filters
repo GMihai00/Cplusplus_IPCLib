@@ -18,5 +18,13 @@
     <ClCompile Include="testing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="win_process_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="win_process_manager.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

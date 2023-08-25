@@ -12,6 +12,9 @@ void test_client::send_ok_test_message()
 	msg.m_header.m_type = TestingMessage::TEST;
 
 	msg << true;
+
+	msg << 5;
+
 	send(msg);
 }
 
