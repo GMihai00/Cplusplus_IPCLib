@@ -27,6 +27,12 @@
     <ClCompile Include="test_server.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\event_helpers.cpp">
+      <Filter>Header Files\utile</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\type_converters.cpp">
+      <Filter>Header Files\utile</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\message_types.hpp">
@@ -42,6 +48,12 @@
       <Filter>Header Files\utile</Filter>
     </ClInclude>
     <ClInclude Include="..\..\utile\observer.hpp">
+      <Filter>Header Files\utile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\event_helpers.hpp">
+      <Filter>Header Files\utile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\type_converters.hpp">
       <Filter>Header Files\utile</Filter>
     </ClInclude>
   </ItemGroup>

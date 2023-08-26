@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "../common/command_line_parser.hpp"
+#include "../common/event_helpers.hpp"
 
 #include "test_server.hpp"
 
@@ -15,10 +16,11 @@ std::string_view get_option_or_quit(utile::command_line_parser& cmd_parser, std:
 	return maybe_option.value();
 }
 
-
 int main(int argc, char* argv[])
 {
 	utile::command_line_parser cmd_parser(argc, argv);
+
+	HANDLE_START_EVENT(cmd_parser);
 
 	auto server_ip = utile::IP_ADRESS(get_option_or_quit(cmd_parser, "--srv_ip"));
 	auto server_port = (utile::PORT)std::stoi(std::string(get_option_or_quit(cmd_parser, "--srv_port")));

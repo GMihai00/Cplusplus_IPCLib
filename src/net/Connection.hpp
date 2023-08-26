@@ -133,10 +133,10 @@ namespace net
             if (m_owner == owner::Client)
             {
                 // LOG_SET_NAME("connection-SERVER");
-                std::function<void(std::error_code errcode, boost::asio::ip::tcp::endpoint endpoint)> connect_callback;
+                std::function<void(const std::error_code&)> connect_callback;
                 if (m_reading)
                 {
-                    connect_callback = [this](std::error_code errcode, boost::asio::ip::tcp::endpoint /*endpoint*/)
+                    connect_callback = [this](const std::error_code& errcode)
                     {
                         if (errcode)
                         {
@@ -147,7 +147,7 @@ namespace net
                 }
                 else
                 {
-                    connect_callback = [this](std::error_code errcode, boost::asio::ip::tcp::endpoint /*endpoint*/)
+                    connect_callback = [this](const std::error_code& errcode)
                     {
                         if (!errcode)
                         {
@@ -173,7 +173,8 @@ namespace net
                     ec = err.code();
                 }
                    
-                connect_callback(ec, endpoint);
+                connect_callback(ec);
+
                 if (m_socket.is_open())
                 {
                     m_reading = true;

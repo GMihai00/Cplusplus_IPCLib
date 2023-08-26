@@ -69,6 +69,9 @@
     <ClInclude Include="logger.hpp">
       <Filter>Header Files\utile</Filter>
     </ClInclude>
+    <ClInclude Include="utile\finally.hpp">
+      <Filter>Header Files\utile</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ipc.cpp">
@@ -76,6 +79,9 @@
     </ClCompile>
     <ClCompile Include="security\rsa.cpp">
       <Filter>Source Files\security</Filter>
+    </ClCompile>
+    <ClCompile Include="utile\finally.cpp">
+      <Filter>Source Files\utile</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

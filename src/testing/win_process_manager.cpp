@@ -4,6 +4,8 @@
 #include <execution>
 #include <atomic>
 
+#include "utile/finally.hpp"
+
 namespace win_helpers
 {
     namespace details
@@ -25,6 +27,25 @@ namespace win_helpers
             LocalFree(messageBuffer);
 
             return message;
+        }
+        std::wstring GenereateUniqueId()
+        {
+            GUID guid;
+            if (CoCreateGuid(&guid) == S_OK) {
+                wchar_t guid_str[39];
+                if (StringFromGUID2(guid, guid_str, 39)) {
+                    std::wcout << L"Generated GUID: " << guid_str << std::endl;
+                    return std::wstring(guid_str);
+                }
+                else {
+                    std::wcerr << L"String conversion failed." << std::endl;
+                }
+            }
+            else {
+                std::wcerr << L"Failed to create GUID." << std::endl;
+            }
+
+            return L"";
         }
     }
 
@@ -52,6 +73,7 @@ namespace win_helpers
         si.cb = sizeof(si);
         ZeroMemory(&pi, sizeof(pi));
 
+
         auto workingDir = get_working_directory();
         workingDir /= cmd.m_exe;
 
@@ -61,7 +83,26 @@ namespace win_helpers
             command += L" \"" + arg + L"\"";
         }
 
+        auto start_event_name = L"Global" + details::GenereateUniqueId();
+
+        command += L" \"--start_event_guid\"";
+        command += L" \"" + start_event_name + L"\"";
+
         std::wcout << L"[INFO] Attempting to run: " << command << L"\n";
+
+        HANDLE h_start_event = CreateEventW(NULL, TRUE, FALSE, start_event_name.c_str());
+
+        if (h_start_event == NULL) {
+            std::cout << "Failed to create failure event. Error code: " << GetLastError() << std::endl;
+            return 1;
+        }
+
+        utile::finally close_handle{ [&h_start_event]() {
+                CloseHandle(h_start_event);
+            } };
+
+
+        std::atomic_bool process_started = false;
 
         if (!CreateProcess(NULL,
             LPWSTR(command.c_str()),
@@ -80,14 +121,22 @@ namespace win_helpers
             return 0;
         }
 
-        std::cout << "Created new process with pid: " << static_cast<int>(pi.dwProcessId) << std::endl;
+        if (WaitForSingleObject(h_start_event, 10000) == WAIT_OBJECT_0)
+        {
+            std::cout << "Created new process with pid: " << static_cast<int>(pi.dwProcessId) << std::endl;
 
-        CloseHandle(pi.hThread);
+            CloseHandle(pi.hThread);
 
-        std::lock_guard<std::mutex> lock(m_mutex_map);
-        m_running_processes.emplace(pi.dwProcessId, pi.hProcess);
+            std::lock_guard<std::mutex> lock(m_mutex_map);
+            m_running_processes.emplace(pi.dwProcessId, pi.hProcess);
 
-        return pi.dwProcessId;
+            return pi.dwProcessId;
+        }
+        else
+        {
+            std::cerr << "Process start timeout" << std::endl;
+            return 0;
+        }
     }
 
     std::vector<DWORD> win_process_manager::create_processes_from_same_directory(const std::vector<command_line>& cmds)

@@ -160,6 +160,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\common\commnad_line_parser.cpp" />
+    <ClCompile Include="..\common\event_helpers.cpp" />
+    <ClCompile Include="..\common\type_converters.cpp" />
     <ClCompile Include="testing_client.cpp" />
     <ClCompile Include="test_client.cpp" />
   </ItemGroup>
@@ -167,7 +169,9 @@
     <ClInclude Include="..\..\utile\observer.hpp" />
     <ClInclude Include="..\..\utile\timer.hpp" />
     <ClInclude Include="..\common\command_line_parser.hpp" />
+    <ClInclude Include="..\common\event_helpers.hpp" />
     <ClInclude Include="..\common\message_types.hpp" />
+    <ClInclude Include="..\common\type_converters.hpp" />
     <ClInclude Include="test_client.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

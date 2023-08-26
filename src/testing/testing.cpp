@@ -8,6 +8,7 @@
 #include "net/client.hpp"
 #include "net/server.hpp"
 #include "net/message.hpp"
+#include "utile/finally.hpp"
 
 #include "win_process_manager.hpp"
 
@@ -66,6 +67,21 @@ int general_test(const int nr_clients, const std::wstring& task, const int timeo
         return ERROR_SERVICE_NEVER_STARTED;
     }
 
+    utile::finally close_server{ [&server_pid]() {
+            g_process_manager.close_process(server_pid, 1000);
+        } };
+
+    HANDLE h_failure_event = CreateEventW(NULL, TRUE, FALSE, L"Global\\TestFailed");
+
+    if (h_failure_event == NULL) {
+        std::cout << "Failed to create failure event. Error code: " << GetLastError() << std::endl;
+        return 1;
+    }
+
+    utile::finally close_handle{ [&h_failure_event]() {
+            CloseHandle(h_failure_event);
+        } };
+
     auto client_pids = attach_clients(nr_clients, task, timeout);
 
     if (client_pids.size() != nr_clients)
@@ -74,16 +90,16 @@ int general_test(const int nr_clients, const std::wstring& task, const int timeo
         return ERROR_INTERNAL_ERROR;
     }
 
-    //takes time for client to initialize
-    // trebuie regandita asta cu sleep, in multe cazuri still not enough somehow
-    Sleep(timeout);
-    g_process_manager.close_processes(client_pids, timeout);
+    utile::finally close_clients{ [&client_pids, &timeout]() {
+        g_process_manager.close_processes(client_pids, timeout);
+        } };
 
-    // I QUESS POT SA PUN EVENT DE WIN PE STOP DE CLIENT SI SA NUMAR CATE EVENTS AU FOST PRIMITE INAPOI PE UN THREAD SEPARAT
+    if (WaitForSingleObject(h_failure_event, timeout) == WAIT_OBJECT_0)
+    {
+        std::cerr << "Error event caught\n";
+        return 1;
+    }
 
-    //AICI AR TREBUI SA ADAUG METODA SA ASTEPT DUPA TOATE PROCESELE DUPA EXIT CODE SI SA VERIFIC CA A FOST CU SUCCES
-
-    g_process_manager.close_process(server_pid, 1000);
     return 0;
 }
 

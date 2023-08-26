@@ -30,6 +30,12 @@
     <ClCompile Include="..\common\commnad_line_parser.cpp">
       <Filter>Source Files\utile</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\event_helpers.cpp">
+      <Filter>Header Files\utile</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\type_converters.cpp">
+      <Filter>Header Files\utile</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_client.hpp">
@@ -45,6 +51,12 @@
       <Filter>Header Files\utile</Filter>
     </ClInclude>
     <ClInclude Include="..\..\utile\timer.hpp">
+      <Filter>Header Files\utile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\event_helpers.hpp">
+      <Filter>Header Files\utile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\type_converters.hpp">
       <Filter>Header Files\utile</Filter>
     </ClInclude>
   </ItemGroup>
