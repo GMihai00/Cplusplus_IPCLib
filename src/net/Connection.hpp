@@ -69,7 +69,7 @@ namespace net
         std::unique_ptr<utile::observer<std::shared_ptr<connection<T>>>>& m_observer;
 
     private:
-        bool read_data(std::vector<uint8_t>& vBuffer, size_t toRead, int timeout = 0)
+        bool read_data(std::vector<uint8_t>& vBuffer, size_t toRead, uint16_t timeout = 0)
         {
             std::function<void()> cancel_callback = [this]() { if (this) m_socket.cancel(); };
 
@@ -285,12 +285,12 @@ namespace net
         }
         
         // TO DO: should add timeout only when no message is beeing processed
-
+        // In theoury a server should respond in 1 minute to a request but need to add the other check as well
         bool read_header()
         {
             std::vector<uint8_t> vBuffer(sizeof(message_header<T>));
-        
-            if (!read_data(vBuffer, sizeof(message_header<T>), 5000)) { return false; }
+
+            if (!read_data(vBuffer, sizeof(message_header<T>), (m_owner == owner::Server) ? 60000 : 0)) { return false; }
 
             std::memcpy(&m_incoming_message.m_header, vBuffer.data(), sizeof(message_header<T>));
             // LOG_DBG << "Finished reading header for message: " << m_incoming_message;
@@ -300,8 +300,8 @@ namespace net
         bool read_body()
         {
             std::vector<uint8_t> vBuffer(m_incoming_message.m_header.m_size * sizeof(uint8_t));
-    
-            if (!read_data(vBuffer, sizeof(uint8_t) * m_incoming_message.m_header.m_size, 5000)) { return false; }
+
+            if (!read_data(vBuffer, sizeof(uint8_t) * m_incoming_message.m_header.m_size, (m_owner == owner::Server) ? 60000 : 0)) { return false; }
 
             m_incoming_message << vBuffer;
             // LOG_DBG << "Finished reading message: " << m_incoming_message;
