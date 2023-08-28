@@ -105,6 +105,7 @@ namespace net
             m_observer{observer},
             m_id{ ++connection<T>::ID }
         {
+
             m_thread_write = std::thread([this]() { write_messages(); });
             m_thread_read = std::thread([this]() { read_messages(); });
         }
@@ -154,6 +155,7 @@ namespace net
                         if (!errcode)
                         {
                             std::cout <<"Started reading messages\n";
+                            m_reading = true;
                             m_cond_var_read.notify_one();
                         }
                         else
@@ -174,12 +176,11 @@ namespace net
                 {
                     ec = err.code();
                 }
-                   
+
                 connect_callback(ec);
 
                 if (m_socket.is_open())
                 {
-                    m_reading = true;
                     m_ip_adress = m_socket.remote_endpoint().address().to_string();
                     return true;
                 }
@@ -234,11 +235,9 @@ namespace net
 
         void read_messages()
         {
-            if (!m_reading && !m_shutting_down)
             {
                 std::unique_lock<std::mutex> ulock(m_mutex_read);
                 m_cond_var_read.wait(ulock, [this]() { return m_reading || m_shutting_down; });
-                ulock.unlock();
             }
 
             while (!m_shutting_down)
@@ -339,11 +338,9 @@ namespace net
         {
             while (!m_shutting_down)
             {
-                if (!m_writing && !m_shutting_down)
                 {
                     std::unique_lock<std::mutex> ulock(m_mutex_write);
                     m_cond_var_write.wait(ulock, [this]() { return m_writing || m_shutting_down; });
-                    ulock.unlock();
                 }
 
                 while (!m_outgoing_messages.empty())

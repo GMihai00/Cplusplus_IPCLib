@@ -70,18 +70,13 @@ void ok_test_run(test_client& client, const utile::IP_ADRESS& srv_ip, const util
 	{
 		client.send_ok_test_message();
 
-		// imbunatati latency...
-		auto ans = client.wait_for_answear(5000);
+		// auto ans = client.wait_for_answear(5000);
 
+		auto ans = client.wait_for_answear();
 		if (ans == std::nullopt)
 		{
-			ans = client.wait_for_answear(5000);
-
-			if (ans == std::nullopt)
-			{
-				std::cerr << "Test failed timeout reciving answear";
-				signal_error_event();
-			}
+			std::cerr << "Test failed timeout reciving answear";
+			signal_error_event();
 		}
 
 		if (ans.value().m_msg.m_header.m_type == TestingMessage::NACK)

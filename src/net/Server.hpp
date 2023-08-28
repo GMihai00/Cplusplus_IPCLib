@@ -45,6 +45,8 @@ namespace net
         std::mutex m_mutex_update;
         std::mutex m_mutex_send;
         std::mutex m_mutex_send_async;
+        std::mutex m_mutex_connect;
+        std::mutex m_mutex_disconnect;
 
         std::atomic<bool> m_shutting_down = false;
 
@@ -106,10 +108,17 @@ namespace net
                         
                         if (can_client_connect(newconnection))
                         {
-                            // need to lock this part and erase as well
+                            std::lock_guard<std::mutex> lock(m_mutex_connect);
+
                             auto it = m_connections.insert(std::shared_ptr<connection<T>>(std::move(newconnection)));
                             if (it.second) {
-                                on_client_connect(*(it.first));
+                                if ((*(it.first))->connect_to_client())
+                                    on_client_connect(*(it.first));
+                                else
+                                {
+                                    std::cerr << "Failed to connect to client";
+                                    m_connections.erase(it.first);
+                                }
                             }
                             else
                             {
@@ -227,9 +236,6 @@ namespace net
 
             if (!m_context.stopped())
                 m_context.stop();
-
-            // I think it's a good ideea to remove already existing connections on stop, to be tested
-            m_connections.clear();
         }
     
     protected:
@@ -252,7 +258,10 @@ namespace net
             {
                 on_client_disconnect(client);
 
-                m_connections.erase(client);
+                {
+                    std::lock_guard<std::mutex> lock(m_mutex_disconnect);
+                    m_connections.erase(client);
+                }
 
                 client.reset();
             }
@@ -279,7 +288,10 @@ namespace net
             {
                 on_client_disconnect(client);
 
-                m_connections.erase(client);
+                {
+                    std::lock_guard<std::mutex> lock(m_mutex_disconnect);
+                    m_connections.erase(client);
+                }
 
                 client.reset();
             }
