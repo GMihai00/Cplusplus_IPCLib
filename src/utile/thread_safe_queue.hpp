@@ -27,7 +27,7 @@ namespace utile
                 return {};
             }
 
-            std::unique_lock lock(m_mutexRead);
+            std::lock_guard<std::shared_mutex> lock(m_mutexRead);
             auto t = std::move(m_queue.front());
             m_queue.pop();
             return t;
@@ -35,7 +35,7 @@ namespace utile
 
         void push(const T& elem)
         {
-            std::scoped_lock lock(m_mutexWrite);
+            std::lock_guard<std::mutex> lock(m_mutexWrite);
             m_queue.push(std::move(elem));
         }
 
@@ -53,7 +53,7 @@ namespace utile
 
         void clear()
         {
-            std::unique_lock lock(m_mutexRead);
+            std::lock_guard<std::shared_mutex> lock(m_mutexRead);
             while (!m_queue.empty())
                 m_queue.pop();
         }

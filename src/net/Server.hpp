@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
-#include <set>
+#include <unordered_set>
 #include <map>
 #include <thread>
 #include <system_error>
@@ -35,7 +35,7 @@ namespace net
         // TO DO ADD DATA STRUCTURE TO STORE ASYNC REQUESTS
         boost::asio::ip::tcp::endpoint m_endpoint;
         std::optional<boost::asio::ip::tcp::acceptor> m_connection_accepter = std::nullopt;
-        std::set<std::shared_ptr<connection<T>>> m_connections;
+        std::unordered_set<std::shared_ptr<connection<T>>> m_connections;
         boost::asio::io_context m_context;
         std::thread m_thread_context;
         std::thread m_thread_update;
@@ -106,17 +106,14 @@ namespace net
                         
                         if (can_client_connect(newconnection))
                         {
-                            auto connection_id = newconnection->get_id();
-                            m_connections.insert(std::shared_ptr<connection<T>>(std::move(newconnection)));
-
-                            // could be refactored
-                            for (const auto& connection : m_connections)
+                            // need to lock this part and erase as well
+                            auto it = m_connections.insert(std::shared_ptr<connection<T>>(std::move(newconnection)));
+                            if (it.second) {
+                                on_client_connect(*(it.first));
+                            }
+                            else
                             {
-                                if (connection->get_id() == connection_id)
-                                {
-                                    connection->connect_to_client();
-                                    on_client_connect(connection);
-                                }
+                                std::cerr << "Internal error, failed to add connection";
                             }
                         }
                         else

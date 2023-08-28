@@ -18,6 +18,8 @@
 #include "../utile/thread_safe_queue.hpp"
 #include "../utile/data_types.hpp"
 
+#include <unordered_set>
+
 namespace net
 {
     enum class owner
@@ -420,6 +422,9 @@ namespace net
             return m_id < other.m_id;
         }
 
+        bool operator==(const connection<T>& other) const {
+            return m_id == other.m_id;
+        }
         uint32_t get_id() const noexcept
         {
             return m_id;
@@ -430,3 +435,31 @@ namespace net
     uint32_t connection<T>::ID = 0;
 
 }   // namespace net
+
+namespace std {
+    template <typename T>
+    struct equal_to<std::shared_ptr<net::connection<T>>> {
+        bool operator()(const std::shared_ptr<net::connection<T>>& ptr1, const std::shared_ptr<net::connection<T>>& ptr2) const {
+            return ptr1 && ptr2 && (ptr1->get_id() == ptr2->get_id());
+        }
+    };
+}
+
+namespace std {
+    template <typename T>
+    struct hash<std::shared_ptr<net::connection<T>>> {
+        size_t operator()(const std::shared_ptr<net::connection<T>>& con) const {
+            if (!con)
+                return 0;
+
+            return con->get_id();
+        }
+    };
+}
+
+
+
+
+
+
+

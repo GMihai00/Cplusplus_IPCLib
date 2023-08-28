@@ -16,6 +16,10 @@ void succes_exit()
 
 void signal_error_event()
 {
+	std::mutex m;
+
+	std::lock_guard<std::mutex> lck(m);
+
 	std::cout << "FAILURE OCCURED\n";
 	HANDLE h_fail_event = OpenEventW(EVENT_MODIFY_STATE, FALSE, L"Global\\TestFailed");
 
@@ -31,7 +35,6 @@ void signal_error_event()
 	}
 
 	// just for debugging for now
-	Sleep(10000);
 	exit(ERROR_INTERNAL_ERROR);
 }
 
@@ -67,12 +70,18 @@ void ok_test_run(test_client& client, const utile::IP_ADRESS& srv_ip, const util
 	{
 		client.send_ok_test_message();
 
+		// imbunatati latency...
 		auto ans = client.wait_for_answear(5000);
 
 		if (ans == std::nullopt)
 		{
-			std::cerr << "Test failed timeout reciving answear";
-			signal_error_event();
+			ans = client.wait_for_answear(5000);
+
+			if (ans == std::nullopt)
+			{
+				std::cerr << "Test failed timeout reciving answear";
+				signal_error_event();
+			}
 		}
 
 		if (ans.value().m_msg.m_header.m_type == TestingMessage::NACK)
