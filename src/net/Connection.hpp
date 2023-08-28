@@ -12,11 +12,10 @@
 #include <boost/asio/ts/buffer.hpp>
 #include <boost/asio/ts/internet.hpp>
 
-#include "client_disconnect_observer.hpp"
-
 #include "message.hpp"
 #include "../utile/thread_safe_queue.hpp"
 #include "../utile/data_types.hpp"
+#include "../utile/observer.hpp"
 
 #include <unordered_set>
 
@@ -65,7 +64,7 @@ namespace net
         std::atomic_bool m_shutting_down = false;
         std::string m_ip_adress;
         uint32_t m_id;
-        std::unique_ptr<client_disconnect_observer<T>>& m_observer;
+        std::unique_ptr<utile::observer<std::shared_ptr<connection<T>>>>& m_observer;
 
     private:
         bool read_data(std::vector<uint8_t>& vBuffer, size_t toRead)
@@ -96,7 +95,7 @@ namespace net
             boost::asio::ip::tcp::socket socket,
             ::utile::thread_safe_queue<owned_message<T>>& incomingmessages,
             std::condition_variable& condVarUpdate,
-            std::unique_ptr<client_disconnect_observer<T>>& observer) :
+            std::unique_ptr<utile::observer<std::shared_ptr<connection<T>>>>& observer) :
             m_owner{ owner },
             m_context{ context },
             m_socket{ std::move(socket) },

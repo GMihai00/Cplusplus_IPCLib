@@ -16,11 +16,10 @@ namespace utile
 		observer() = delete;
 		observer(std::function<void(Args...)>& callback) : m_id(++OBJ_ID), m_callback(callback) {}
 		~observer() = default;
-		void notify(Args...)
+		void notify(Args&&... args)
 		{
 			if (m_callback)
-				m_callback(Args...);
-
+				m_callback(std::forward<Args>(args)...);
 		}
 
 		bool operator<(const observer& other) const {

@@ -162,7 +162,6 @@
   <ItemGroup>
     <ClInclude Include="logger.hpp" />
     <ClInclude Include="net\client.hpp" />
-    <ClInclude Include="net\client_disconnect_observer.hpp" />
     <ClInclude Include="net\connection.hpp" />
     <ClInclude Include="net\message.hpp" />
     <ClInclude Include="net\server.hpp" />

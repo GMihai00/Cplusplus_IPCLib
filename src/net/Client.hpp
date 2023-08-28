@@ -20,7 +20,7 @@
 
 #include "../utile/data_types.hpp"
 
-#include "client_disconnect_observer.hpp"
+#include "../utile/observer.hpp"
 
 namespace net
 {
@@ -38,7 +38,8 @@ namespace net
         std::unique_ptr<connection<T>> m_connection;
         std::atomic<bool> m_shutting_down = false;
         boost::asio::io_context::work m_idle_work;
-        std::unique_ptr<client_disconnect_observer<T>> m_observer;
+
+        std::unique_ptr<utile::observer<std::shared_ptr<connection<T>>>> m_observer;
 
         bool is_connected()
         {

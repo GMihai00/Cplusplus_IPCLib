@@ -21,7 +21,7 @@
 #include "connection.hpp"
 
 #include "../utile/data_types.hpp"
-#include "client_disconnect_observer.hpp"
+#include "../utile/observer.hpp"
 
 
 namespace net
@@ -50,7 +50,7 @@ namespace net
 
         std::atomic<bool> m_shutting_down = false;
 
-        std::unique_ptr<client_disconnect_observer<T>> m_observer_disconnect;
+        std::unique_ptr<utile::observer<std::shared_ptr<connection<T>>>> m_observer_disconnect;
         std::function<void(std::shared_ptr<connection<T>>)> m_disconnect_callback;
 
     private:
@@ -168,7 +168,7 @@ namespace net
         server(const utile::IP_ADRESS& host, utile::PORT port) try
         {
             m_disconnect_callback = std::bind(&server::disconnect_callback, this, std::placeholders::_1);
-            m_observer_disconnect = std::make_unique<client_disconnect_observer<T>>(m_disconnect_callback);
+            m_observer_disconnect = std::make_unique<utile::observer<std::shared_ptr<connection<T>>>>(m_disconnect_callback);
 
             m_endpoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(host), port);
 
