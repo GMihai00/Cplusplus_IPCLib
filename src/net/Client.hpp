@@ -97,6 +97,8 @@ namespace net
         {
             if (is_connected())
             {
+                // here I should send disconnect message
+
                 m_connection->disconnect();
 
                 m_answears_recieved.clear();

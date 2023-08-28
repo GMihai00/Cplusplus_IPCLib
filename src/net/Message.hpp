@@ -22,6 +22,8 @@ namespace net
         };
     }
 
+    // TO DO: add checksum
+
     template <typename T>
     struct message_header
     {

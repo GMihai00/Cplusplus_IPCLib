@@ -3,6 +3,8 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <unordered_set>
+#include <algorithm>
 #include <system_error>
 #include <mutex>
 #include <thread>
@@ -16,8 +18,8 @@
 #include "../utile/thread_safe_queue.hpp"
 #include "../utile/data_types.hpp"
 #include "../utile/observer.hpp"
+#include "../utile/timer.hpp"
 
-#include <unordered_set>
 
 namespace net
 {
@@ -67,8 +69,17 @@ namespace net
         std::unique_ptr<utile::observer<std::shared_ptr<connection<T>>>>& m_observer;
 
     private:
-        bool read_data(std::vector<uint8_t>& vBuffer, size_t toRead)
+        bool read_data(std::vector<uint8_t>& vBuffer, size_t toRead, int timeout = 0)
         {
+            std::function<void()> cancel_callback = [this]() { if (this) m_socket.cancel(); };
+
+            std::shared_ptr<utile::observer<>> cancel_observer = std::make_shared<utile::observer<>>(cancel_callback);
+            utile::timer<> cancel_timer(0);
+
+            cancel_timer.subscribe(cancel_observer);
+
+            if (timeout) cancel_timer.reset(timeout);
+
             size_t left = toRead;
             while (left && !m_shutting_down)
             {
@@ -76,11 +87,13 @@ namespace net
                     return false;
             
                 boost::system::error_code errcode;
+
                 size_t read = m_socket.read_some(boost::asio::buffer(vBuffer.data() + (toRead - left), left), errcode);
-            
+                
+                if (timeout) cancel_timer.reset(timeout);
+
                 if (errcode)
-                {
-                        
+                {   
                     // LOG_ERR << "Error while reading data err: " << errcode.value() << errcode.message();
                     disconnect();
                     return false;
@@ -130,8 +143,21 @@ namespace net
             return m_ip_adress;
         }
 
+
+        bool reconnect_to_server()
+        {
+            return false;
+            // TO DO
+            // o sa afecteze si readul ca trebuie inchis si redeschis socket-ul to think about this
+        }
+
         bool connect_to_server(const boost::asio::ip::tcp::resolver::results_type& endpoints)
         {
+            if (m_socket.is_open())
+            {
+                return std::any_of(endpoints.begin(), endpoints.end(), [this](const auto& endpoint) { return endpoint == m_socket.remote_endpoint(); });
+            }
+
             if (m_owner == owner::Client)
             {
                 // LOG_SET_NAME("connection-SERVER");
@@ -188,7 +214,7 @@ namespace net
             }
             return false;
         }
-    
+
         bool connect_to_client()
         {
             if (m_owner == owner::Server)
@@ -257,12 +283,14 @@ namespace net
             }
             m_reading = false;
         }
+        
+        // TO DO: should add timeout only when no message is beeing processed
 
         bool read_header()
         {
             std::vector<uint8_t> vBuffer(sizeof(message_header<T>));
         
-            if (!read_data(vBuffer, sizeof(message_header<T>))) { return false; }
+            if (!read_data(vBuffer, sizeof(message_header<T>), 5000)) { return false; }
 
             std::memcpy(&m_incoming_message.m_header, vBuffer.data(), sizeof(message_header<T>));
             // LOG_DBG << "Finished reading header for message: " << m_incoming_message;
@@ -273,7 +301,7 @@ namespace net
         {
             std::vector<uint8_t> vBuffer(m_incoming_message.m_header.m_size * sizeof(uint8_t));
     
-            if (!read_data(vBuffer, sizeof(uint8_t) * m_incoming_message.m_header.m_size)) { return false; }
+            if (!read_data(vBuffer, sizeof(uint8_t) * m_incoming_message.m_header.m_size, 5000)) { return false; }
 
             m_incoming_message << vBuffer;
             // LOG_DBG << "Finished reading message: " << m_incoming_message;
@@ -358,7 +386,20 @@ namespace net
                     const auto& outgoing_message = outgoingMsg.value();
 
                     // LOG_DBG << "Started writing message: " << outgoing_message;
-                    if (!write_header(outgoing_message)) { m_outgoing_messages.clear(); break; }
+                    if (!write_header(outgoing_message)) { 
+
+                        if (!reconnect_to_server())
+                        {
+                            m_outgoing_messages.clear();
+                            break;
+                        }
+                        else if (!write_header(outgoing_message))
+                        {
+                            m_outgoing_messages.clear();
+                            break;
+                        }
+                        
+                    }
 
                     if (outgoing_message.m_header.m_size > 0)
                     {

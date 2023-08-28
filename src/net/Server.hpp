@@ -47,7 +47,7 @@ namespace net
         std::mutex m_mutex_send_async;
         std::mutex m_mutex_connect;
         std::mutex m_mutex_disconnect;
-
+        
         std::atomic<bool> m_shutting_down = false;
 
         std::unique_ptr<utile::observer<std::shared_ptr<connection<T>>>> m_observer_disconnect;
@@ -155,10 +155,15 @@ namespace net
             m_context.run();
         }
 
-        void disconnect_callback(std::shared_ptr<connection<T>> connection) noexcept
+        void disconnect(std::shared_ptr<connection<T>> connection) noexcept
         {
             if (connection)
             {
+                std::lock_guard<std::mutex> lock(m_mutex_disconnect);
+
+                if (auto it = m_connections.find(connection); it != m_connections.end())
+                    m_connections.erase(it);
+
                 on_client_disconnect(connection);
             }
         }
@@ -167,7 +172,7 @@ namespace net
 
         server(const utile::IP_ADRESS& host, utile::PORT port) try
         {
-            m_disconnect_callback = std::bind(&server::disconnect_callback, this, std::placeholders::_1);
+            m_disconnect_callback = std::bind(&server::disconnect, this, std::placeholders::_1);
             m_observer_disconnect = std::make_unique<utile::observer<std::shared_ptr<connection<T>>>>(m_disconnect_callback);
 
             m_endpoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(host), port);
@@ -237,7 +242,7 @@ namespace net
             if (!m_context.stopped())
                 m_context.stop();
         }
-    
+
     protected:
 
         void async_message_client(std::shared_ptr<connection<T>> client, const message<T>& msg)
@@ -256,14 +261,7 @@ namespace net
             }
             else if (client)
             {
-                on_client_disconnect(client);
-
-                {
-                    std::lock_guard<std::mutex> lock(m_mutex_disconnect);
-                    m_connections.erase(client);
-                }
-
-                client.reset();
+                disconnect(client);
             }
             else
             {
@@ -286,14 +284,7 @@ namespace net
             }
             else if (client)
             {
-                on_client_disconnect(client);
-
-                {
-                    std::lock_guard<std::mutex> lock(m_mutex_disconnect);
-                    m_connections.erase(client);
-                }
-
-                client.reset();
+                disconnect(client);
             }
             else
             {

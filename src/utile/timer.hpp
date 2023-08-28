@@ -68,6 +68,7 @@ namespace utile
 
 		virtual ~timer() noexcept
 		{
+			m_should_stop = true;
 			m_cond_var_resume.notify_one();
 			if (m_timer_thread.joinable())
 				m_timer_thread.join();
