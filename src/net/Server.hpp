@@ -157,15 +157,16 @@ namespace net
 
         void disconnect(std::shared_ptr<connection<T>> connection) noexcept
         {
+            std::lock_guard<std::mutex> lock(m_mutex_disconnect);
             if (connection)
             {
-                std::lock_guard<std::mutex> lock(m_mutex_disconnect);
 
                 if (auto it = m_connections.find(connection); it != m_connections.end())
                     m_connections.erase(it);
 
                 on_client_disconnect(connection);
             }
+            std::cout << "DONE CALLING DISCONNECT\n";
         }
 
     public:

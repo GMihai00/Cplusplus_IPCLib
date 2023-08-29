@@ -125,17 +125,18 @@ namespace net
                 std::unique_lock<std::mutex> ulock(m_mutex_get);
                 m_cond_var_get.wait(ulock, [&] { return !m_answears_recieved.empty() || m_shutting_down; });
 
+                if (m_shutting_down)
+                    return std::nullopt;
+
                 return m_answears_recieved.pop();
             }
 
             std::unique_lock<std::mutex> ulock(m_mutex_get);
-            if (!m_answears_recieved.empty() || m_shutting_down)
-            {
-                return m_answears_recieved.pop();
-            }
-
             if (m_cond_var_get.wait_for(ulock, std::chrono::milliseconds(timeout), [&] { return !m_answears_recieved.empty() || m_shutting_down; }))
             {
+                if (m_shutting_down)
+                    return std::nullopt;
+
                 return m_answears_recieved.pop();
             }
             else

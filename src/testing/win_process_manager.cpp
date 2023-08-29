@@ -104,11 +104,12 @@ namespace win_helpers
 
         std::atomic_bool process_started = false;
 
-        if (!CreateProcess(NULL,
+        if (!CreateProcess(
+            NULL,
             LPWSTR(command.c_str()),
             NULL,
             NULL,
-            FALSE,
+            TRUE,
             CREATE_NEW_CONSOLE,
             NULL,
             NULL,

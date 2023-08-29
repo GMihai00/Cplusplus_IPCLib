@@ -71,7 +71,7 @@ namespace net
     private:
         bool read_data(std::vector<uint8_t>& vBuffer, size_t toRead, uint16_t timeout = 0)
         {
-            std::function<void()> cancel_callback = [this]() { if (this) m_socket.cancel(); };
+            std::function<void()> cancel_callback = [this]() { std::cout << "TIMEOUT READING DATA\n"; if (this && is_connected()) m_socket.cancel(); };
 
             std::shared_ptr<utile::observer<>> cancel_observer = std::make_shared<utile::observer<>>(cancel_callback);
             utile::timer<> cancel_timer(0);
@@ -94,6 +94,7 @@ namespace net
 
                 if (errcode)
                 {   
+                    std::cout << "FAILEED READING SOME DATA\n";
                     // LOG_ERR << "Error while reading data err: " << errcode.value() << errcode.message();
                     disconnect();
                     return false;
@@ -124,17 +125,23 @@ namespace net
 
         virtual ~connection() noexcept
         { 
+            std::cout << "CALLING CONNECTION DTOR\n";
             m_shutting_down = true;
 
+            // aici pare ca se duce dracu totul la close pe read pipe, posibil din cauza timer-ului...
+            std::cout << "CALLING CLOSE READ PIPE\n";
             m_cond_var_read.notify_one();
             if (m_thread_read.joinable())
                 m_thread_read.join();
+
+            std::cout << "CALLING CLOSE WRITE PIPE\n";
 
             m_cond_var_write.notify_one();
             if (m_thread_write.joinable())
                 m_thread_write.join();
 
             disconnect(); 
+            std::cout << "DONE CALLING CONNECTION DTOR\n";
         }
     
         // this is not working properly
@@ -169,7 +176,7 @@ namespace net
                         if (errcode)
                         {
                             std::cerr << "FAILED TO CONNECT TO SERVER: " << errcode.message();
-                            m_socket.close();
+                            disconnect();
                         }
                     };
                 }
@@ -186,7 +193,7 @@ namespace net
                         else
                         {
                             std::cerr << "FAILED TO CONNECT TO SERVER: " << errcode.message();
-                            m_socket.close();
+                            disconnect();
                         }
                     };
                 }
@@ -269,9 +276,12 @@ namespace net
             {
                 std::scoped_lock lock(m_mutex_read);
 
+                std::cout << "READING HEADER\n";
                 if (!read_header()) { 
                     break; 
                 }
+
+                std::cout << "READING BODY\n";
 
                 if (!read_body()) { 
                     break;
@@ -288,6 +298,7 @@ namespace net
         // In theoury a server should respond in 1 minute to a request but need to add the other check as well
         bool read_header()
         {
+            // PARE CA UNDEVA PE ACI SE DUCE DRACU
             std::vector<uint8_t> vBuffer(sizeof(message_header<T>));
 
             if (!read_data(vBuffer, sizeof(message_header<T>), (m_owner == owner::Server) ? 60000 : 0)) { return false; }
@@ -446,12 +457,14 @@ namespace net
     
         void disconnect() noexcept 
         {
+            std::cout << "CALLING DISCONNECT FROM CONNECTION!";
+
             if (is_connected())
             {
-                if (m_observer)
-                    m_observer->notify(this->shared_from_this());
+             /*  if (m_observer)
+                    m_observer->notify(this->shared_from_this());*/
 
-                boost::asio::post(m_context, [this]() { m_socket.close(); });
+               m_socket.close();
             }
         }
 

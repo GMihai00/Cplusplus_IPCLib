@@ -32,8 +32,7 @@ namespace utile
 				{
 					{
 						std::unique_lock<std::mutex> ulock(m_mutex_resume);
-						if (m_paused || !m_should_stop)
-							m_cond_var_resume.wait(ulock, [this]() { return m_paused == false || m_should_stop; });
+						m_cond_var_resume.wait(ulock, [this]() { return m_paused == false || m_should_stop; });
 					}
 
 					while (!m_should_stop && m_time_left > 0)

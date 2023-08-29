@@ -70,9 +70,8 @@ void ok_test_run(test_client& client, const utile::IP_ADRESS& srv_ip, const util
 	{
 		client.send_ok_test_message();
 
-		// auto ans = client.wait_for_answear(5000);
+		auto ans = client.wait_for_answear(5000);
 
-		auto ans = client.wait_for_answear();
 		if (ans == std::nullopt)
 		{
 			std::cerr << "Test failed timeout reciving answear";
