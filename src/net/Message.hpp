@@ -8,6 +8,8 @@
 
 #include "connection.hpp"
 
+#include <nlohmann/json.hpp>
+
 #include "../utile/serializable_data.hpp"
 
 namespace net
@@ -111,13 +113,32 @@ namespace net
             return msg;
         }
 
-        friend message<T>& operator << (message<T>& msg, const serializable_data* data)
+        friend message<T>& operator >> (message<T>& msg, nlohmann::json& data)
         {
-            assert(data);
+            std::string bytes;
+            bytes.resize(msg.m_body.size());
 
-            size_t size_before_push = msg.m_body.size();
-            msg.m_body.resize(size_before_push + data->size());
-            std::memcpy(msg.m_body.data() + size_before_push, &(data->deserialize()), data->size());
+            size_t size_after_pop = msg.m_body.size() - sizeof(uint8_t) * bytes.size();
+            std::memcpy(bytes.data(), msg.m_body.data() + size_after_pop, sizeof(uint8_t) * bytes.size());
+            msg.m_body.resize(size_after_pop);
+            msg.m_header.m_size = msg.size();
+            
+
+            data = nlohmann::json::parse(bytes);
+
+            return msg;
+        }
+
+        friend message<T>& operator << (message<T>& msg, const nlohmann::json& data)
+        {
+            auto string_data = data.dump();
+
+            size_t sizeBeforePush = msg.m_body.size();
+            msg.m_body.resize(sizeBeforePush + (sizeof(uint8_t) * string_data.size()));
+            std::memcpy(
+                msg.m_body.data() + sizeBeforePush,
+                string_data.data(),
+                (sizeof(uint8_t) * string_data.size()));
             msg.m_header.m_size = msg.size();
 
             return msg;
