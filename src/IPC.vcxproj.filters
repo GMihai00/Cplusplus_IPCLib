@@ -72,7 +72,7 @@
     <ClInclude Include="secure_web_client.hpp">
       <Filter>Header Files\net</Filter>
     </ClInclude>
-    <ClInclude Include="https_request.hpp">
+    <ClInclude Include="http_request.hpp">
       <Filter>Header Files\net</Filter>
     </ClInclude>
     <ClInclude Include="web_request_helpers.hpp">
@@ -89,16 +89,16 @@
     <ClCompile Include="utile\finally.cpp">
       <Filter>Source Files\utile</Filter>
     </ClCompile>
-    <ClCompile Include="https_response.hpp">
+    <ClCompile Include="http_response.hpp">
       <Filter>Header Files\net</Filter>
     </ClCompile>
     <ClCompile Include="secure_web_client.cpp">
       <Filter>Source Files\net</Filter>
     </ClCompile>
-    <ClCompile Include="https_request.cpp">
+    <ClCompile Include="http_request.cpp">
       <Filter>Source Files\net</Filter>
     </ClCompile>
-    <ClCompile Include="https_response.cpp">
+    <ClCompile Include="http_response.cpp">
       <Filter>Source Files\net</Filter>
     </ClCompile>
   </ItemGroup>

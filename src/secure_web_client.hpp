@@ -6,8 +6,8 @@
 #include <future>
 #include <memory>
 
-#include "https_request.hpp"
-#include "https_response.hpp"
+#include "http_request.hpp"
+#include "http_response.hpp"
 
 namespace net
 {
@@ -22,13 +22,13 @@ namespace net
 
 		// timeouts to be added in here
 
-		std::shared_ptr<https_response> send(const https_request & request);
-		std::future<std::shared_ptr<https_response>> send_async(const https_request& request);
+		std::shared_ptr<http_response> send(const http_response & request);
+		std::future<std::shared_ptr<http_response>> send_async(const http_response& request);
 
 	private:
 
 		std::future<void> async_write(const std::string& data);
-		std::future<std::shared_ptr<https_response>> async_read();
+		std::future<std::shared_ptr<http_response>> async_read();
 
 		boost::asio::io_service m_io_service;
 		boost::asio::io_context::work m_idle_work;

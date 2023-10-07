@@ -155,16 +155,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="https_request.cpp" />
-    <ClCompile Include="https_response.cpp" />
-    <ClCompile Include="https_response.hpp" />
+    <ClCompile Include="http_request.cpp" />
+    <ClCompile Include="http_response.cpp" />
+    <ClCompile Include="http_response.hpp" />
     <ClCompile Include="ipc.cpp" />
     <ClCompile Include="security\rsa.cpp" />
     <ClCompile Include="utile\finally.cpp" />
     <ClCompile Include="secure_web_client.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="https_request.hpp" />
+    <ClInclude Include="http_request.hpp" />
     <ClInclude Include="logger.hpp" />
     <ClInclude Include="net\client.hpp" />
     <ClInclude Include="net\connection.hpp" />

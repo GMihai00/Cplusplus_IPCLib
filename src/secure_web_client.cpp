@@ -59,11 +59,11 @@ namespace net
 		}
 	}
 
-	std::shared_ptr<https_response> secure_web_client::send(const https_request& request)
+	std::shared_ptr<http_response> secure_web_client::send(const http_response& request)
 	{
 		{
 			std::scoped_lock lock(m_mutex);
-			if (m_waiting_for_request)
+			if (m_waiting_for_request || !m_socket.lowest_layer().is_open())
 			{
 				return nullptr;
 			}
@@ -80,8 +80,9 @@ namespace net
 
 		boost::asio::write(m_socket, request_buff);
 
-		auto response = std::make_shared<https_response>();
-		boost::asio::read_until(m_socket, response->get_buffer(), "\r\n");
+		auto response = std::make_shared<http_response>();
+		//this is just the end of the header, not the actual message, handle body if present afterwards
+		boost::asio::read_until(m_socket, response->get_buffer(), "\r\n\r\n");
 
 		return response;
 	}
@@ -108,15 +109,16 @@ namespace net
 		return shared_promise->get_future();
 	}
 
-	std::future<std::shared_ptr<https_response>> secure_web_client::async_read()
+	std::future<std::shared_ptr<http_response>> secure_web_client::async_read()
 	{
-		std::promise<std::shared_ptr<https_response>> promise;
+		std::promise<std::shared_ptr<http_response>> promise;
 
-		auto shared_promise = std::make_shared<std::promise<std::shared_ptr<https_response>>>(std::move(promise));
+		auto shared_promise = std::make_shared<std::promise<std::shared_ptr<http_response>>>(std::move(promise));
 
-		auto response = std::make_shared<https_response>();
+		auto response = std::make_shared<http_response>();
 
-		boost::asio::async_read_until(m_socket, response->get_buffer(), "\r\n", [shared_promise, &response](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
+		//this is just the end of the header, not the actual message, handle body if present afterwards
+		boost::asio::async_read_until(m_socket, response->get_buffer(), "\r\n\r\n", [shared_promise, &response](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
 			if (!error) {
 
 				shared_promise->set_value(response);
@@ -130,15 +132,15 @@ namespace net
 		return shared_promise->get_future();
 	}
 
-	std::future<std::shared_ptr<https_response>> secure_web_client::send_async(const https_request& request)
+	std::future<std::shared_ptr<http_response>> secure_web_client::send_async(const http_response& request)
 	{
-		std::promise<std::shared_ptr<https_response>> promise;
+		std::promise<std::shared_ptr<http_response>> promise;
 
-		auto shared_promise = std::make_shared<std::promise<std::shared_ptr<https_response>>>(std::move(promise));
+		auto shared_promise = std::make_shared<std::promise<std::shared_ptr<http_response>>>(std::move(promise));
 
 		{
 			std::scoped_lock lock(m_mutex);
-			if (m_waiting_for_request)
+			if (m_waiting_for_request || !m_socket.lowest_layer().is_open())
 			{
 				shared_promise->set_exception(std::make_exception_ptr(std::runtime_error("Request already ongoing")));
 				return shared_promise->get_future();
