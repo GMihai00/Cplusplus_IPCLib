@@ -14,16 +14,18 @@ namespace net
 			const std::string& method,
 			const content_type cont_type, 
 			const nlohmann::json& additional_header_data = nullptr, 
-			const std::vector<uint8_t>& m_body_data = std::vector<uint8_t>());
+			const std::vector<uint8_t>& body_data = std::vector<uint8_t>());
 
 		void set_host(const std::string& host);
 
 		std::string to_string() const;
-
+	private:
 		request_type m_type;
 		std::string m_method;
 		content_type m_content_type;
 		std::string m_host{};
+		// searching only the first level of the json, adding just string and ints
+		// ex: Accept: text/*
 		nlohmann::json m_additional_header_data = nullptr;
 		std::vector<uint8_t> m_body_data;
 	};

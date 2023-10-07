@@ -4,12 +4,22 @@ namespace net
 {
 	//https://kinsta.com/knowledgebase/what-is-an-http-request/
 	//https://www.youtube.com/watch?v=pHFWGN-upGM
+
+	//Content-Length: just read the data
+
+	//Transfer-Encoding: Chunked 0\r\n\r\n should do the trick here but NEEDS DECODING. basicaly read until \r\n if you are on number size, convert to int 
+	// then read until \r\n, see amount of data sent, if not matching with the lenght just halt everything
+
+	//Connection: closed read data until you can't any more on one go, needs to be done sync I think not sure
 	enum class request_type
 	{
 		GET,
 		POST,
 		PUT,
-		HEAD
+		HEAD,
+		PATCH,
+		OPTIONS,
+		DEL
 	};
 
 	enum class content_type
@@ -24,6 +34,30 @@ namespace net
 		video_or_mp4, //Indicates an MP4 video file.
 	};
 
+	inline std::string request_type_to_string(const request_type req_type)
+	{
+		switch (req_type)
+		{
+		case request_type::GET:
+			return "GET";
+		case request_type::POST:
+			return "POST";
+		case request_type::PUT:
+			return "PUT";
+		case request_type::HEAD:
+			return "HEAD";
+		case request_type::PATCH:
+			return "PATCH";
+		case request_type::OPTIONS:
+			return "OPTIONS";
+		case request_type::DEL:
+			return "DELETE";
+		default:
+			break;
+		}
+
+		throw std::runtime_error("Failed to find coresponding request type");
+	}
 
 	inline std::string content_type_to_string(const content_type con_type)
 	{
@@ -51,11 +85,4 @@ namespace net
 
 		throw std::runtime_error("Failed to find coresponding context type");
 	}
-
-	//Content-Length: just read the data
-
-	//Transfer-Encoding: Chunked 0\r\n\r\n should do the trick here but NEEDS DECODING. basicaly read until \r\n if you are on number size, convert to int 
-	// then read until \r\n, see amount of data sent, if not matching with the lenght just halt everything
-
-	//Connection: closed read data until you can't any more on one go, needs to be done sync I think not sure
 }

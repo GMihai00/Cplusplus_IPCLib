@@ -22,8 +22,8 @@ namespace net
 
 		// timeouts to be added in here
 
-		std::shared_ptr<http_response> send(const http_response & request);
-		std::future<std::shared_ptr<http_response>> send_async(const http_response& request);
+		std::shared_ptr<http_response> send(http_request& request);
+		std::future<std::shared_ptr<http_response>> send_async(http_request& request);
 
 	private:
 
@@ -35,6 +35,7 @@ namespace net
 		boost::asio::ssl::context m_ssl_context;
 		boost::asio::ssl::stream<boost::asio::ip::tcp::socket> m_socket;
 		boost::asio::ip::tcp::resolver m_resolver;
+		std::string m_host{};
 		std::mutex m_mutex;
 		std::atomic_bool m_waiting_for_request;
 		std::function<bool(bool, boost::asio::ssl::verify_context& ctx)> m_verify_certificate_callback;

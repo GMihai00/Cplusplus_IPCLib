@@ -46,6 +46,8 @@ namespace net
 		m_socket.set_verify_callback(boost::asio::ssl::rfc2818_verification("host.name"));
 		m_socket.handshake(boost::asio::ssl::stream<boost::asio::ip::tcp::socket>::client);
 		
+		m_host = query.host_name();
+
 		return true;
 	}
 
@@ -59,7 +61,7 @@ namespace net
 		}
 	}
 
-	std::shared_ptr<http_response> secure_web_client::send(const http_response& request)
+	std::shared_ptr<http_response> secure_web_client::send(http_request& request)
 	{
 		{
 			std::scoped_lock lock(m_mutex);
@@ -67,12 +69,14 @@ namespace net
 			{
 				return nullptr;
 			}
+			m_waiting_for_request = true;
 		}
 
-		m_waiting_for_request = true;
 		auto final_action = utile::finally([&]() {
 			m_waiting_for_request = false;
 			});
+
+		request.set_host(m_host);
 
 		boost::asio::streambuf request_buff;
 		std::ostream request_stream(&request_buff);
@@ -132,7 +136,7 @@ namespace net
 		return shared_promise->get_future();
 	}
 
-	std::future<std::shared_ptr<http_response>> secure_web_client::send_async(const http_response& request)
+	std::future<std::shared_ptr<http_response>> secure_web_client::send_async(http_request& request)
 	{
 		std::promise<std::shared_ptr<http_response>> promise;
 
@@ -145,14 +149,16 @@ namespace net
 				shared_promise->set_exception(std::make_exception_ptr(std::runtime_error("Request already ongoing")));
 				return shared_promise->get_future();
 			}
+			m_waiting_for_request = true;
 		}
 
-		m_waiting_for_request = true;
+
 		auto final_action = utile::finally([&]() {
 			m_waiting_for_request = false;
 			});
 
 		try {
+			request.set_host(m_host);
 			async_write(request.to_string()).get();
 		}
 		catch (const std::exception& e) {
