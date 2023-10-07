@@ -1,5 +1,6 @@
 #include "secure_web_client.hpp"
 #include "utile/finally.hpp"
+#include <boost/bind.hpp>
 
 namespace net
 {
@@ -61,6 +62,110 @@ namespace net
 		}
 	}
 
+	void secure_web_client::try_to_extract_body(std::shared_ptr<http_response> response, bool async) noexcept try
+	{
+		try_to_extract_body_using_current_lenght(response) || try_to_extract_body_using_transfer_encoding(response) || try_to_extract_body_using_connection_closed(response);
+	} 
+	catch (const std::exception& err)
+	{
+		std::cout << "Failed to extract body err: " << err.what();
+	}
+
+	bool secure_web_client::try_to_extract_body_using_current_lenght(std::shared_ptr<http_response> response, bool async)
+	{
+		auto body_lenght = response->get_header_value<uint32_t>("Content-Length");
+		if (body_lenght == std::nullopt)
+		{
+			return false;
+		}
+
+		if (async)
+		{
+			boost::asio::async_read(m_socket, response->get_buffer(), boost::asio::transfer_exactly(*body_lenght),
+				[] (const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
+					if (error) {
+						throw std::runtime_error("Failed to read data err: " + error.value());
+					}
+				});
+		}
+		else
+		{
+			if (auto size = boost::asio::read(m_socket, response->get_buffer(), boost::asio::transfer_exactly(*body_lenght)); size != *body_lenght)
+			{
+				throw std::runtime_error("Failed to read data missing bytes: " + (*body_lenght - size));
+			}
+		}
+
+		return true;
+	}
+
+	// TO DO
+	bool secure_web_client::try_to_extract_body_using_transfer_encoding(std::shared_ptr<http_response> response, bool async)
+	{
+		auto encoding = response->get_header_value<std::string>("Transfer-Encoding");
+
+		if (encoding == std::nullopt || encoding.value() != "Chunked")
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	void read_all_remaining_data(const boost::system::error_code& error, std::size_t bytesRead, boost::asio::ssl::stream<boost::asio::ip::tcp::socket>& socket, boost::asio::streambuf& buffer) {
+		if (!error) {
+			if (bytesRead > 0) {
+
+				boost::asio::async_read(socket, buffer,
+					boost::asio::transfer_at_least(1), // Read at least 1 byte
+					boost::bind(read_all_remaining_data,
+						boost::asio::placeholders::error,
+						boost::asio::placeholders::bytes_transferred,
+						boost::ref(socket),
+						boost::ref(buffer)
+					)
+				);
+			}
+			else {
+			}
+		}
+	}
+
+	bool secure_web_client::try_to_extract_body_using_connection_closed(std::shared_ptr<http_response> response, bool async)
+	{
+		auto connection_status = response->get_header_value<std::string>("Connection");
+
+		if (connection_status == std::nullopt || connection_status.value() != "closed")
+		{
+			return false;
+		}
+
+		if (async)
+		{
+			auto& buffer = response->get_buffer();
+
+			boost::asio::async_read(m_socket, buffer,
+				boost::asio::transfer_at_least(1), // Read at least 1 byte
+				boost::bind(read_all_remaining_data,
+					boost::asio::placeholders::error,
+					boost::asio::placeholders::bytes_transferred,
+					boost::ref(m_socket),
+					boost::ref(buffer)
+				)
+			);
+		}
+		else try
+		{
+			boost::asio::read(m_socket, response->get_buffer());
+		}
+		catch (...)
+		{
+
+		}
+
+		return true;
+	}
+
 	std::shared_ptr<http_response> secure_web_client::send(http_request& request)
 	{
 		{
@@ -85,8 +190,18 @@ namespace net
 		boost::asio::write(m_socket, request_buff);
 
 		auto response = std::make_shared<http_response>();
-		//this is just the end of the header, not the actual message, handle body if present afterwards
+
 		boost::asio::read_until(m_socket, response->get_buffer(), "\r\n\r\n");
+
+		if (!response->build_header_from_data_recieved())
+		{
+			std::cerr << "Invalid message header recieved";
+			return nullptr;
+		}
+
+		try_to_extract_body(response);
+
+		response->finalize_message();
 
 		return response;
 	}
@@ -121,17 +236,24 @@ namespace net
 
 		auto response = std::make_shared<http_response>();
 
-		//this is just the end of the header, not the actual message, handle body if present afterwards
 		boost::asio::async_read_until(m_socket, response->get_buffer(), "\r\n\r\n", [shared_promise, &response](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
-			if (!error) {
-
-				shared_promise->set_value(response);
-			}
-			else {
+			if (error) {
 				shared_promise->set_exception(std::make_exception_ptr(std::runtime_error(error.message())));
 			}
 			});
 
+		if (!response->build_header_from_data_recieved())
+		{
+			shared_promise->set_exception(std::make_exception_ptr(std::runtime_error("Invalid message header recieved")));
+		}
+		else
+		{
+			try_to_extract_body(response, true);
+
+			response->finalize_message();
+
+			shared_promise->set_value(response);
+		}
 
 		return shared_promise->get_future();
 	}

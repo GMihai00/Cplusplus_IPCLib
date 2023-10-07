@@ -2,8 +2,8 @@
 
 namespace net
 {
-	//https://kinsta.com/knowledgebase/what-is-an-http-request/
 	//https://www.youtube.com/watch?v=pHFWGN-upGM
+	//https://faculty.cs.byu.edu/~rodham/cs462/lecture-notes/day-09-web-programming/diagrams-HTTP.pdf
 
 	//Content-Length: just read the data
 
