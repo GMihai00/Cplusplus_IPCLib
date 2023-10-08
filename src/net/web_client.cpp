@@ -137,8 +137,10 @@ namespace net
 					boost::asio::read(m_socket, response->get_buffer(), boost::asio::transfer_exactly(available_bytes));
 				}
 				
+				//aci mai degraba un wait daca am 0 bytes si in caz ca dupa wait same thing then fail
 			} while (*body_lenght != 0 && available_bytes != 0);
 			
+			// caz de fail de fapt, only for debug here
 			if (body_lenght != 0)
 			{
 				std::cerr << "Some bytes seem to be missing from body: " << *body_lenght << std::endl;
