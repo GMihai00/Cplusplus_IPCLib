@@ -4,6 +4,24 @@
 
 namespace net
 {
+	namespace details
+	{
+		void copy_buffer_data_to_stream(std::ostream& ostream, boost::asio::streambuf& streambuf)
+		{
+			const char* data = boost::asio::buffer_cast<const char*>(streambuf.data());
+			std::size_t size = streambuf.size();
+
+			ostream << std::string(data, size - 2);
+		}
+
+		void copy_buffer_data_to_number(uint16_t& buffer_size, boost::asio::streambuf& streambuf)
+		{
+			const char* data = boost::asio::buffer_cast<const char*>(streambuf.data());
+			std::size_t size = streambuf.size();
+
+			buffer_size = (uint16_t)std::stoll(std::string(data, size - 2));
+		}
+	}
 	secure_web_client::secure_web_client(const std::function<bool(bool, boost::asio::ssl::verify_context& ctx)>& verify_certificate_callback) :
 		m_ssl_context(boost::asio::ssl::context::sslv23),
 		m_socket(m_io_service, m_ssl_context),
@@ -64,7 +82,7 @@ namespace net
 
 	void secure_web_client::try_to_extract_body(std::shared_ptr<http_response> response, bool async) noexcept try
 	{
-		try_to_extract_body_using_current_lenght(response) || try_to_extract_body_using_transfer_encoding(response) || try_to_extract_body_using_connection_closed(response);
+		try_to_extract_body_using_current_lenght(response, async) || try_to_extract_body_using_transfer_encoding(response, async) || try_to_extract_body_using_connection_closed(response, async);
 	} 
 	catch (const std::exception& err)
 	{
@@ -99,7 +117,6 @@ namespace net
 		return true;
 	}
 
-	// TO DO
 	bool secure_web_client::try_to_extract_body_using_transfer_encoding(std::shared_ptr<http_response> response, bool async)
 	{
 		auto encoding = response->get_header_value<std::string>("Transfer-Encoding");
@@ -108,6 +125,49 @@ namespace net
 		{
 			return false;
 		}
+
+		std::ostream ostream(&(response->get_buffer()));
+
+		boost::asio::streambuf streambuf;
+
+		bool should_read_size = true;
+		uint16_t buffer_size = 0;
+
+		do
+		{
+			if (async)
+			{
+				boost::asio::async_read_until(m_socket, response->get_buffer(), "\r\n", [](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
+					if (error) {
+						throw std::runtime_error("Failed to read enough data err: " + error.message());
+					}
+					});
+			}
+			else
+			{
+				boost::asio::read_until(m_socket, streambuf, "\r\n");
+			}
+
+			if (!should_read_size)
+			{
+				if (streambuf.size() - 2 != buffer_size)
+				{
+					throw std::runtime_error("Invalid message body recieved, missing bytes: " + (buffer_size - (streambuf.size() - 2)));
+				}
+
+				details::copy_buffer_data_to_stream(ostream, streambuf);
+			}
+			else
+			{
+				details::copy_buffer_data_to_number(buffer_size, streambuf);
+			}
+
+			should_read_size = 1 - should_read_size;
+
+			streambuf.consume(streambuf.size());
+
+		} while (buffer_size == 0 && should_read_size);
+
 
 		return true;
 	}

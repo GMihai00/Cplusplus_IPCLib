@@ -31,9 +31,9 @@ namespace net
 		std::future<std::shared_ptr<http_response>> async_read();
 
 		void try_to_extract_body(std::shared_ptr<http_response> response, bool async = false) noexcept;
-		bool try_to_extract_body_using_current_lenght(std::shared_ptr<http_response> response, bool async = false);
-		bool try_to_extract_body_using_transfer_encoding(std::shared_ptr<http_response> response, bool async = false);
-		bool try_to_extract_body_using_connection_closed(std::shared_ptr<http_response> response, bool async = false);
+		bool try_to_extract_body_using_current_lenght(std::shared_ptr<http_response> response, bool async);
+		bool try_to_extract_body_using_transfer_encoding(std::shared_ptr<http_response> response, bool async);
+		bool try_to_extract_body_using_connection_closed(std::shared_ptr<http_response> response, bool async);
 
 		boost::asio::io_service m_io_service;
 		boost::asio::io_context::work m_idle_work;
