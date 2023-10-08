@@ -30,10 +30,11 @@ namespace net
 		ss << request_type_to_string(m_type) << " " << m_method << " " << "HTTP/1.1" << "\r\n";
 
 		// header
+		ss << "Host: " << m_host << "\r\n";
 		ss << "Content-type: " << content_type_to_string(m_content_type) << "\r\n";
 		ss << "Content-Length: " << m_body_data.size() << "\r\n";
 
-		if (m_additional_header_data)
+		if (m_additional_header_data != nullptr)
 		{
 			for (const auto& item : m_additional_header_data.items())
 			{

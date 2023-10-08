@@ -155,21 +155,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="http_request.cpp" />
-    <ClCompile Include="http_response.cpp" />
-    <ClCompile Include="http_response.hpp" />
     <ClCompile Include="ipc.cpp" />
+    <ClCompile Include="net\http_request.cpp" />
+    <ClCompile Include="net\http_response.cpp" />
+    <ClCompile Include="net\secure_web_client.cpp" />
+    <ClCompile Include="net\web_client.cpp" />
     <ClCompile Include="security\rsa.cpp" />
     <ClCompile Include="utile\finally.cpp" />
-    <ClCompile Include="secure_web_client.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="http_request.hpp" />
     <ClInclude Include="logger.hpp" />
     <ClInclude Include="net\client.hpp" />
     <ClInclude Include="net\connection.hpp" />
+    <ClInclude Include="net\http_request.hpp" />
+    <ClInclude Include="net\http_response.hpp" />
     <ClInclude Include="net\message.hpp" />
+    <ClInclude Include="net\secure_web_client.hpp" />
     <ClInclude Include="net\server.hpp" />
+    <ClInclude Include="net\web_client.hpp" />
+    <ClInclude Include="net\web_request_helpers.hpp" />
     <ClInclude Include="security\rsa.hpp" />
     <ClInclude Include="utile\data_types.hpp" />
     <ClInclude Include="utile\finally.hpp" />
@@ -177,8 +181,6 @@
     <ClInclude Include="utile\serializable_data.hpp" />
     <ClInclude Include="utile\thread_safe_queue.hpp" />
     <ClInclude Include="utile\timer.hpp" />
-    <ClInclude Include="secure_web_client.hpp" />
-    <ClInclude Include="web_request_helpers.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

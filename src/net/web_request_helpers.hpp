@@ -11,6 +11,8 @@ namespace net
 	// then read until \r\n, see amount of data sent, if not matching with the lenght just halt everything
 
 	//Connection: closed read data until you can't any more on one go, needs to be done sync I think not sure
+
+	// need to follow up redirects... Location: ... in response header
 	enum class request_type
 	{
 		GET,
@@ -32,6 +34,7 @@ namespace net
 		image_or_png, //Indicates a PNG image.
 		audio_or_mpeg, //Specifies an MP3 audio file.
 		video_or_mp4, //Indicates an MP4 video file.
+		any
 	};
 
 	inline std::string request_type_to_string(const request_type req_type)
@@ -79,6 +82,8 @@ namespace net
 			return "iaudio/mpeg";
 		case content_type::video_or_mp4:
 			return "video/mp4";
+		case content_type::any:
+			return "*/*";
 		default:
 			break;
 		}

@@ -17,7 +17,7 @@ namespace net
 		secure_web_client(const std::function<bool(bool, boost::asio::ssl::verify_context& ctx)>& verify_certificate_callback = nullptr);
 		~secure_web_client();
 
-		bool connect(const std::string& url);
+		bool connect(const std::string& url) noexcept;
 		void disconnect();
 
 		// timeouts to be added in here
@@ -42,6 +42,7 @@ namespace net
 		boost::asio::ip::tcp::resolver m_resolver;
 		std::string m_host{};
 		std::mutex m_mutex;
+		std::thread m_thread_context;
 		std::atomic_bool m_waiting_for_request;
 		std::function<bool(bool, boost::asio::ssl::verify_context& ctx)> m_verify_certificate_callback;
 	};

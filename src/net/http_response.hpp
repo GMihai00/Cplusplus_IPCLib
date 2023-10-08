@@ -31,12 +31,15 @@ namespace net
 
 		bool build_header_from_data_recieved();
 		void finalize_message();
+		std::string get_version() const;
+		uint16_t get_status() const;
+		std::string get_reason() const;
 	private:
 		boost::asio::streambuf m_buffer;
 		std::string m_version;
 		uint16_t m_status;
 		std::string m_reason;
-		nlohmann::json m_header_data = nlohmann::json("{}");
+		nlohmann::json m_header_data = nlohmann::json();
 		std::vector<uint8_t> m_body_data;
 	};
 }

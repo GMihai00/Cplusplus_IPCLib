@@ -1,5 +1,5 @@
 #include "secure_web_client.hpp"
-#include "utile/finally.hpp"
+#include "../utile/finally.hpp"
 #include <boost/bind.hpp>
 
 namespace net
@@ -30,13 +30,14 @@ namespace net
 		m_idle_work(m_io_service)
 	{
 		m_ssl_context.set_default_verify_paths();
+		m_ssl_context.set_verify_mode(boost::asio::ssl::verify_peer);
+
 		if (m_verify_certificate_callback != nullptr)
 		{
-			m_ssl_context.set_verify_mode(boost::asio::ssl::verify_peer);
 			m_ssl_context.set_verify_callback(m_verify_certificate_callback);
 		}
 
-		m_io_service.run();
+		m_thread_context = std::thread([this]() { m_io_service.run(); });
 	}
 
 	secure_web_client::~secure_web_client()
@@ -45,9 +46,11 @@ namespace net
 		{
 			disconnect();
 		}
+		if (m_thread_context.joinable())
+			m_thread_context.join();
 	}
 
-	bool secure_web_client::connect(const std::string& url)
+	bool secure_web_client::connect(const std::string& url) noexcept try
 	{
 		{
 			std::scoped_lock lock(m_mutex);
@@ -61,13 +64,21 @@ namespace net
 		boost::asio::connect(m_socket.lowest_layer(), m_resolver.resolve(query));
 		m_socket.lowest_layer().set_option(boost::asio::ip::tcp::no_delay(true));
 
-		m_socket.set_verify_mode(boost::asio::ssl::verify_peer);
-		m_socket.set_verify_callback(boost::asio::ssl::rfc2818_verification("host.name"));
+		if (m_verify_certificate_callback == nullptr)
+		{
+			m_ssl_context.set_verify_callback(boost::asio::ssl::rfc2818_verification(url));
+		}
+
 		m_socket.handshake(boost::asio::ssl::stream<boost::asio::ip::tcp::socket>::client);
-		
-		m_host = query.host_name();
+
+		m_host = url;
 
 		return true;
+	}
+	catch (const std::exception& err)
+	{
+		std::cerr << "Failed to connect to server, err: " << err.what();
+		return false;
 	}
 
 	void secure_web_client::disconnect()
@@ -121,7 +132,7 @@ namespace net
 	{
 		auto encoding = response->get_header_value<std::string>("Transfer-Encoding");
 
-		if (encoding == std::nullopt || encoding.value() != "Chunked")
+		if (encoding == std::nullopt || encoding.value() != "chunked")
 		{
 			return false;
 		}

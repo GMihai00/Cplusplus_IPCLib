@@ -22,7 +22,10 @@ namespace net
 
 	nlohmann::json http_response::get_json_body() const
 	{
-		return nlohmann::json::parse(std::string(m_body_data.begin(), m_body_data.end()));
+		if (!m_body_data.empty())
+			return nlohmann::json::parse(std::string(m_body_data.begin(), m_body_data.end()));
+		
+		return nlohmann::json();
 	}
 
 	bool http_response::build_header_from_data_recieved()
@@ -92,14 +95,32 @@ namespace net
 			}
 		}
 
-		if (!iss.str().empty())
+		if (!iss.eof())
+		{
+			std::cerr << "Invalid characters still left inside the header";
 			return false;
+		}
 
 		m_buffer.consume(m_buffer.size());
 
 		return true;
 	}
 	
+	std::string http_response::get_version() const
+	{
+		return m_version;
+	}
+
+	uint16_t http_response::get_status() const
+	{
+		return m_status;
+	}
+
+	std::string http_response::get_reason() const
+	{
+		return m_reason;
+	}
+
 	void http_response::finalize_message()
 	{
 		const char* data = boost::asio::buffer_cast<const char*>(m_buffer.data());
