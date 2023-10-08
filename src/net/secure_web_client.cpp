@@ -108,21 +108,62 @@ namespace net
 			return false;
 		}
 
+
 		if (async)
 		{
-			boost::asio::async_read(m_socket, response->get_buffer(), boost::asio::transfer_exactly(*body_lenght),
-				[] (const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
-					if (error) {
-						throw std::runtime_error("Failed to read data err: " + error.value());
-					}
-				});
+			do
+			{
+				std::size_t available_bytes = m_socket.lowest_layer().available();
+
+				if (available_bytes >= *body_lenght)
+				{
+					boost::asio::async_read(m_socket, response->get_buffer(), boost::asio::transfer_exactly(*body_lenght),
+						[](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
+							if (error) {
+								throw std::runtime_error("Failed to read data err: " + error.value());
+							}
+						});
+					body_lenght.value() = 0;
+				}
+				else
+				{
+					*body_lenght -= available_bytes;
+
+					boost::asio::async_read(m_socket, response->get_buffer(), boost::asio::transfer_exactly(available_bytes),
+						[](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
+							if (error) {
+								throw std::runtime_error("Failed to read data err: " + error.value());
+							}
+						});
+				}
+			} while (*body_lenght != 0);
 		}
 		else
 		{
-			if (auto size = boost::asio::read(m_socket, response->get_buffer(), boost::asio::transfer_exactly(*body_lenght)); size != *body_lenght)
+			std::size_t available_bytes = 0;
+			do
 			{
-				throw std::runtime_error("Failed to read data missing bytes: " + (*body_lenght - size));
+				available_bytes = m_socket.lowest_layer().available();
+
+				if (available_bytes >= *body_lenght)
+				{
+					boost::asio::read(m_socket, response->get_buffer(), boost::asio::transfer_exactly(*body_lenght));
+					body_lenght.value() = 0;
+				}
+				else
+				{
+					*body_lenght -= available_bytes;
+					boost::asio::read(m_socket, response->get_buffer(), boost::asio::transfer_exactly(available_bytes));
+				}
+
+			} while (*body_lenght != 0 && available_bytes != 0);
+
+			if (body_lenght != 0)
+			{
+				std::cerr << "Some bytes seem to be missing from body: " << *body_lenght << std::endl;
 			}
+
+
 		}
 
 		return true;
@@ -227,7 +268,14 @@ namespace net
 		}
 		else try
 		{
-			boost::asio::read(m_socket, response->get_buffer());
+			std::size_t available_bytes = 0;
+			do
+			{
+				available_bytes = m_socket.lowest_layer().available();
+
+				boost::asio::read(m_socket, response->get_buffer(), boost::asio::transfer_exactly(available_bytes));
+
+			} while (available_bytes != 0);
 		}
 		catch (...)
 		{
