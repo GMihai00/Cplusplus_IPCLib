@@ -6,22 +6,37 @@ namespace net
 {
 	namespace details
 	{
-		void copy_buffer_data_to_stream(std::ostream& ostream, boost::asio::streambuf& streambuf)
+		void copy_buffer_data_to_stream(std::ostream& ostream, boost::asio::streambuf& streambuf, const size_t size)
 		{
 			const char* data = boost::asio::buffer_cast<const char*>(streambuf.data());
-			std::size_t size = streambuf.size();
 
 			ostream << std::string(data, size - 2);
 		}
 
-		void copy_buffer_data_to_number(uint16_t& buffer_size, boost::asio::streambuf& streambuf)
+		void copy_buffer_data_to_number(uint16_t& buffer_size, boost::asio::streambuf& streambuf, const size_t size)
 		{
 			const char* data = boost::asio::buffer_cast<const char*>(streambuf.data());
-			std::size_t size = streambuf.size();
 
 			buffer_size = (uint16_t)std::stoll(std::string(data, size - 2));
 		}
+
+		std::optional<size_t> find_delimiter_poz(boost::asio::streambuf& buffer, const std::string& delimiter)
+		{
+			const char* data = boost::asio::buffer_cast<const char*>(buffer.data());
+			std::size_t size = buffer.size();
+
+			std::optional<size_t> rez = std::nullopt;
+
+			for (std::size_t i = 0; i < size - delimiter.size() + 1; ++i) {
+				if (std::memcmp(data + i, delimiter.c_str(), delimiter.size()) == 0) {
+					return i + delimiter.size();
+				}
+			}
+
+			return std::nullopt;
+		}
 	}
+
 	secure_web_client::secure_web_client(const std::function<bool(bool, boost::asio::ssl::verify_context& ctx)>& verify_certificate_callback) :
 		m_ssl_context(boost::asio::ssl::context::sslv23),
 		m_socket(m_io_service, m_ssl_context),
@@ -94,7 +109,7 @@ namespace net
 	void secure_web_client::try_to_extract_body(std::shared_ptr<http_response> response, bool async) noexcept try
 	{
 		try_to_extract_body_using_current_lenght(response, async) || try_to_extract_body_using_transfer_encoding(response, async) || try_to_extract_body_using_connection_closed(response, async);
-	} 
+	}
 	catch (const std::exception& err)
 	{
 		std::cout << "Failed to extract body err: " << err.what();
@@ -108,6 +123,8 @@ namespace net
 			return false;
 		}
 
+		// remove already read characters from size of buffer;
+		*body_lenght -= response->get_buffer().size();
 
 		if (async)
 		{
@@ -140,6 +157,7 @@ namespace net
 		}
 		else
 		{
+			// need to add a timeout mechanism
 			std::size_t available_bytes = 0;
 			do
 			{
@@ -156,14 +174,7 @@ namespace net
 					boost::asio::read(m_socket, response->get_buffer(), boost::asio::transfer_exactly(available_bytes));
 				}
 
-			} while (*body_lenght != 0 && available_bytes != 0);
-
-			if (body_lenght != 0)
-			{
-				std::cerr << "Some bytes seem to be missing from body: " << *body_lenght << std::endl;
-			}
-
-
+			} while (*body_lenght != 0);
 		}
 
 		return true;
@@ -178,45 +189,70 @@ namespace net
 			return false;
 		}
 
-		std::ostream ostream(&(response->get_buffer()));
-
 		boost::asio::streambuf streambuf;
+
+		{
+			// clear already existing buffer and copy to streambuf
+			std::size_t bytes_to_copy = response->get_buffer().size();
+
+			std::istream source_stream(&(response->get_buffer()));
+
+			std::ostream target_stream(&streambuf);
+
+			target_stream << source_stream.rdbuf();
+		}
+
+		std::ostream ostream(&(response->get_buffer()));
 
 		bool should_read_size = true;
 		uint16_t buffer_size = 0;
 
 		do
 		{
-			if (async)
+			// search in streambuf for "\r\n", if found skip reading from socket
+
+			auto delimiter = details::find_delimiter_poz(streambuf, "\r\n");
+
+			if (delimiter == std::nullopt)
 			{
-				boost::asio::async_read_until(m_socket, response->get_buffer(), "\r\n", [](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
-					if (error) {
-						throw std::runtime_error("Failed to read enough data err: " + error.message());
-					}
-					});
+				if (async)
+				{
+					boost::asio::async_read_until(m_socket, streambuf, "\r\n", [](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
+						if (error) {
+							throw std::runtime_error("Failed to read enough data err: " + error.message());
+						}
+						});
+				}
+				else
+				{
+					boost::asio::read_until(m_socket, streambuf, "\r\n");
+				}
 			}
-			else
+
+			delimiter = details::find_delimiter_poz(streambuf, "\r\n");
+
+			if (delimiter == std::nullopt)
 			{
-				boost::asio::read_until(m_socket, streambuf, "\r\n");
+				throw std::runtime_error("Failed to find delimiter, error occured when reading data");
 			}
 
 			if (!should_read_size)
 			{
-				if (streambuf.size() - 2 != buffer_size)
+				if (*delimiter - 2 != buffer_size)
 				{
-					throw std::runtime_error("Invalid message body recieved, missing bytes: " + (buffer_size - (streambuf.size() - 2)));
+					throw std::runtime_error("Invalid message body recieved, missing bytes: " + (buffer_size - (*delimiter - 1)));
 				}
 
-				details::copy_buffer_data_to_stream(ostream, streambuf);
+				details::copy_buffer_data_to_stream(ostream, streambuf, *delimiter);
 			}
 			else
 			{
-				details::copy_buffer_data_to_number(buffer_size, streambuf);
+				details::copy_buffer_data_to_number(buffer_size, streambuf, *delimiter);
 			}
 
 			should_read_size = 1 - should_read_size;
 
-			streambuf.consume(streambuf.size());
+			streambuf.consume(*delimiter);
 
 		} while (buffer_size == 0 && should_read_size);
 
