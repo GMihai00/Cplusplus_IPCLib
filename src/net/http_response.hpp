@@ -35,6 +35,9 @@ namespace net
 		uint16_t get_status() const;
 		std::string get_reason() const;
 	private:
+
+		std::string extract_header_from_buffer();
+
 		boost::asio::streambuf m_buffer;
 		std::string m_version;
 		uint16_t m_status;

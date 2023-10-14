@@ -28,12 +28,35 @@ namespace net
 		return nlohmann::json();
 	}
 
-	bool http_response::build_header_from_data_recieved()
+	std::string http_response::extract_header_from_buffer()
 	{
 		const char* data = boost::asio::buffer_cast<const char*>(m_buffer.data());
 		std::size_t size = m_buffer.size();
-		
-		std::istringstream iss(std::string(data, size));
+		const char* search_str = "\r\n\r\n";
+		std::size_t search_len = std::strlen(search_str);
+
+		std::size_t header_end = size - search_len;
+
+		for (std::size_t i = 0; i < size - search_len + 1; ++i) {
+			if (std::memcmp(data + i, search_str, search_len) == 0) {
+				header_end = i;
+				break;
+			}
+		}
+
+		return std::string(data, header_end + search_len);
+	}
+
+	bool http_response::build_header_from_data_recieved()
+	{
+		auto header = extract_header_from_buffer();
+
+		std::cout << header;
+
+		std::cout << header.size();
+		m_buffer.consume(header.size());
+
+		std::istringstream iss(header);
 		
 		std::string line;
 		if (std::getline(iss, line, '\r'))
@@ -100,8 +123,6 @@ namespace net
 			std::cerr << "Invalid characters still left inside the header";
 			return false;
 		}
-
-		m_buffer.consume(m_buffer.size());
 
 		return true;
 	}
