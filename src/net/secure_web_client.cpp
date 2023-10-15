@@ -64,6 +64,9 @@ namespace net
 		{
 			disconnect();
 		}
+
+		m_io_service.stop();
+
 		if (m_thread_context.joinable())
 			m_thread_context.join();
 	}

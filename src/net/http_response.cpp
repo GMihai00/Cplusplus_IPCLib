@@ -51,9 +51,6 @@ namespace net
 	{
 		auto header = extract_header_from_buffer();
 
-		std::cout << header;
-
-		std::cout << header.size();
 		m_buffer.consume(header.size());
 
 		std::istringstream iss(header);
