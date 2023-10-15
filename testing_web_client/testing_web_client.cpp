@@ -31,8 +31,15 @@ int main()
 	{
 		auto response = web_client.send(req, 2000);
 
+		// this crashes
 
 		/*auto rez = web_client.send_async(req);
+
+		// this runs just fine
+		auto rez = std::async(std::launch::async, [&web_client, &req]() {
+				return web_client.send(req, 2000);
+			});
+
 
 		int i = 5;
 		do

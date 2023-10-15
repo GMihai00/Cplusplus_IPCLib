@@ -415,6 +415,8 @@ namespace net
 
 	std::future<std::shared_ptr<http_response>> web_client::send_async(http_request& request)
 	{
+		throw std::runtime_error("REMOVED FOR NOW, NOT YET WORKING AS EXPECTED");
+
 		std::promise<std::shared_ptr<http_response>> promise;
 
 		auto shared_promise = std::make_shared<std::promise<std::shared_ptr<http_response>>>(std::move(promise));
