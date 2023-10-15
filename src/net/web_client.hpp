@@ -8,6 +8,7 @@
 
 #include "http_request.hpp"
 #include "http_response.hpp"
+#include "../utile/timer.hpp"
 
 namespace net
 {
@@ -20,11 +21,12 @@ namespace net
 		bool connect(const std::string& url) noexcept;
 		void disconnect();
 
-		// timeouts to be added in here
+		std::shared_ptr<http_response> send(http_request& request, const uint16_t timeout = 0);
 
-		std::shared_ptr<http_response> send(http_request& request);
+		// timeouts to be added in here
 		std::future<std::shared_ptr<http_response>> send_async(http_request& request);
 
+		bool last_request_timedout() const;
 	private:
 
 		std::future<void> async_write(const std::string& data);
@@ -43,6 +45,9 @@ namespace net
 		std::mutex m_mutex;
 		std::thread m_thread_context;
 		std::atomic_bool m_waiting_for_request;
+		std::atomic_bool m_timedout = false;
+		std::function<void()> m_timeout_callback;
+		std::shared_ptr<utile::observer<>> m_timeout_observer;
 	};
 
 } // namespace net

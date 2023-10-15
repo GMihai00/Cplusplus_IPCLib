@@ -78,7 +78,11 @@ namespace net
 
             cancel_timer.subscribe(cancel_observer);
 
-            if (timeout) cancel_timer.reset(timeout);
+            if (timeout)
+            {
+                cancel_timer.reset(timeout);
+                cancel_timer.resume();
+            }
 
             size_t left = toRead;
             while (left && !m_shutting_down)
@@ -90,7 +94,11 @@ namespace net
 
                 size_t read = m_socket.read_some(boost::asio::buffer(vBuffer.data() + (toRead - left), left), errcode);
                 
-                if (timeout) cancel_timer.reset(timeout);
+                if (timeout)
+                {
+                    cancel_timer.reset(timeout);
+                    cancel_timer.resume();
+                }
 
                 if (errcode)
                 {   

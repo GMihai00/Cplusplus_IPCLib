@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "net/web_client.hpp"
+#include "utile/finally.hpp"
 
 int main()
 {	
@@ -28,7 +29,7 @@ int main()
 
 	try
 	{
-		auto response = web_client.send(req);
+		auto response = web_client.send(req, 2000);
 
 		if (response == nullptr)
 		{
@@ -48,9 +49,10 @@ int main()
 	}
 	catch (const std::exception& err)
 	{
-		std::cerr << "Request failed, err: " << err.what();
+		std::cerr << "Request failed, err: " << err.what() << " timeout: " << web_client.last_request_timedout();
 		return 5;
 	}
 
+	// problem in dtor it seems
 	return 0;
 }

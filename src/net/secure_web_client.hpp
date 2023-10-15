@@ -8,6 +8,7 @@
 
 #include "http_request.hpp"
 #include "http_response.hpp"
+#include "../utile/timer.hpp"
 
 namespace net
 {
@@ -22,7 +23,7 @@ namespace net
 
 		// timeouts to be added in here
 
-		std::shared_ptr<http_response> send(http_request& request);
+		std::shared_ptr<http_response> send(http_request& request, const uint16_t timeout = 0);
 		std::future<std::shared_ptr<http_response>> send_async(http_request& request);
 
 	private:
@@ -45,6 +46,9 @@ namespace net
 		std::thread m_thread_context;
 		std::atomic_bool m_waiting_for_request;
 		std::function<bool(bool, boost::asio::ssl::verify_context& ctx)> m_verify_certificate_callback;
+		std::atomic_bool m_timedout = false;
+		std::function<void()> m_timeout_callback;
+		std::shared_ptr<utile::observer<>> m_timeout_observer;
 	};
 
 } // namespace net

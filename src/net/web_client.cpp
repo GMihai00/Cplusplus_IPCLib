@@ -41,6 +41,9 @@ namespace net
 		m_resolver(m_io_service),
 		m_idle_work(m_io_service)
 	{
+		m_timeout_callback = [this]() { if (this) { m_timedout = true; disconnect(); } };
+		m_timeout_observer = std::make_shared<utile::observer<>>(m_timeout_callback);
+
 		m_thread_context = std::thread([this]() { m_io_service.run(); });
 	}
 
@@ -70,6 +73,8 @@ namespace net
 
 		m_host = url;
 
+		m_timedout = false;
+
 		return true;
 	}
 	catch (const std::exception& err)
@@ -93,7 +98,7 @@ namespace net
 	}
 	catch (const std::exception& err)
 	{
-		std::cout << "Failed to extract body err: " << err.what();
+		std::cerr << "Failed to extract body err: " << err.what();
 	}
 
 	bool web_client::try_to_extract_body_using_current_lenght(std::shared_ptr<http_response> response, bool async)
@@ -303,7 +308,7 @@ namespace net
 		return true;
 	}
 
-	std::shared_ptr<http_response> web_client::send(http_request& request)
+	std::shared_ptr<http_response> web_client::send(http_request& request, const uint16_t timeout)
 	{
 		{
 			std::scoped_lock lock(m_mutex);
@@ -317,6 +322,16 @@ namespace net
 		auto final_action = utile::finally([&]() {
 			m_waiting_for_request = false;
 			});
+
+		utile::timer<> cancel_timer(0);
+
+		cancel_timer.subscribe(m_timeout_observer);
+
+		if (timeout)
+		{
+			cancel_timer.reset(timeout);
+			cancel_timer.resume();
+		}
 
 		request.set_host(m_host);
 
@@ -430,4 +445,9 @@ namespace net
 		return async_read();
 	}
 
+
+	bool web_client::last_request_timedout() const
+	{
+		return m_timedout;
+	}
 } // namespace net

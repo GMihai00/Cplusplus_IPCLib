@@ -32,7 +32,7 @@ namespace utile
 				{
 					{
 						std::unique_lock<std::mutex> ulock(m_mutex_resume);
-						m_cond_var_resume.wait(ulock, [this]() { return m_paused == false || m_should_stop; });
+						m_cond_var_resume.wait(ulock, [this]() { return (m_paused == false && m_expired == false) || m_should_stop; });
 					}
 
 					while (!m_should_stop && m_time_left > 0)
@@ -110,6 +110,11 @@ namespace utile
 		void unsubscribe_all()
 		{
 			m_attached_observers.clear();
+		}
+
+		bool has_expired()
+		{
+			return m_expired;
 		}
 	};
 
