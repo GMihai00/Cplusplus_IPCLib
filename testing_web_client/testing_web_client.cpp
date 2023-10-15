@@ -31,6 +31,19 @@ int main()
 	{
 		auto response = web_client.send(req, 2000);
 
+
+		/*auto rez = web_client.send_async(req);
+
+		int i = 5;
+		do
+		{
+			std::cout << "Waiting\n";
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+			i--;
+		} while (i);
+
+		auto response = rez.get();*/
+
 		if (response == nullptr)
 		{
 			std::cerr << "Failed to get response";
