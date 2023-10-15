@@ -415,6 +415,10 @@ namespace net
 
 	std::future<std::shared_ptr<http_response>> web_client::send_async(http_request& request)
 	{
+		// after calling async boost:asio operations I'm not guaranted to have finished the operation...
+		// they are running on same thread so need to change logic
+		// Split into 2 operations: I'll just set a signal in here and wait for it to end in the main thread basically whenever I need it
+		// there will be callbacks after callbacks after callbacks..
 		throw std::runtime_error("REMOVED FOR NOW, NOT YET WORKING AS EXPECTED");
 
 		std::promise<std::shared_ptr<http_response>> promise;

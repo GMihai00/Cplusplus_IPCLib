@@ -29,16 +29,16 @@ int main()
 
 	try
 	{
-		auto response = web_client.send(req, 2000);
+		//auto response = web_client.send(req, 2000);
 
 		// this crashes
 
-		/*auto rez = web_client.send_async(req);
+		auto rez = web_client.send_async(req);
 
 		// this runs just fine
-		auto rez = std::async(std::launch::async, [&web_client, &req]() {
+	/*	auto rez = std::async(std::launch::async, [&web_client, &req]() {
 				return web_client.send(req, 2000);
-			});
+			});*/
 
 
 		int i = 5;
@@ -49,7 +49,7 @@ int main()
 			i--;
 		} while (i);
 
-		auto response = rez.get();*/
+		auto response = rez.get();
 
 		if (response == nullptr)
 		{
