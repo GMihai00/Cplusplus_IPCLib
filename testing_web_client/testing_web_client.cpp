@@ -27,52 +27,57 @@ int main()
 
 	net::http_request req(net::request_type::GET, method, net::content_type::any, additional_header_data);
 
-	try
-	{
-		//auto response = web_client.send(req, 2000);
-
-		// this crashes
-
-		auto rez = web_client.send_async(req);
-
-		// this runs just fine
-	/*	auto rez = std::async(std::launch::async, [&web_client, &req]() {
-				return web_client.send(req, 2000);
-			});*/
+	// THIS SEEMS TO WORK FINE
+	//try
+	//{
+	//	auto response = web_client.send(req, 2000);
 
 
-		int i = 5;
-		do
+	//	if (response == nullptr)
+	//	{
+	//		std::cerr << "Failed to get response";
+	//		return 5;
+	//	}
+
+	//	std::cout << "Request: " << req.to_string() << std::endl;
+
+	//	std::cout << "version: " << response->get_version() <<
+	//		" status: " << response->get_status() << 
+	//		" reason: " << response->get_reason() << std::endl;
+	//	std::cout << "Recieved header data: " << response->get_header().dump() << std::endl;
+	//	std::cout << "Recieved body data: " << response->get_json_body().dump();
+	//}
+	//catch (const std::exception& err)
+	//{
+	//	std::cerr << "Request failed, err: " << err.what() << " timeout: " << web_client.last_request_timedout();
+	//	return 5;
+	//}
+
+
+	bool can_stop = false;
+
+	net::async_send_callback req_callback = [&can_stop](std::shared_ptr<net::http_response> response, std::string err_msg) {
+		if (!response)
 		{
-			std::cout << "Waiting\n";
-			std::this_thread::sleep_for(std::chrono::seconds(1));
-			i--;
-		} while (i);
-
-		auto response = rez.get();
-
-		if (response == nullptr)
-		{
-			std::cerr << "Failed to get response";
-			return 5;
+			std::cerr << err_msg;
+			exit(5);
 		}
 
-		std::cout << "Request: " << req.to_string() << std::endl;
-
-		std::cout << "version: " << response->get_version() <<
-			" status: " << response->get_status() << 
-			" reason: " << response->get_reason() << std::endl;
 		std::cout << "Recieved header data: " << response->get_header().dump() << std::endl;
 		auto raw_body_data = response->get_body_raw();
 		std::cout << "Recieved body data: " << std::string(raw_body_data.begin(), raw_body_data.end()) << std::endl;
-		std::cout << "Recieved body data: " << response->get_json_body().dump();
-	}
-	catch (const std::exception& err)
+		
+		can_stop = true;
+	};
+
+	web_client.send_async(req, req_callback);
+
+	while (!can_stop)
 	{
-		std::cerr << "Request failed, err: " << err.what() << " timeout: " << web_client.last_request_timedout();
-		return 5;
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+		std::cout << "Waiting for answear\n";
 	}
 
-	// problem in dtor it seems
+
 	return 0;
 }

@@ -40,8 +40,10 @@ namespace net
 
 		void async_read_all_remaining_data(const boost::system::error_code& error, std::size_t bytes_transferred, std::shared_ptr<http_response> response, async_send_callback& callback) noexcept;
 
+		void async_read_bytes(std::shared_ptr<http_response> response, async_send_callback& callback, std::size_t bytes_remaining) noexcept;
 		void async_try_to_extract_body(std::shared_ptr<http_response> response, async_send_callback& callback) noexcept;
 		void async_try_to_extract_body_using_current_lenght(std::shared_ptr<http_response> response, async_send_callback& callback) noexcept;
+		void async_read_fragmented_body(std::shared_ptr<http_response> response, async_send_callback& callback, bool should_read_size = true, uint16_t buffer_size = 0) noexcept;
 		void async_try_to_extract_body_using_transfer_encoding(std::shared_ptr<http_response> response, async_send_callback& callback) noexcept;
 		void async_try_to_extract_body_using_connection_closed(std::shared_ptr<http_response> response, async_send_callback& callback) noexcept;
 
