@@ -95,16 +95,21 @@ namespace net
 		}
 	}
 
-	void web_client::try_to_extract_body(std::shared_ptr<http_response> response, bool async) noexcept try
+	void web_client::try_to_extract_body(std::shared_ptr<http_response> response) noexcept try
 	{
-		try_to_extract_body_using_current_lenght(response, async) || try_to_extract_body_using_transfer_encoding(response, async) || try_to_extract_body_using_connection_closed(response, async);
+		try_to_extract_body_using_current_lenght(response) || try_to_extract_body_using_transfer_encoding(response) || try_to_extract_body_using_connection_closed(response);
 	}
 	catch (const std::exception& err)
 	{
 		std::cerr << "Failed to extract body err: " << err.what();
 	}
 
-	bool web_client::try_to_extract_body_using_current_lenght(std::shared_ptr<http_response> response, bool async)
+	void web_client::async_try_to_extract_body(std::shared_ptr<http_response> response, async_send_callback& callback) noexcept
+	{
+		async_try_to_extract_body_using_current_lenght(response, callback);
+	}
+
+	bool web_client::try_to_extract_body_using_current_lenght(std::shared_ptr<http_response> response)
 	{
 		auto body_lenght = response->get_header_value<uint32_t>("Content-Length");
 		if (body_lenght == std::nullopt)
@@ -115,61 +120,71 @@ namespace net
 		// remove already read characters from size of buffer;
 		*body_lenght -= response->get_buffer().size();
 
-		if (async)
+		// need to add a timeout mechanism
+		std::size_t available_bytes = 0;
+		do
 		{
-			do
+			available_bytes = m_socket.available();
+
+			if (available_bytes >= *body_lenght)
 			{
-				std::size_t available_bytes = m_socket.available();
-
-				if (available_bytes >= *body_lenght)
-				{
-					boost::asio::async_read(m_socket, response->get_buffer(), boost::asio::transfer_exactly(*body_lenght),
-						[](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
-							if (error) {
-								throw std::runtime_error("Failed to read data err: " + error.value());
-							}
-						});
-					body_lenght.value() = 0;
-				}
-				else
-				{
-					*body_lenght -= available_bytes;
-
-					boost::asio::async_read(m_socket, response->get_buffer(), boost::asio::transfer_exactly(available_bytes),
-						[](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
-							if (error) {
-								throw std::runtime_error("Failed to read data err: " + error.value());
-							}
-						});
-				}
-			} while (*body_lenght != 0);
-		}
-		else
-		{
-			// need to add a timeout mechanism
-			std::size_t available_bytes = 0;
-			do
+				boost::asio::read(m_socket, response->get_buffer(), boost::asio::transfer_exactly(*body_lenght));
+				body_lenght.value() = 0;
+			}
+			else
 			{
-				available_bytes = m_socket.available();
+				*body_lenght -= available_bytes;
+				boost::asio::read(m_socket, response->get_buffer(), boost::asio::transfer_exactly(available_bytes));
+			}
 
-				if (available_bytes >= *body_lenght)
-				{
-					boost::asio::read(m_socket, response->get_buffer(), boost::asio::transfer_exactly(*body_lenght));
-					body_lenght.value() = 0;
-				}
-				else
-				{
-					*body_lenght -= available_bytes;
-					boost::asio::read(m_socket, response->get_buffer(), boost::asio::transfer_exactly(available_bytes));
-				}
-
-			} while (*body_lenght != 0);
-		}
+		} while (*body_lenght != 0);
 
 		return true;
 	}
 
-	bool web_client::try_to_extract_body_using_transfer_encoding(std::shared_ptr<http_response> response, bool async)
+	// TO REPAIR
+	void web_client::async_try_to_extract_body_using_current_lenght(std::shared_ptr<http_response> response, async_send_callback& callback) noexcept
+	{
+		auto body_lenght = response->get_header_value<uint32_t>("Content-Length");
+		if (body_lenght == std::nullopt)
+		{
+			async_try_to_extract_body_using_transfer_encoding(response, callback);
+			return;
+		}
+
+		// remove already read characters from size of buffer;
+		*body_lenght -= response->get_buffer().size();
+
+		do
+		{
+			std::size_t available_bytes = m_socket.available();
+
+			if (available_bytes >= *body_lenght)
+			{
+				boost::asio::async_read(m_socket, response->get_buffer(), boost::asio::transfer_exactly(*body_lenght),
+					[](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
+						if (error) {
+							throw std::runtime_error("Failed to read data err: " + error.value());
+						}
+					});
+				body_lenght.value() = 0;
+			}
+			else
+			{
+				*body_lenght -= available_bytes;
+
+				boost::asio::async_read(m_socket, response->get_buffer(), boost::asio::transfer_exactly(available_bytes),
+					[](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
+						if (error) {
+							throw std::runtime_error("Failed to read data err: " + error.value());
+						}
+					});
+			}
+		} while (*body_lenght != 0);
+	
+	}
+
+	bool web_client::try_to_extract_body_using_transfer_encoding(std::shared_ptr<http_response> response)
 	{
 		auto encoding = response->get_header_value<std::string>("Transfer-Encoding");
 
@@ -204,18 +219,7 @@ namespace net
 
 			if (delimiter == std::nullopt)
 			{
-				if (async)
-				{
-					boost::asio::async_read_until(m_socket, streambuf, "\r\n", [](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
-						if (error) {
-							throw std::runtime_error("Failed to read enough data err: " + error.message());
-						}
-						});
-				}
-				else
-				{
-					boost::asio::read_until(m_socket, streambuf, "\r\n");
-				}
+				boost::asio::read_until(m_socket, streambuf, "\r\n");
 			}
 			
 			delimiter = details::find_delimiter_poz(streambuf, "\r\n");
@@ -249,26 +253,79 @@ namespace net
 		return true;
 	}
 
-	void read_all_remaining_data(const boost::system::error_code& error, std::size_t bytesRead, boost::asio::ip::tcp::socket& socket, boost::asio::streambuf& buffer) {
-		if (!error) {
-			if (bytesRead > 0) {
+	// TO REPAIR
+	void web_client::async_try_to_extract_body_using_transfer_encoding(std::shared_ptr<http_response> response, async_send_callback& callback) noexcept
+	{
+		auto encoding = response->get_header_value<std::string>("Transfer-Encoding");
 
-				boost::asio::async_read(socket, buffer,
-					boost::asio::transfer_at_least(1), // Read at least 1 byte
-					boost::bind(read_all_remaining_data,
-						boost::asio::placeholders::error,
-						boost::asio::placeholders::bytes_transferred,
-						boost::ref(socket),
-						boost::ref(buffer)
-					)
-				);
-			}
-			else {
-			}
+		if (encoding == std::nullopt || encoding.value() != "chunked")
+		{
+			async_try_to_extract_body_using_connection_closed(response, callback);
+			return;
 		}
+
+		boost::asio::streambuf streambuf;
+
+		{
+			// clear already existing buffer and copy to streambuf
+			std::size_t bytes_to_copy = response->get_buffer().size();
+
+			std::istream source_stream(&(response->get_buffer()));
+
+			std::ostream target_stream(&streambuf);
+
+			target_stream << source_stream.rdbuf();
+		}
+
+		std::ostream ostream(&(response->get_buffer()));
+
+		bool should_read_size = true;
+		uint16_t buffer_size = 0;
+
+		do
+		{
+			// search in streambuf for "\r\n", if found skip reading from socket
+
+			auto delimiter = details::find_delimiter_poz(streambuf, "\r\n");
+
+			if (delimiter == std::nullopt)
+			{
+				boost::asio::async_read_until(m_socket, streambuf, "\r\n", [](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
+					if (error) {
+						throw std::runtime_error("Failed to read enough data err: " + error.message());
+					}
+					});
+			}
+
+			delimiter = details::find_delimiter_poz(streambuf, "\r\n");
+
+			if (delimiter == std::nullopt)
+			{
+				throw std::runtime_error("Failed to find delimiter, error occured when reading data");
+			}
+
+			if (!should_read_size)
+			{
+				if (*delimiter - 2 != buffer_size)
+				{
+					throw std::runtime_error("Invalid message body recieved, missing bytes: " + (buffer_size - (*delimiter - 1)));
+				}
+
+				details::copy_buffer_data_to_stream(ostream, streambuf, *delimiter);
+			}
+			else
+			{
+				details::copy_buffer_data_to_number(buffer_size, streambuf, *delimiter);
+			}
+
+			should_read_size = 1 - should_read_size;
+
+			streambuf.consume(*delimiter);
+
+		} while (buffer_size == 0 && should_read_size);
 	}
 
-	bool web_client::try_to_extract_body_using_connection_closed(std::shared_ptr<http_response> response, bool async)
+	bool web_client::try_to_extract_body_using_connection_closed(std::shared_ptr<http_response> response)
 	{
 		auto connection_status = response->get_header_value<std::string>("Connection");
 
@@ -277,38 +334,74 @@ namespace net
 			return false;
 		}
 
-		if (async)
-		{
-			auto& buffer = response->get_buffer();
 
-			boost::asio::async_read(m_socket, buffer,
-				boost::asio::transfer_at_least(1), // Read at least 1 byte
-				boost::bind(read_all_remaining_data,
-					boost::asio::placeholders::error,
-					boost::asio::placeholders::bytes_transferred,
-					boost::ref(m_socket),
-					boost::ref(buffer)
-				)
-			);
-		}
-		else try
+		std::size_t available_bytes = 0;
+		do
 		{
-			std::size_t available_bytes = 0;
-			do
-			{
-				available_bytes = m_socket.available();
+			available_bytes = m_socket.available();
 			
-				boost::asio::read(m_socket, response->get_buffer(), boost::asio::transfer_exactly(available_bytes));
+			boost::asio::read(m_socket, response->get_buffer(), boost::asio::transfer_exactly(available_bytes));
 				
-			}
-			while(available_bytes != 0);
 		}
-		catch (...)
-		{
-
-		}
+		while(available_bytes != 0);
 
 		return true;
+	}
+
+	void web_client::async_read_all_remaining_data(const boost::system::error_code& error, std::size_t bytes_transferred, std::shared_ptr<http_response> response, async_send_callback& callback) noexcept
+	{
+		if (!error) 
+		{
+			if (bytes_transferred > 0)
+			{
+
+				boost::asio::async_read(m_socket, response->get_buffer(),
+					boost::asio::transfer_at_least(1), // Read at least 1 byte
+					boost::bind(&web_client::async_read_all_remaining_data,
+						this,
+						boost::asio::placeholders::error,
+						boost::asio::placeholders::bytes_transferred,
+						boost::ref(response),
+						boost::ref(callback)
+					)
+				);
+			}
+			else
+			{
+				response->finalize_message();
+				if (callback) callback(response, "Succes");
+				m_waiting_for_request = false;
+
+			}
+		}
+		else
+		{
+			if (callback) callback(nullptr, error.message());
+			m_waiting_for_request = false;
+		}
+	}
+
+	void web_client::async_try_to_extract_body_using_connection_closed(std::shared_ptr<http_response> response, async_send_callback& callback) noexcept
+	{
+		auto connection_status = response->get_header_value<std::string>("Connection");
+
+		if (connection_status == std::nullopt || connection_status.value() != "closed")
+		{
+			response->finalize_message();
+			if (callback) callback(response, "Succes");
+			m_waiting_for_request = false;
+		}
+
+		boost::asio::async_read(m_socket, response->get_buffer(),
+			boost::asio::transfer_at_least(1), // Read at least 1 byte
+			boost::bind(&web_client::async_read_all_remaining_data,
+				this,
+				boost::asio::placeholders::error,
+				boost::asio::placeholders::bytes_transferred,
+				boost::ref(response),
+				boost::ref(callback)
+			)
+		);
 	}
 
 	std::shared_ptr<http_response> web_client::send(http_request& request, const uint16_t timeout)
@@ -361,97 +454,82 @@ namespace net
 		return response;
 	}
 
-	std::future<void> web_client::async_write(const std::string& data)
+	void web_client::async_write(async_send_callback& callback) noexcept
 	{
-		std::promise<void> promise;
 
-		auto shared_promise = std::make_shared<std::promise<void>>(std::move(promise));
+		boost::asio::async_write(m_socket, m_request_buff, [this, &callback](const boost::system::error_code& error, std::size_t bytes_transferred) {
+			if (!error)
+			{
 
-		boost::asio::streambuf request_buff;
-		std::ostream request_stream(&request_buff);
-		request_stream << data;
+				if (bytes_transferred > m_request_buff.size())
+				{
+					m_waiting_for_request = false;
+					if (callback) callback(nullptr, "Wrote more bytes then expected, boost asio problem");
+				}
 
-		boost::asio::async_write(m_socket, request_buff, [shared_promise](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
-			if (!error) {
-				shared_promise->set_value();
+				m_request_buff.consume(bytes_transferred);
+
+				if (m_request_buff.size() == 0)
+				{
+					async_read(callback);
+				}
+				else
+				{
+					async_write(callback);
+				}
 			}
-			else {
-				shared_promise->set_exception(std::make_exception_ptr(std::runtime_error(error.message())));
+			else
+			{
+				m_waiting_for_request = false;
+				if (callback) callback(nullptr, error.message());
 			}
-			});
-
-		return shared_promise->get_future();
+		});
 	}
 
-	std::future<std::shared_ptr<http_response>> web_client::async_read()
+	void web_client::async_read(async_send_callback& callback) noexcept
 	{
-		std::promise<std::shared_ptr<http_response>> promise;
-
-		auto shared_promise = std::make_shared<std::promise<std::shared_ptr<http_response>>>(std::move(promise));
-
 		auto response = std::make_shared<http_response>();
 
-		boost::asio::async_read_until(m_socket, response->get_buffer(), "\r\n\r\n", [shared_promise, &response](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
+		boost::asio::async_read_until(m_socket, response->get_buffer(), "\r\n\r\n", [this, response, &callback](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
 			if (error) {
-				shared_promise->set_exception(std::make_exception_ptr(std::runtime_error(error.message())));
+				if (callback) callback(nullptr, error.message());
+				m_waiting_for_request = false;
 			}
-			});
-
-		if (!response->build_header_from_data_recieved())
-		{
-			shared_promise->set_exception(std::make_exception_ptr(std::runtime_error("Invalid message header recieved")));
-		}
-		else
-		{
-			try_to_extract_body(response, true);
-
-			response->finalize_message();
-
-			shared_promise->set_value(response);
-		}
-
-		return shared_promise->get_future();
+			else
+			{
+				if (!response->build_header_from_data_recieved())
+				{
+					if (callback) callback(nullptr, "Invalid message header recieved");
+					m_waiting_for_request = false;
+				}
+				else
+				{
+					async_try_to_extract_body(response, callback);
+				}
+			}
+		});
 	}
 
-	std::future<std::shared_ptr<http_response>> web_client::send_async(http_request& request)
+	void web_client::send_async(http_request& request, async_send_callback& callback) noexcept
 	{
-		// after calling async boost:asio operations I'm not guaranted to have finished the operation...
-		// they are running on same thread so need to change logic
-		// Split into 2 operations: I'll just set a signal in here and wait for it to end in the main thread basically whenever I need it
-		// there will be callbacks after callbacks after callbacks..
-		throw std::runtime_error("REMOVED FOR NOW, NOT YET WORKING AS EXPECTED");
-
-		std::promise<std::shared_ptr<http_response>> promise;
-
-		auto shared_promise = std::make_shared<std::promise<std::shared_ptr<http_response>>>(std::move(promise));
-
 		{
-			std::scoped_lock lock(m_mutex);
+			std::unique_lock<std::mutex> lock(m_mutex);
 			if (m_waiting_for_request || !m_socket.is_open())
 			{
-				shared_promise->set_exception(std::make_exception_ptr(std::runtime_error("Request already ongoing")));
-				return shared_promise->get_future();
+				lock.unlock();
+				if (callback) callback(nullptr, "Request already ongoing");
+				return;
 			}
+			if (m_request_buff.size() != 0) m_request_buff.consume(m_request_buff.size());
 			m_waiting_for_request = true;
 		}
 
+		request.set_host(m_host);
 
-		auto final_action = utile::finally([&]() {
-			m_waiting_for_request = false;
-			});
+		std::ostream request_stream(&m_request_buff);
+		request_stream << request.to_string();
 
-		try {
-			request.set_host(m_host);
-			async_write(request.to_string()).get();
-		}
-		catch (const std::exception& e) {
-			shared_promise->set_exception(std::make_exception_ptr(e));
-			return shared_promise->get_future();
-		}
-
-		shared_promise.reset();
-
-		return async_read();
+		async_write(callback);
 	}
 
 
