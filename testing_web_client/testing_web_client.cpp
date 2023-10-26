@@ -5,6 +5,12 @@
 
 int main()
 {	
+	 //boost::asio::io_service io_service;
+  //  boost::asio::ip::tcp::socket socket(io_service);
+
+  //   Wrap the socket in a shared_ptr
+  //  std::shared_ptr<boost::asio::ip::tcp::socket> socketPtr = std::make_shared<boost::asio::ip::tcp::socket>(std::move(socket));
+
 	net::web_client web_client{};
 
 	std::string url = "universities.hipolabs.com";

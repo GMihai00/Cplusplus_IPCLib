@@ -160,6 +160,7 @@
     <ClCompile Include="net\http_response.cpp" />
     <ClCompile Include="net\secure_web_client.cpp" />
     <ClCompile Include="net\web_client.cpp" />
+    <ClCompile Include="net\web_message_dispatcher.cpp" />
     <ClCompile Include="security\rsa.cpp" />
     <ClCompile Include="utile\finally.cpp" />
   </ItemGroup>
@@ -173,10 +174,15 @@
     <ClInclude Include="net\secure_web_client.hpp" />
     <ClInclude Include="net\server.hpp" />
     <ClInclude Include="net\web_client.hpp" />
+    <ClInclude Include="net\web_message_controller.hpp" />
+    <ClInclude Include="net\web_message_dispatcher.hpp" />
+    <ClInclude Include="net\web_message_reciever.hpp" />
     <ClInclude Include="net\web_request_helpers.hpp" />
+    <ClInclude Include="net\web_server.hpp" />
     <ClInclude Include="security\rsa.hpp" />
     <ClInclude Include="utile\data_types.hpp" />
     <ClInclude Include="utile\finally.hpp" />
+    <ClInclude Include="utile\generic_error.hpp" />
     <ClInclude Include="utile\observer.hpp" />
     <ClInclude Include="utile\serializable_data.hpp" />
     <ClInclude Include="utile\thread_safe_queue.hpp" />
