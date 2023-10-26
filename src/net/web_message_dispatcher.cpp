@@ -1,6 +1,6 @@
 #include "web_message_dispatcher.hpp"
 
-#include <iostream>
+#include "../utile/finally.hpp"
 
 namespace net
 {
@@ -8,19 +8,23 @@ namespace net
 
 	web_message_dispatcher::web_message_dispatcher(std::shared_ptr<boost::asio::ip::tcp::socket> socket) : m_socket(socket)
 	{
-
+		assert(socket);
 	}
 
 	utile::web_error web_message_dispatcher::send(const http_request& request) noexcept try
 	{
 		{
 			std::scoped_lock lock(m_mutex);
-			if (m_waiting_for_request || !m_socket->is_open())
+			if (m_waiting_for_request)
 			{
 				return REQUEST_ALREADY_ONGOING;
 			}
 			m_waiting_for_request = true;
 		}
+
+		auto final_action = utile::finally([&]() {
+			m_waiting_for_request = false;
+			});
 
 		boost::asio::streambuf request_buff;
 		std::ostream request_stream(&request_buff);
@@ -47,7 +51,7 @@ namespace net
 	{
 		{
 			std::unique_lock<std::mutex> lock(m_mutex);
-			if (m_waiting_for_request || !m_socket->is_open())
+			if (m_waiting_for_request)
 			{
 				lock.unlock();
 
@@ -72,7 +76,8 @@ namespace net
 			{
 				if (m_request_buff.size() == 0)
 				{
-					callback(utile::web_error());
+					m_waiting_for_request = false;
+					if (callback) callback(utile::web_error());
 				}
 				else
 				{

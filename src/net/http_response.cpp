@@ -47,6 +47,7 @@ namespace net
 		return std::string(data, header_end + search_len);
 	}
 
+	// to change this to return web_error after finishing functionality splitting
 	bool http_response::build_header_from_data_recieved()
 	{
 		auto header = extract_header_from_buffer();

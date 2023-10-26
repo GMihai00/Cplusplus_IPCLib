@@ -3,7 +3,6 @@
 #include <iostream>
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
-#include <future>
 #include <memory>
 
 #include "http_request.hpp"
@@ -17,6 +16,7 @@ namespace net
 	class web_message_dispatcher
 	{
 	public:
+		web_message_dispatcher() = delete;
 		web_message_dispatcher(std::shared_ptr<boost::asio::ip::tcp::socket> socket);
 
 		utile::web_error send(const http_request& request) noexcept;

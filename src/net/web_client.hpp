@@ -9,11 +9,10 @@
 #include "http_request.hpp"
 #include "http_response.hpp"
 #include "../utile/timer.hpp"
+#include "web_message_controller.hpp"
 
 namespace net
 {
-	typedef std::function<void(std::shared_ptr<http_response>, std::string)> async_send_callback;
-
 	class web_client
 	{
 	public:
@@ -24,41 +23,19 @@ namespace net
 		// to be called if you want to cancel async request
 		void disconnect();
 
-		std::shared_ptr<http_response> send(http_request& request, const uint16_t timeout = 0);
+		std::pair<std::shared_ptr<http_response>, utile::web_error> send(http_request&& request, const uint16_t timeout = 0);
 
-		void send_async(http_request& request, async_send_callback& callback) noexcept;
-
-		bool last_request_timedout() const;
+		void send_async(http_request&& request, async_get_callback& callback) noexcept;
 	private:
-		void try_to_extract_body(std::shared_ptr<http_response> response) noexcept;
-		bool try_to_extract_body_using_current_lenght(std::shared_ptr<http_response> response);
-		bool try_to_extract_body_using_transfer_encoding(std::shared_ptr<http_response> response);
-		bool try_to_extract_body_using_connection_closed(std::shared_ptr<http_response> response);
-
-		void async_write(async_send_callback& callback) noexcept;
-		void async_read(async_send_callback& callback) noexcept;
-
-		void async_read_all_remaining_data(const boost::system::error_code& error, std::size_t bytes_transferred, std::shared_ptr<http_response> response, async_send_callback& callback) noexcept;
-
-		void async_read_bytes(std::shared_ptr<http_response> response, async_send_callback& callback, std::size_t bytes_remaining) noexcept;
-		void async_try_to_extract_body(std::shared_ptr<http_response> response, async_send_callback& callback) noexcept;
-		void async_try_to_extract_body_using_current_lenght(std::shared_ptr<http_response> response, async_send_callback& callback) noexcept;
-		void async_read_fragmented_body(std::shared_ptr<http_response> response, async_send_callback& callback, bool should_read_size = true, uint16_t buffer_size = 0) noexcept;
-		void async_try_to_extract_body_using_transfer_encoding(std::shared_ptr<http_response> response, async_send_callback& callback) noexcept;
-		void async_try_to_extract_body_using_connection_closed(std::shared_ptr<http_response> response, async_send_callback& callback) noexcept;
 
 		boost::asio::io_service m_io_service;
 		boost::asio::io_context::work m_idle_work;
-		boost::asio::ip::tcp::socket m_socket;
+		std::shared_ptr<boost::asio::ip::tcp::socket> m_socket;
 		boost::asio::ip::tcp::resolver m_resolver;
 		std::string m_host{};
 		std::mutex m_mutex;
 		std::thread m_thread_context;
-		std::atomic_bool m_waiting_for_request;
-		std::atomic_bool m_timedout = false;
-		std::function<void()> m_timeout_callback;
-		boost::asio::streambuf m_request_buff;
-		std::shared_ptr<utile::observer<>> m_timeout_observer;
+		web_message_controller m_controller;
 	};
 
 } // namespace net

@@ -34,38 +34,37 @@ int main()
 	net::http_request req(net::request_type::GET, method, net::content_type::any, additional_header_data);
 
 	// THIS SEEMS TO WORK FINE
-	//try
-	//{
-	//	auto response = web_client.send(req, 2000);
+	try
+	{
+	 	std::cout << "Request: " << req.to_string() << std::endl;
+		auto response = web_client.send(std::move(req), 5000);
 
 
-	//	if (response == nullptr)
-	//	{
-	//		std::cerr << "Failed to get response";
-	//		return 5;
-	//	}
+		if (!response.second)
+		{
+			std::cerr << "Failed to get response err: " << response.second.message();
+			return 5;
+		}
 
-	//	std::cout << "Request: " << req.to_string() << std::endl;
+		std::cout << "version: " << response.first->get_version() <<
+			" status: " << response.first->get_status() <<
+			" reason: " << response.first->get_reason() << std::endl;
+		std::cout << "Recieved header data: " << response.first->get_header().dump() << std::endl;
+		std::cout << "Recieved body data: " << response.first->get_json_body().dump();
+	}
+	catch (const std::exception& err)
+	{
+		std::cerr << "Request failed, err: " << err.what();
+		return 5;
+	}
 
-	//	std::cout << "version: " << response->get_version() <<
-	//		" status: " << response->get_status() << 
-	//		" reason: " << response->get_reason() << std::endl;
-	//	std::cout << "Recieved header data: " << response->get_header().dump() << std::endl;
-	//	std::cout << "Recieved body data: " << response->get_json_body().dump();
-	//}
-	//catch (const std::exception& err)
-	//{
-	//	std::cerr << "Request failed, err: " << err.what() << " timeout: " << web_client.last_request_timedout();
-	//	return 5;
-	//}
-
-
+	/*
 	bool can_stop = false;
 
-	net::async_send_callback req_callback = [&can_stop](std::shared_ptr<net::http_response> response, std::string err_msg) {
+	net::async_get_callback req_callback = [&can_stop](std::shared_ptr<net::http_response> response, utile::web_error err_msg) {
 		if (!response)
 		{
-			std::cerr << err_msg;
+			std::cerr << "Failed: " << err_msg.message();
 			exit(5);
 		}
 
@@ -76,7 +75,7 @@ int main()
 		can_stop = true;
 	};
 
-	web_client.send_async(req, req_callback);
+	web_client.send_async(std::move(req), req_callback);
 
 	while (!can_stop)
 	{
@@ -84,6 +83,6 @@ int main()
 		std::cout << "Waiting for answear\n";
 	}
 
-
+	*/
 	return 0;
 }
