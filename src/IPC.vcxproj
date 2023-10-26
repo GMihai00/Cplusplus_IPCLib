@@ -161,6 +161,7 @@
     <ClCompile Include="net\secure_web_client.cpp" />
     <ClCompile Include="net\web_client.cpp" />
     <ClCompile Include="net\web_message_dispatcher.cpp" />
+    <ClCompile Include="net\web_message_reciever.cpp" />
     <ClCompile Include="security\rsa.cpp" />
     <ClCompile Include="utile\finally.cpp" />
   </ItemGroup>
