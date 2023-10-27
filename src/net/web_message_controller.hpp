@@ -28,7 +28,7 @@ namespace net
 		std::function<void()> m_base_timeout_callback;
 		std::mutex m_mutex;
 		std::atomic_bool m_can_send = true;
-		async_send_callback write_callback;
+		async_send_callback m_write_callback;
 		std::vector<std::shared_ptr<utile::observer<>>> m_timeout_observers;
 	};
 }

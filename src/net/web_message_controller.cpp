@@ -1,6 +1,7 @@
 #include "web_message_controller.hpp"
 
 #include "../utile/timer.hpp"
+#include "../utile/finally.hpp"
 
 namespace net
 {
@@ -13,6 +14,8 @@ namespace net
 			return;
 		}
 
+		auto delete_callback_on_exit = utile::finally([this]() { if (this) m_write_callback = nullptr; });
+		
 		m_reciever.async_get_response(callback);
 	}
 
@@ -56,16 +59,25 @@ namespace net
 		return m_reciever.get_response();
 	}
 
-	// LIMITATION FOR NOW TO SEND ONLY ONE MESSAGE AT A TIME. TO BE CHANGED!!!
-
 	void web_message_controller::send_async(http_request&& request, async_get_callback& callback) noexcept
 	{
-		write_callback = std::bind(&web_message_controller::get_response_post_async_send,
-			this,
-			std::placeholders::_1,
-			callback);
+		{
+			std::scoped_lock lock(m_mutex);
 
-		m_dispatcher.send_async(request, write_callback);
+			if (m_write_callback)
+			{
+				if (callback)
+					callback(nullptr, utile::web_error(std::error_code(5, std::generic_category()), "Request already ongoing"));
+				return;
+			}
+
+			m_write_callback = std::bind(&web_message_controller::get_response_post_async_send,
+				this,
+				std::placeholders::_1,
+				std::ref(callback));
+		}
+
+		m_dispatcher.send_async(request, m_write_callback);
 	}
 
 	void web_message_controller::attack_timeout_observer(const std::shared_ptr<utile::observer<>>& obs)
