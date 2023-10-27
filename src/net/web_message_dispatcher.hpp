@@ -17,12 +17,16 @@ namespace net
 	{
 	public:
 		web_message_dispatcher() = delete;
+
 		web_message_dispatcher(std::shared_ptr<boost::asio::ip::tcp::socket> socket);
 
 		utile::web_error send(const http_request& request) noexcept;
+		utile::web_error reply(const http_request& request) noexcept;
 
 		void send_async(const http_request& request, async_send_callback& callback) noexcept;
 
+		void reply_async(const http_response& request, async_send_callback& callback) noexcept;
+		
 	private:
 		void async_write(async_send_callback& callback) noexcept;
 

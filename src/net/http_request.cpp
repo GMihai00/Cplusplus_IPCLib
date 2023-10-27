@@ -21,7 +21,7 @@ namespace net
 	{
 		m_host = host;
 	}
-
+	
 	std::string http_request::to_string() const
 	{
 		std::stringstream ss;

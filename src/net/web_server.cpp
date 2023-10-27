@@ -87,8 +87,13 @@ namespace net
                             return;
                         }
 
-                        // auto ret = m_clients_controllers.emplace(*id, web_message_controller(client_socket));
-
+                        auto ret = m_clients_controllers.emplace(id.value(), std::make_shared<web_message_controller>(client_socket));
+                        
+                        if (!ret.second)
+                        {
+                            std::cerr << "Internal error";
+                            return;
+                        }
                         on_client_connect(client_socket);
 
                         // start listening to messages, method to be added to web_message_controller that waits for request

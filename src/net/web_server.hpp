@@ -35,7 +35,7 @@ namespace net
         
         utile::thread_safe_queue<uint64_t> m_available_connection_ids;
 
-        std::map<uint64_t, web_message_controller> m_clients_controllers;
+        std::map<uint64_t, std::shared_ptr<web_message_controller>> m_clients_controllers;
 
         // boost::asio::ip::tcp::socket socket instead of connection
 
