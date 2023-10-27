@@ -1,58 +1,60 @@
 #pragma once
 
-/*
 #include <boost/asio.hpp>
 #include <boost/asio/ts/buffer.hpp>
 #include <boost/asio/ts/internet.hpp>
 
 #include <system_error>
-#include <optional>
+
+#include "../utile/thread_safe_queue.hpp"
 
 #include "http_request.hpp"
+#include "web_message_controller.hpp"
+#include "../utile/data_types.hpp"
+#include "../utile/generic_error.hpp"
 
 namespace net
 {
 	class web_server
 	{
 	public:
-		web_server();
+
+		web_server(const utile::IP_ADRESS& host, utile::PORT port, const uint64_t max_nr_connections = 1000);
 		~web_server();
 
-		std::error_code start();
-		std::error_code stop();
+		utile::web_error start();
+        utile::web_error stop();
 	private:
+
 		void wait_for_client_connection() noexcept;
 
 		boost::asio::ip::tcp::endpoint m_endpoint;
-		std::optional<boost::asio::ip::tcp::acceptor> m_connection_accepter = std::nullopt;
+		boost::asio::ip::tcp::acceptor m_connection_accepter;
 		boost::asio::io_context m_context;
+        std::mutex m_mutex;
+        
+        utile::thread_safe_queue<uint64_t> m_available_connection_ids;
+
+        std::map<uint64_t, web_message_controller> m_clients_controllers;
 
         // boost::asio::ip::tcp::socket socket instead of connection
 
-        virtual bool can_client_connect([[maybe_unused]] std::shared_ptr<connection<T>> client) noexcept
+        virtual bool can_client_connect([[maybe_unused]] const std::shared_ptr<boost::asio::ip::tcp::socket> client) noexcept
         {
             return true;
         }
 
-        virtual void on_client_connect([[maybe_unused]] std::shared_ptr<connection<T>> client) noexcept
+        virtual void on_client_connect([[maybe_unused]] const std::shared_ptr<boost::asio::ip::tcp::socket> client) noexcept
         {
 
         }
 
-        virtual void on_client_disconnect([[maybe_unused]] std::shared_ptr<connection<T>> client) noexcept
+        virtual void on_client_disconnect([[maybe_unused]] const std::shared_ptr<boost::asio::ip::tcp::socket> client) noexcept
         {
         }
 
-        // task can be handle in a async matter to think about a way to make this happen maybe create another sepparate class
-        // maybe instead I could have a send_async and on_async_message and have it call on_message and que up futures inside  
-        // will have to add apart from queue a set of pending tasks or smth alike
-        virtual void on_message_async([[maybe_unused]] std::shared_ptr<connection<T>> client, [[maybe_unused]] net::http_request& req) noexcept
-        {
-            // TO DO, TO BE DISCUSSED IF I CAN JUST HAVE IT RUN ON_MESSAGE INSTEAD
-        }
-
-        virtual void on_message([[maybe_unused]] std::shared_ptr<connection<T>> client, [[maybe_unused]] net::http_request& req) noexcept
+        virtual void on_message([[maybe_unused]] const std::shared_ptr<boost::asio::ip::tcp::socket> client, [[maybe_unused]] net::http_request& req) noexcept
         {
         }
 	};
-} */
+} 

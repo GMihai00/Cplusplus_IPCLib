@@ -163,6 +163,7 @@
     <ClCompile Include="net\web_message_controller.cpp" />
     <ClCompile Include="net\web_message_dispatcher.cpp" />
     <ClCompile Include="net\web_message_reciever.cpp" />
+    <ClCompile Include="net\web_server.cpp" />
     <ClCompile Include="security\rsa.cpp" />
     <ClCompile Include="utile\finally.cpp" />
   </ItemGroup>

@@ -306,14 +306,6 @@ namespace net
         virtual void on_client_disconnect([[maybe_unused]]  std::shared_ptr<connection<T>> client) noexcept
         {
         }
-    
-        // task can be handle in a async matter to think about a way to make this happen maybe create another sepparate class
-        // maybe instead I could have a send_async and on_async_message and have it call on_message and que up futures inside  
-        // will have to add apart from queue a set of pending tasks or smth alike
-        virtual void on_message_async([[maybe_unused]] std::shared_ptr<connection<T>> client, [[maybe_unused]] message<T>& msg) noexcept
-        {
-            // TO DO, TO BE DISCUSSED IF I CAN JUST HAVE IT RUN ON_MESSAGE INSTEAD
-        }
 
         virtual void on_message([[maybe_unused]] std::shared_ptr<connection<T>> client, [[maybe_unused]] message<T>& msg) noexcept
         {

@@ -19,6 +19,7 @@ namespace net
 		void attack_timeout_observer(const std::shared_ptr<utile::observer<>>& obs);
 		// TO DO: void remove_observer();
 
+
 	private:
 		void get_response_post_async_send(utile::web_error err, async_get_callback& callback);
 

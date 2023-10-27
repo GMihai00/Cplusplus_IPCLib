@@ -33,6 +33,11 @@ namespace utile
             return t;
         }
 
+        void push_unsafe(const T& elem)
+        {
+            m_queue.push(elem);
+        }
+
         void push(const T& elem)
         {
             std::lock_guard<std::mutex> lock(m_mutexWrite);
