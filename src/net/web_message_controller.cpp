@@ -80,7 +80,7 @@ namespace net
 		m_dispatcher.send_async(request, m_write_callback);
 	}
 
-	void web_message_controller::attack_timeout_observer(const std::shared_ptr<utile::observer<>>& obs)
+	void web_message_controller::attach_timeout_observer(const std::shared_ptr<utile::observer<>>& obs)
 	{
 		m_timeout_observers.push_back(obs);
 	}
@@ -90,8 +90,21 @@ namespace net
 		return m_dispatcher.reply(response);
 	}
 
-	void web_message_controller::reply_async(http_response& response, async_send_callback& callback) noexcept
+	void web_message_controller::reply_async(http_response&& response, async_send_callback& callback) noexcept
 	{
+		{
+			std::scoped_lock lock(m_mutex);
+
+			if (m_write_callback)
+			{
+				if (callback)
+					callback(utile::web_error(std::error_code(5, std::generic_category()), "Request already ongoing"));
+				return;
+			}
+
+			m_write_callback = callback;
+		}
+
 		return m_dispatcher.reply_async(response, callback);
 	}
 }

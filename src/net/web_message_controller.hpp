@@ -16,13 +16,13 @@ namespace net
 		std::pair<std::shared_ptr<http_response>, utile::web_error> send(http_request&& request, const uint16_t timeout = 0) noexcept;
 		void send_async(http_request&& request, async_get_callback& callback) noexcept;
 
-		void attack_timeout_observer(const std::shared_ptr<utile::observer<>>& obs);
+		void attach_timeout_observer(const std::shared_ptr<utile::observer<>>& obs);
 		// TO DO: void remove_observer();
 		utile::web_error start_listening_for_incoming_req(async_req_callback& callback) noexcept;
 		void stop_listening_for_incoming_req() noexcept;
 
 		utile::web_error reply(http_response& response) noexcept;
-		void reply_async(http_response& response, async_send_callback& callback) noexcept;
+		void reply_async(http_response&& response, async_send_callback& callback) noexcept;
 	private:
 		void get_response_post_async_send(utile::web_error err, async_get_callback& callback);
 

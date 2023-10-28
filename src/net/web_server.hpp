@@ -96,7 +96,7 @@ namespace net
                    auto reply = (it->second)(req);
 
                    /*TO DO*/ auto m_my_callback = async_send_callback();
-                   it2->second->reply_async(reply, m_my_callback);
+                   it2->second->reply_async(std::move(reply), m_my_callback);
                }
            }
         }
