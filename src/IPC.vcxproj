@@ -156,6 +156,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ipc.cpp" />
+    <ClCompile Include="net\ihttp_message.cpp" />
     <ClCompile Include="net\http_request.cpp" />
     <ClCompile Include="net\http_response.cpp" />
     <ClCompile Include="net\secure_web_client.cpp" />
@@ -171,6 +172,7 @@
     <ClInclude Include="logger.hpp" />
     <ClInclude Include="net\client.hpp" />
     <ClInclude Include="net\connection.hpp" />
+    <ClInclude Include="net\ihttp_message.hpp" />
     <ClInclude Include="net\http_request.hpp" />
     <ClInclude Include="net\http_response.hpp" />
     <ClInclude Include="net\message.hpp" />

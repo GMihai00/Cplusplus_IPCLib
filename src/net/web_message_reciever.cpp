@@ -3,8 +3,6 @@
 #include <iostream>
 #include <boost/bind.hpp>
 
-#include "../utile/finally.hpp"
-
 namespace net
 {
 	namespace details
@@ -48,104 +46,45 @@ namespace net
 
 	// !m_socket->is_open() facute pe controller
 
-	std::pair<std::shared_ptr<http_response>, utile::web_error> web_message_reciever::get_response() noexcept try
+
+	void web_message_reciever::async_read(std::shared_ptr<ihttp_message> message, async_get_callback& callback) noexcept
 	{
-		{
-			std::scoped_lock lock(m_mutex);
-			if (m_waiting_for_response)
-			{
-				return { nullptr, REQUEST_ALREADY_ONGOING };
-			}
-			m_waiting_for_response = true;
-		}
-
-		auto final_action = utile::finally([&]() {
-			m_waiting_for_response = false;
-			});
-
-		auto response = std::make_shared<http_response>();
-
-		boost::asio::read_until(*m_socket, response->get_buffer(), "\r\n\r\n");
-
-		if (!response->build_header_from_data_recieved())
-		{
-			return { nullptr, utile::web_error(std::error_code(5, std::generic_category()), "Invalid message header recieved") };
-		}
-
-		try_to_extract_body(response);
-
-		response->finalize_message();
-
-		return { response, utile::web_error() };
-	}
-	catch (const boost::system::system_error& err)
-	{
-		return { nullptr, utile::web_error(err.code(), err.what()) };
-	}
-	catch (const std::exception& err)
-	{
-		return { nullptr, utile::web_error(std::error_code(1000, std::generic_category()), err.what()) };
-	}
-	catch (...)
-	{
-		return { nullptr, INTERNAL_ERROR };
-	}
-
-	void web_message_reciever::async_get_response(async_get_callback& callback) noexcept
-	{
-		{
-			std::scoped_lock lock(m_mutex);
-			if (m_waiting_for_response)
-			{
-				if (callback) callback(nullptr, REQUEST_ALREADY_ONGOING);
-				return;
-			}
-			m_waiting_for_response = true;
-		}
-
-		auto response = std::make_shared<http_response>();
-
-		async_read(response, callback);
-	}
-
-	void web_message_reciever::async_read(std::shared_ptr<http_response> response, async_get_callback& callback) noexcept
-	{
-		boost::asio::async_read_until(*m_socket, response->get_buffer(), "\r\n\r\n", [this, response, &callback](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
+		boost::asio::async_read_until(*m_socket, message->get_buffer(), "\r\n\r\n", [this, message, &callback](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
 			if (error) 
 			{
-				m_waiting_for_response = false;
+				m_waiting_for_message = false;
 				if (callback) callback(nullptr, utile::web_error(std::error_code(error.value(), std::generic_category()), error.message()));
 			}
 			else
 			{
-				if (!response->build_header_from_data_recieved())
+				if (!message->build_header_from_data_recieved())
 				{
-					m_waiting_for_response = false;
+					m_waiting_for_message = false;
 					if (callback) callback(nullptr, utile::web_error(std::error_code(error.value(), std::generic_category()), error.message()));
 				}
 				else
 				{
-					async_try_to_extract_body(response, callback);
+					async_try_to_extract_body(message, callback);
 				}
 			}
 		});
 	}
 
-	void web_message_reciever::try_to_extract_body(std::shared_ptr<http_response> response)
+	void web_message_reciever::try_to_extract_body(std::shared_ptr<ihttp_message> message)
 	{
-		try_to_extract_body_using_current_lenght(response) || try_to_extract_body_using_transfer_encoding(response) || try_to_extract_body_using_connection_closed(response);
+		try_to_extract_body_using_current_lenght(message) || try_to_extract_body_using_transfer_encoding(message) || try_to_extract_body_using_connection_closed(message);
 	}
 
-	bool web_message_reciever::try_to_extract_body_using_current_lenght(std::shared_ptr<http_response> response)
+	bool web_message_reciever::try_to_extract_body_using_current_lenght(std::shared_ptr<ihttp_message> message)
 	{
-		auto body_lenght = response->get_header_value<uint32_t>("Content-Length");
+		auto body_lenght = message->get_header_value<uint32_t>("Content-Length");
 		if (body_lenght == std::nullopt)
 		{
 			return false;
 		}
 
 		// remove already read characters from size of buffer;
-		*body_lenght -= response->get_buffer().size();
+		*body_lenght -= message->get_buffer().size();
 
 		std::size_t available_bytes = 0;
 		do
@@ -154,13 +93,13 @@ namespace net
 
 			if (available_bytes >= *body_lenght)
 			{
-				boost::asio::read(*m_socket, response->get_buffer(), boost::asio::transfer_exactly(*body_lenght));
+				boost::asio::read(*m_socket, message->get_buffer(), boost::asio::transfer_exactly(*body_lenght));
 				body_lenght.value() = 0;
 			}
 			else
 			{
 				*body_lenght -= available_bytes;
-				boost::asio::read(*m_socket, response->get_buffer(), boost::asio::transfer_exactly(available_bytes));
+				boost::asio::read(*m_socket, message->get_buffer(), boost::asio::transfer_exactly(available_bytes));
 			}
 
 		} while (*body_lenght != 0);
@@ -168,9 +107,9 @@ namespace net
 		return true;
 	}
 
-	bool web_message_reciever::try_to_extract_body_using_transfer_encoding(std::shared_ptr<http_response> response)
+	bool web_message_reciever::try_to_extract_body_using_transfer_encoding(std::shared_ptr<ihttp_message> message)
 	{
-		auto encoding = response->get_header_value<std::string>("Transfer-Encoding");
+		auto encoding = message->get_header_value<std::string>("Transfer-Encoding");
 
 		if (encoding == std::nullopt || encoding.value() != "chunked")
 		{
@@ -181,16 +120,15 @@ namespace net
 
 		{
 			// clear already existing buffer and copy to streambuf
-			std::size_t bytes_to_copy = response->get_buffer().size();
 
-			std::istream source_stream(&(response->get_buffer()));
+			std::istream source_stream(&(message->get_buffer()));
 
 			std::ostream target_stream(&streambuf);
 
 			target_stream << source_stream.rdbuf();
 		}
 
-		std::ostream ostream(&(response->get_buffer()));
+		std::ostream ostream(&(message->get_buffer()));
 
 		bool should_read_size = true;
 		uint16_t buffer_size = 0;
@@ -237,7 +175,7 @@ namespace net
 		return true;
 	}
 
-	bool web_message_reciever::try_to_extract_body_using_connection_closed(std::shared_ptr<http_response> response)
+	bool web_message_reciever::try_to_extract_body_using_connection_closed(std::shared_ptr<ihttp_message> response)
 	{
 		auto connection_status = response->get_header_value<std::string>("Connection");
 
@@ -259,83 +197,83 @@ namespace net
 		return true;
 	}
 
-	void web_message_reciever::async_read_all_remaining_data(const boost::system::error_code& error, std::size_t bytes_transferred, std::shared_ptr<http_response> response, async_get_callback& callback) noexcept
+	void web_message_reciever::async_read_all_remaining_data(const boost::system::error_code& error, std::size_t bytes_transferred, std::shared_ptr<ihttp_message> message, async_get_callback& callback) noexcept
 	{
 		if (!error)
 		{
 			if (bytes_transferred > 0)
 			{
-				boost::asio::async_read(*m_socket, response->get_buffer(),
+				boost::asio::async_read(*m_socket, message->get_buffer(),
 					boost::asio::transfer_at_least(1), // Read at least 1 byte
 					boost::bind(&web_message_reciever::async_read_all_remaining_data,
 						this,
 						boost::asio::placeholders::error,
 						boost::asio::placeholders::bytes_transferred,
-						boost::ref(response),
+						boost::ref(message),
 						boost::ref(callback)
 					)
 				);
 			}
 			else
 			{
-				m_waiting_for_response = false;
-				response->finalize_message();
-				if (callback) callback(response, utile::web_error());
+				m_waiting_for_message = false;
+				message->finalize_message();
+				if (callback) callback(message, utile::web_error());
 			}
 		}
 		else
 		{
-			m_waiting_for_response = false;
+			m_waiting_for_message = false;
 			if (callback) callback(nullptr, utile::web_error(std::error_code(error.value(), std::generic_category()), error.message()));
 		}
 	}
 
-	void web_message_reciever::async_read_bytes(std::shared_ptr<http_response> response, async_get_callback& callback, std::size_t bytes_remaining) noexcept
+	void web_message_reciever::async_read_bytes(std::shared_ptr<ihttp_message> message, async_get_callback& callback, std::size_t bytes_remaining) noexcept
 	{
 		if (bytes_remaining == 0)
 		{
-			m_waiting_for_response = false;
-			response->finalize_message();
-			if (callback) callback(response, utile::web_error());
+			m_waiting_for_message = false;
+			message->finalize_message();
+			if (callback) callback(message, utile::web_error());
 			return;
 		}
 
-		boost::asio::async_read(*m_socket, response->get_buffer(), boost::asio::transfer_at_least(1),
-			[this, &callback, response, bytes_remaining](const boost::system::error_code& error, std::size_t bytes_transferred) {
+		boost::asio::async_read(*m_socket, message->get_buffer(), boost::asio::transfer_at_least(1),
+			[this, &callback, message, bytes_remaining](const boost::system::error_code& error, std::size_t bytes_transferred) {
 				if (error)
 				{
-					m_waiting_for_response = false;
+					m_waiting_for_message = false;
 					if (callback) callback(nullptr, utile::web_error(std::error_code(error.value(), std::generic_category()), error.message()));
 				}
 				else
 				{
-					async_read_bytes(response, callback, bytes_remaining - bytes_transferred);
+					async_read_bytes(message, callback, bytes_remaining - bytes_transferred);
 				}
 			});
 	}
 
-	void web_message_reciever::async_try_to_extract_body(std::shared_ptr<http_response> response, async_get_callback& callback) noexcept
+	void web_message_reciever::async_try_to_extract_body(std::shared_ptr<ihttp_message> message, async_get_callback& callback) noexcept
 	{
-		async_try_to_extract_body_using_current_lenght(response, callback);
+		async_try_to_extract_body_using_current_lenght(message, callback);
 	}
 
-	void web_message_reciever::async_try_to_extract_body_using_current_lenght(std::shared_ptr<http_response> response, async_get_callback& callback) noexcept
+	void web_message_reciever::async_try_to_extract_body_using_current_lenght(std::shared_ptr<ihttp_message> message, async_get_callback& callback) noexcept
 	{
-		auto body_lenght = response->get_header_value<uint32_t>("Content-Length");
+		auto body_lenght = message->get_header_value<uint32_t>("Content-Length");
 		if (body_lenght == std::nullopt)
 		{
-			async_try_to_extract_body_using_transfer_encoding(response, callback);
+			async_try_to_extract_body_using_transfer_encoding(message, callback);
 			return;
 		}
 
 		// remove already read characters from size of buffer;
-		*body_lenght -= response->get_buffer().size();
+		*body_lenght -= message->get_buffer().size();
 
 		std::size_t bytes_to_read = (*body_lenght);
-		async_read_bytes(response, callback, bytes_to_read);
+		async_read_bytes(message, callback, bytes_to_read);
 	}
 
-	void web_message_reciever::async_read_fragmented_body(std::shared_ptr<http_response> response, async_get_callback& callback, bool should_read_size, uint16_t buffer_size) noexcept
+	void web_message_reciever::async_read_fragmented_body(std::shared_ptr<ihttp_message> message, async_get_callback& callback, bool should_read_size, uint16_t buffer_size) noexcept
 	{
 		do
 		{
@@ -345,15 +283,15 @@ namespace net
 
 			if (delimiter == std::nullopt)
 			{
-				boost::asio::async_read_until(*m_socket, m_request_buff, "\r\n", [this, &callback, response, should_read_size, buffer_size](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
+				boost::asio::async_read_until(*m_socket, m_request_buff, "\r\n", [this, &callback, message, should_read_size, buffer_size](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
 					if (error)
 					{
-						m_waiting_for_response = false;
+						m_waiting_for_message = false;
 						if (callback) callback(nullptr, utile::web_error(std::error_code(error.value(), std::generic_category()), "Failed to read enough data err: " + error.message()));
 					}
 					else
 					{
-						async_read_fragmented_body(response, callback, should_read_size, buffer_size);
+						async_read_fragmented_body(message, callback, should_read_size, buffer_size);
 					}
 					});
 				return;
@@ -363,10 +301,11 @@ namespace net
 			{
 				if (*delimiter - 2 != buffer_size)
 				{
-					throw std::runtime_error("Invalid message body recieved, missing bytes: " + (buffer_size - (*delimiter - 1)));
+					if (callback) callback(nullptr, utile::web_error(std::error_code(5, std::generic_category()), "Invalid message body recieved, missing bytes: " + (buffer_size - (*delimiter - 1))));
+					return;
 				}
 
-				std::ostream ostream(&(response->get_buffer()));
+				std::ostream ostream(&(message->get_buffer()));
 				details::copy_buffer_data_to_stream(ostream, m_request_buff, *delimiter);
 			}
 			else try
@@ -375,7 +314,7 @@ namespace net
 			}
 			catch (const std::exception& err)
 			{
-				m_waiting_for_response = false;
+				m_waiting_for_message = false;
 				if (callback) callback(nullptr, utile::web_error(std::error_code(-1, std::generic_category()), "Invalid fragmented body found err: " + std::string(err.what())));
 				return;
 			}
@@ -386,54 +325,52 @@ namespace net
 
 		} while (buffer_size == 0 && should_read_size);
 
-		m_waiting_for_response = false;
-		response->finalize_message();
-		if (callback) callback(response, utile::web_error());
+		m_waiting_for_message = false;
+		message->finalize_message();
+		if (callback) callback(message, utile::web_error());
 	}
 
-	void web_message_reciever::async_try_to_extract_body_using_transfer_encoding(std::shared_ptr<http_response> response, async_get_callback& callback) noexcept
+	void web_message_reciever::async_try_to_extract_body_using_transfer_encoding(std::shared_ptr<ihttp_message> message, async_get_callback& callback) noexcept
 	{
-		auto encoding = response->get_header_value<std::string>("Transfer-Encoding");
+		auto encoding = message->get_header_value<std::string>("Transfer-Encoding");
 
 		if (encoding == std::nullopt || encoding.value() != "chunked")
 		{
-			async_try_to_extract_body_using_connection_closed(response, callback);
+			async_try_to_extract_body_using_connection_closed(message, callback);
 			return;
 		}
 
 		{
 			// clear already existing buffer and copy to streambuf
-			std::size_t bytes_to_copy = response->get_buffer().size();
-
-			std::istream source_stream(&(response->get_buffer()));
+			std::istream source_stream(&(message->get_buffer()));
 
 			std::ostream target_stream(&m_request_buff);
 
 			target_stream << source_stream.rdbuf();
 		}
 
-		async_read_fragmented_body(response, callback);
+		async_read_fragmented_body(message, callback);
 	}
 
-	void web_message_reciever::async_try_to_extract_body_using_connection_closed(std::shared_ptr<http_response> response, async_get_callback& callback) noexcept
+	void web_message_reciever::async_try_to_extract_body_using_connection_closed(std::shared_ptr<ihttp_message> message, async_get_callback& callback) noexcept
 	{
-		auto connection_status = response->get_header_value<std::string>("Connection");
+		auto connection_status = message->get_header_value<std::string>("Connection");
 
 		if (connection_status == std::nullopt || connection_status.value() != "closed")
 		{
 			// no body found
-			m_waiting_for_response = false;
-			response->finalize_message();
-			if (callback) callback(response, utile::web_error());
+			m_waiting_for_message = false;
+			message->finalize_message();
+			if (callback) callback(message, utile::web_error());
 		}
 
-		boost::asio::async_read(*m_socket, response->get_buffer(),
+		boost::asio::async_read(*m_socket, message->get_buffer(),
 			boost::asio::transfer_at_least(1), // Read at least 1 byte
 			boost::bind(&web_message_reciever::async_read_all_remaining_data,
 				this,
 				boost::asio::placeholders::error,
 				boost::asio::placeholders::bytes_transferred,
-				boost::ref(response),
+				boost::ref(message),
 				boost::ref(callback)
 			)
 		);

@@ -63,7 +63,6 @@ namespace net
         stop();
     }
 
-    // ASYNC OK
     void web_server::wait_for_client_connection() noexcept
     {
         // to see what happends if I call async_accept when acceptor is not open
@@ -116,6 +115,75 @@ namespace net
 
                 wait_for_client_connection();
             });
+    }
+
+    bool web_server::can_client_connect([[maybe_unused]] const std::shared_ptr<boost::asio::ip::tcp::socket> client) noexcept
+    {
+        return true;
+    }
+
+    void web_server::on_client_connect([[maybe_unused]] const std::shared_ptr<boost::asio::ip::tcp::socket> client) noexcept
+    {
+
+    }
+
+    void web_server::on_client_disconnect([[maybe_unused]] const std::shared_ptr<boost::asio::ip::tcp::socket> client) noexcept
+    {
+    }
+
+    void web_server::on_message(const uint64_t client_id, std::shared_ptr<net::http_request> req, utile::web_error err) noexcept
+    {
+        if (!err)
+        {
+            // for debug only
+            std::cerr << err.message() << "\n";
+            return;
+        }
+
+        auto method = req->get_method();
+
+        if (auto it = m_mappings.find(method); it != m_mappings.end())
+        {
+            if (auto it2 = m_clients_controllers.find(client_id); it2 != m_clients_controllers.end())
+            {
+                auto reply = (it->second)(req);
+
+                it2->second->reply(reply);
+            }
+        }
+    }
+
+    void web_server::on_message_async(const uint64_t client_id, std::shared_ptr<net::http_request>& req, utile::web_error err) noexcept
+    {
+        if (!err)
+        {
+            // for debug only
+            std::cerr << err.message() << "\n";
+            return;
+        }
+
+        auto method = req->get_method();
+
+        if (auto it = m_mappings.find(method); it != m_mappings.end())
+        {
+            if (auto it2 = m_clients_controllers.find(client_id); it2 != m_clients_controllers.end())
+            {
+                auto reply = (it->second)(req);
+
+                /*TO DO*/ auto m_my_callback = async_send_callback();
+                it2->second->reply_async(std::move(reply), m_my_callback);
+            }
+        }
+    }
+
+    bool web_server::add_mapping(const std::string& method, async_req_handle_callback action)
+    {
+        return m_mappings.emplace(method, action).second;
+    }
+
+    void web_server::remove_mapping(const std::string& method)
+    {
+        m_mappings.erase(method);
     }
 
 

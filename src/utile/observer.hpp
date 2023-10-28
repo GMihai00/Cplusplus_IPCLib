@@ -28,5 +28,12 @@ namespace utile
 	};
 
 	template <typename... Args>
+	struct observer_shared_ptr_comparator {
+		bool operator()(const std::shared_ptr<observer<Args...>>& left, const std::shared_ptr<observer<Args...>>& right) const {
+			return *left < *right;
+		}
+	};
+
+	template <typename... Args>
 	uint32_t observer<Args...>::OBJ_ID = 0;
 } // namespace utile

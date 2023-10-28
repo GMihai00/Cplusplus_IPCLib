@@ -37,6 +37,34 @@ namespace net
 		any
 	};
 
+
+	inline request_type string_to_request_type(const std::string& req_type)
+	{
+		if (req_type == "GET") {
+			return request_type::GET;
+		}
+		else if (req_type == "POST") {
+			return request_type::POST;
+		}
+		else if (req_type == "PUT") {
+			return request_type::PUT;
+		}
+		else if (req_type == "HEAD") {
+			return request_type::HEAD;
+		}
+		else if (req_type == "PATCH") {
+			return request_type::PATCH;
+		}
+		else if (req_type == "OPTIONS") {
+			return request_type::OPTIONS;
+		}
+		else if (req_type == "DELETE") {
+			return request_type::DEL;
+		}
+
+		throw std::runtime_error("Failed to find coresponding request type");
+	}
+
 	inline std::string request_type_to_string(const request_type req_type)
 	{
 		switch (req_type)

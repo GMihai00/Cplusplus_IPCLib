@@ -1,5 +1,7 @@
 #pragma once
 
+#include <set>
+
 #include "web_message_dispatcher.hpp"
 #include "web_message_reciever.hpp"
 
@@ -17,9 +19,10 @@ namespace net
 		void send_async(http_request&& request, async_get_callback& callback) noexcept;
 
 		void attach_timeout_observer(const std::shared_ptr<utile::observer<>>& obs);
-		// TO DO: void remove_observer();
-		utile::web_error start_listening_for_incoming_req(async_req_callback& callback) noexcept;
-		void stop_listening_for_incoming_req() noexcept;
+		void remove_observer(const std::shared_ptr<utile::observer<>>& obs);
+
+		std::pair<std::shared_ptr<http_request>, utile::web_error> get_request() noexcept;
+		void async_get_request(async_get_callback& callback) noexcept;
 
 		utile::web_error reply(http_response& response) noexcept;
 		void reply_async(http_response&& response, async_send_callback& callback) noexcept;
@@ -33,6 +36,6 @@ namespace net
 		std::mutex m_mutex;
 		std::atomic_bool m_can_send = true;
 		async_send_callback m_write_callback;
-		std::vector<std::shared_ptr<utile::observer<>>> m_timeout_observers;
+		std::set<std::shared_ptr<utile::observer<>>, utile::observer_shared_ptr_comparator<>> m_timeout_observers;
 	};
 }

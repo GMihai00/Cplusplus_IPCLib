@@ -99,6 +99,9 @@
     <ClInclude Include="utile\generic_error.hpp">
       <Filter>Header Files\utile</Filter>
     </ClInclude>
+    <ClInclude Include="net\ihttp_message.hpp">
+      <Filter>Header Files\net</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ipc.cpp">
@@ -132,6 +135,9 @@
       <Filter>Source Files\net</Filter>
     </ClCompile>
     <ClCompile Include="net\web_server.cpp">
+      <Filter>Source Files\net</Filter>
+    </ClCompile>
+    <ClCompile Include="net\ihttp_message.cpp">
       <Filter>Source Files\net</Filter>
     </ClCompile>
   </ItemGroup>

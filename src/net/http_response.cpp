@@ -3,29 +3,12 @@
 
 namespace net
 {
-
-
-	boost::asio::streambuf& http_response::get_buffer()
+	http_response::http_response(const uint16_t status, const std::string reason, const nlohmann::json& header_data,
+		const std::vector<uint8_t>& body_data) : m_status(status), m_reason(reason)
 	{
-		return m_buffer;
-	}
-
-	nlohmann::json http_response::get_header() const
-	{
-		return m_header_data;
-	}
-
-	std::vector<uint8_t> http_response::get_body_raw() const
-	{
-		return m_body_data;
-	}
-
-	nlohmann::json http_response::get_json_body() const
-	{
-		if (!m_body_data.empty())
-			return nlohmann::json::parse(std::string(m_body_data.begin(), m_body_data.end()));
-		
-		return nlohmann::json();
+		m_header_data = header_data;
+		m_body_data = body_data;
+		m_header_data["Content-Length"] = body_data.size();
 	}
 
 	std::string http_response::to_string() const
@@ -55,34 +38,8 @@ namespace net
 		return ss.str();
 	}
 
-	std::string http_response::extract_header_from_buffer()
+	bool http_response::load_header_prefix(std::istringstream& iss) noexcept try
 	{
-		const char* data = boost::asio::buffer_cast<const char*>(m_buffer.data());
-		std::size_t size = m_buffer.size();
-		const char* search_str = "\r\n\r\n";
-		std::size_t search_len = std::strlen(search_str);
-
-		std::size_t header_end = size - search_len;
-
-		for (std::size_t i = 0; i < size - search_len + 1; ++i) {
-			if (std::memcmp(data + i, search_str, search_len) == 0) {
-				header_end = i;
-				break;
-			}
-		}
-
-		return std::string(data, header_end + search_len);
-	}
-
-	// to change this to return web_error after finishing functionality splitting
-	bool http_response::build_header_from_data_recieved()
-	{
-		auto header = extract_header_from_buffer();
-
-		m_buffer.consume(header.size());
-
-		std::istringstream iss(header);
-		
 		std::string line;
 		if (std::getline(iss, line, '\r'))
 		{
@@ -116,40 +73,12 @@ namespace net
 			std::cerr << "Failed to find req answear";
 			return false;
 		}
-
-		while (std::getline(iss, line, '\r'))
-		{
-			if (!line.empty()) {
-				
-				if (auto it = line.find(": "); it != std::string::npos && it + 2 < line.size())
-				{
-					auto name = line.substr(0, it);
-					auto value = line.substr(it + 2, line.size());
-					try
-					{
-						auto int_value = std::stof(value);
-						m_header_data.emplace(name, int_value);
-					}
-					catch (...)
-					{
-						m_header_data.emplace(name, value);
-					}
-				}
-
-			}
-
-			if (iss.get() != '\n') {
-				break;
-			}
-		}
-
-		if (!iss.eof())
-		{
-			std::cerr << "Invalid characters still left inside the header";
-			return false;
-		}
-
 		return true;
+	}
+	catch (const std::exception& err)
+	{
+		std::cerr << err.what();
+		return false;
 	}
 	
 	std::string http_response::get_version() const
@@ -165,16 +94,5 @@ namespace net
 	std::string http_response::get_reason() const
 	{
 		return m_reason;
-	}
-
-	void http_response::finalize_message()
-	{
-		const char* data = boost::asio::buffer_cast<const char*>(m_buffer.data());
-		std::size_t size = m_buffer.size();
-
-		auto string_data = std::string(data, size);
-
-		if (!string_data.empty())
-			m_body_data = std::vector<uint8_t>(string_data.begin(), string_data.end());
 	}
 }
