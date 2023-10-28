@@ -21,7 +21,12 @@ namespace net
 	{
 		m_host = host;
 	}
-	
+
+	std::string http_request::get_method() const
+	{
+		return m_method;
+	}
+
 	std::string http_request::to_string() const
 	{
 		std::stringstream ss;

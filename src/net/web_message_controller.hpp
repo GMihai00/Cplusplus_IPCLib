@@ -18,7 +18,7 @@ namespace net
 
 		void attack_timeout_observer(const std::shared_ptr<utile::observer<>>& obs);
 		// TO DO: void remove_observer();
-		utile::web_error start_listening_for_incoming_req(async_req_handle_callback& callback) noexcept;
+		utile::web_error start_listening_for_incoming_req(async_req_callback& callback) noexcept;
 		void stop_listening_for_incoming_req() noexcept;
 
 		utile::web_error reply(http_response& response) noexcept;

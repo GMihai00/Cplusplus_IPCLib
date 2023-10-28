@@ -13,7 +13,7 @@ namespace net
 {
 	typedef std::function<void(std::shared_ptr<http_response>, utile::web_error)> async_get_callback;
 
-	typedef std::function<void(std::shared_ptr<http_request>, utile::web_error)> async_req_handle_callback;
+	typedef std::function<void(std::shared_ptr<http_request>, utile::web_error)> async_req_callback;
 
 	class web_message_reciever
 	{
@@ -25,7 +25,8 @@ namespace net
 		std::pair<std::shared_ptr<http_response>, utile::web_error> get_response() noexcept;
 		void async_get_response(async_get_callback& callback) noexcept;
 
-		void async_get_request(async_req_handle_callback& callback) noexcept;
+		std::pair<std::shared_ptr<http_request>, utile::web_error> get_request() noexcept;
+		void async_get_request(async_req_callback& callback) noexcept;
 		
 	private:
 		void async_read(std::shared_ptr<http_response> response, async_get_callback& callback) noexcept;

@@ -18,6 +18,7 @@ namespace net
 
 		void set_host(const std::string& host);
 
+		std::string get_method() const;
 		std::string to_string() const;
 	private:
 		request_type m_type;

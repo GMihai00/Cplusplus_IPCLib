@@ -85,4 +85,13 @@ namespace net
 		m_timeout_observers.push_back(obs);
 	}
 
+	utile::web_error web_message_controller::reply(http_response& response) noexcept
+	{
+		return m_dispatcher.reply(response);
+	}
+
+	void web_message_controller::reply_async(http_response& response, async_send_callback& callback) noexcept
+	{
+		return m_dispatcher.reply_async(response, callback);
+	}
 }

@@ -13,6 +13,7 @@ namespace net
 		nlohmann::json get_header() const;
 		std::vector<uint8_t> get_body_raw() const;
 		nlohmann::json get_json_body() const;
+		std::string to_string() const;
 
 		template <typename T>
 		std::optional<T> get_header_value(const std::string& name) try

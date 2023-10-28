@@ -21,7 +21,7 @@ namespace net
 		web_message_dispatcher(std::shared_ptr<boost::asio::ip::tcp::socket> socket);
 
 		utile::web_error send(const http_request& request) noexcept;
-		utile::web_error reply(const http_request& request) noexcept;
+		utile::web_error reply(const http_response& request) noexcept;
 
 		void send_async(const http_request& request, async_send_callback& callback) noexcept;
 

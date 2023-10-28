@@ -28,6 +28,33 @@ namespace net
 		return nlohmann::json();
 	}
 
+	std::string http_response::to_string() const
+	{
+		std::stringstream ss;
+
+		ss << m_version << " " << m_status << " " << m_reason << "\r\n";
+
+		for (const auto& item : m_header_data.items())
+		{
+			const auto& val = item.value();
+
+			if (val.is_number())
+			{
+				ss << item.key() << ": " << val.get<long long>() << "\r\n";
+			}
+			else if (val.is_string())
+			{
+				ss << item.key() << ": " << val.get<std::string>() << "\r\n";
+			}
+		}
+		
+		ss << "\r\n\r\n";
+
+		ss << std::string(m_body_data.begin(), m_body_data.end());
+
+		return ss.str();
+	}
+
 	std::string http_response::extract_header_from_buffer()
 	{
 		const char* data = boost::asio::buffer_cast<const char*>(m_buffer.data());
