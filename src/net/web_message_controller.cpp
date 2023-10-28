@@ -102,7 +102,7 @@ namespace net
 
 	utile::web_error web_message_controller::reply(http_response& response) noexcept
 	{
-		return m_dispatcher.reply(response);
+		return m_dispatcher.send<http_response>(response);
 	}
 
 	void web_message_controller::reply_async(http_response&& response, async_send_callback& callback) noexcept
@@ -120,6 +120,6 @@ namespace net
 			m_write_callback = callback;
 		}
 
-		return m_dispatcher.reply_async(response, callback);
+		return m_dispatcher.send_async<http_response>(response, callback);
 	}
 }
