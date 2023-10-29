@@ -127,10 +127,7 @@ namespace net
 					callback(utile::web_error(std::error_code(5, std::generic_category()), "Request already ongoing"));
 				return;
 			}
-			// problem here on client disconnect when finished writting message
-			// I kind of need a "safe callback" that has scoped_lock on call and on set/reset
-			// instead of deleting it for good from the callback map I just reset it
-			// somehow a way to avoid locking when calling
+
 			m_write_callback = [this, &callback](utile::web_error err) { 
 
 				if (this)
