@@ -26,6 +26,8 @@ namespace net
 
 		utile::web_error reply(http_response& response) noexcept;
 		void reply_async(http_response&& response, async_send_callback& callback) noexcept;
+
+		std::shared_ptr<boost::asio::ip::tcp::socket> get_connection_socket() const noexcept;
 	private:
 		void get_response_post_async_send(utile::web_error err, async_get_callback& callback);
 

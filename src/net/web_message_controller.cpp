@@ -5,6 +5,11 @@
 
 namespace net
 {
+	std::shared_ptr<boost::asio::ip::tcp::socket> web_message_controller::get_connection_socket() const noexcept
+	{
+		return m_socket;
+	}
+
 	void web_message_controller::get_response_post_async_send(utile::web_error err, async_get_callback& callback)
 	{
 		if (!err)

@@ -33,15 +33,21 @@ namespace net
 		virtual void on_client_disconnect(const std::shared_ptr<boost::asio::ip::tcp::socket> client) noexcept;
 	private:
 		void wait_for_client_connection() noexcept;
-        void on_message(const uint64_t client_id, std::shared_ptr<net::http_request> req, utile::web_error err) noexcept;
-        void on_message_async(const uint64_t client_id, std::shared_ptr<net::http_request>& req, utile::web_error err) noexcept;
+		void handle_client_connection(const std::shared_ptr<boost::asio::ip::tcp::socket>& client_socket) noexcept;
+        void on_message_async(const uint64_t client_id, std::shared_ptr<net::ihttp_message> msg, utile::web_error err) noexcept;
+		
+		void signal_bad_request(const std::shared_ptr<web_message_controller> client_controller) noexcept;
+		void disconnect(const std::shared_ptr<web_message_controller> client_controller) noexcept;
 
 		boost::asio::ip::tcp::endpoint m_endpoint;
 		boost::asio::ip::tcp::acceptor m_connection_accepter;
 		boost::asio::io_context m_context;
         std::mutex m_mutex;
+		std::thread m_thread_context;
+		boost::asio::io_context::work m_idle_work;
         utile::thread_safe_queue<uint64_t> m_available_connection_ids;
         std::map<std::string, async_req_handle_callback> m_mappings;
         std::map<uint64_t, std::shared_ptr<web_message_controller>> m_clients_controllers;
+		std::map<uint64_t, std::pair<async_get_callback, async_send_callback>> m_controllers_callbacks;
 	};
 } 
