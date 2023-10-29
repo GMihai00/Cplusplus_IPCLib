@@ -31,7 +31,7 @@ namespace net
 			}
 		}
 		
-		ss << "\r\n\r\n";
+		ss << "\r\n";
 
 		ss << std::string(m_body_data.begin(), m_body_data.end());
 

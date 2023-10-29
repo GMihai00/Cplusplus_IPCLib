@@ -245,8 +245,10 @@ namespace net
             {
                 auto reply = (it->second)(req);
 
-                /*TO DO*/ auto m_my_callback = async_send_callback(); // if send failed disconnect, if success listen to next requests
-                it2->second->reply_async(std::move(reply), m_my_callback);
+                if (auto it3 = m_controllers_callbacks.find(client_id); it3 != m_controllers_callbacks.end())
+                {
+                    it2->second->reply_async(std::move(reply), it3->second.second);
+                }
             }
         }
     }
