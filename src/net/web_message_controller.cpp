@@ -140,7 +140,7 @@ namespace net
 						m_can_send = true;
 					}
 
-					if (callback && m_socket->is_open())
+					if (callback)
 						callback(err);
 				} 
 			};
