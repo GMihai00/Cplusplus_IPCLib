@@ -191,6 +191,7 @@ namespace net
 
     void web_server::on_client_disconnect([[maybe_unused]] const std::shared_ptr<boost::asio::ip::tcp::socket> client) noexcept
     {
+        std::cout << "Client with ip: \"" << client->remote_endpoint().address().to_string() << "\" disconnected";
     }
 
     void web_server::disconnect(const std::shared_ptr<web_message_controller> client_controller) noexcept try
@@ -215,14 +216,6 @@ namespace net
 
     void web_server::on_message_async(const uint64_t client_id, std::shared_ptr<net::ihttp_message> msg, utile::web_error err) noexcept
     {
-        auto req = std::dynamic_pointer_cast<net::http_request>(msg);
-
-        if (req == nullptr)
-        {
-            std::cerr << "Internal error";
-            return;
-        }
-
         if (!err)
         {
             // for debug only
@@ -234,6 +227,14 @@ namespace net
                 m_clients_controllers.erase(it);
                 m_available_connection_ids.push(client_id);
             }
+            return;
+        }
+
+        auto req = std::dynamic_pointer_cast<net::http_request>(msg);
+
+        if (req == nullptr)
+        {
+            std::cerr << "Internal error";
             return;
         }
 
