@@ -122,9 +122,13 @@ namespace net
 				return;
 			}
 
-			m_write_callback = callback;
+			m_write_callback = [this, &callback](utile::web_error err) { 
+				if (callback) 
+					callback(err);  
+				m_write_callback = nullptr; 
+			};
 		}
 
-		return m_dispatcher.send_async<http_response>(response, callback);
+		return m_dispatcher.send_async<http_response>(response, m_write_callback);
 	}
 }

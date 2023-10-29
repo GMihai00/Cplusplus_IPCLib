@@ -64,18 +64,27 @@ int main()
 	
 	bool can_stop = false;
 
-	net::async_get_callback req_callback = [&can_stop](std::shared_ptr<net::ihttp_message> response, utile::web_error err_msg) {
+	net::async_get_callback req_callback;
+
+	req_callback = [&can_stop, &method, &web_client, &req_callback](std::shared_ptr<net::ihttp_message> response, utile::web_error err_msg) {
 		if (!response)
 		{
 			std::cerr << "Failed: " << err_msg.message();
 			exit(5);
 		}
 
-		std::cout << "Recieved header data: " << response->get_header().dump() << std::endl;
-		auto raw_body_data = response->get_body_raw();
-		std::cout << "Recieved body data: " << std::string(raw_body_data.begin(), raw_body_data.end()) << std::endl;
+		nlohmann::json additional_header_data = nlohmann::json({
+		{"Accept", "*/*"},
+		{"Connection", "keep-alive"},
+		{"Accept-Encoding", "gzip, deflate, br"}
+			});
+
+		std::cout << "Recieved response: " << response->to_string() << "\n";
+
+		net::http_request req(net::request_type::GET, method, net::content_type::any, additional_header_data);
 		
-		can_stop = true;
+		web_client.send_async(std::move(req), req_callback);
+		//can_stop = true;
 	};
 
 	web_client.send_async(std::move(req), req_callback);
