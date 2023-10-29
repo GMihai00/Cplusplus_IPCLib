@@ -14,12 +14,16 @@ namespace net
 	{
 		if (!err)
 		{
+			{
+				std::scoped_lock lock(m_mutex);
+				m_can_send = true;
+			}
+
 			if (callback) callback(nullptr, err);
-			m_can_send = true;
 			return;
 		}
 
-		auto delete_callback_on_exit = utile::finally([this]() { if (this) m_write_callback = nullptr; });
+		auto delete_callback_on_exit = utile::finally([this]() { if (this) { std::scoped_lock lock(m_mutex); m_can_send = true; } });
 		
 		m_reciever.async_get<http_response>(callback);
 	}
@@ -79,7 +83,7 @@ namespace net
 		{
 			std::scoped_lock lock(m_mutex);
 
-			if (m_write_callback)
+			if (!m_can_send)
 			{
 				if (callback)
 					callback(nullptr, utile::web_error(std::error_code(5, std::generic_category()), "Request already ongoing"));
@@ -90,6 +94,8 @@ namespace net
 				this,
 				std::placeholders::_1,
 				std::ref(callback));
+
+			m_can_send = false;
 		}
 
 		m_dispatcher.send_async(request, m_write_callback);
@@ -115,18 +121,30 @@ namespace net
 		{
 			std::scoped_lock lock(m_mutex);
 
-			if (m_write_callback)
+			if (!m_can_send)
 			{
 				if (callback)
 					callback(utile::web_error(std::error_code(5, std::generic_category()), "Request already ongoing"));
 				return;
 			}
-
+			// problem here on client disconnect when finished writting message
+			// I kind of need a "safe callback" that has scoped_lock on call and on set/reset
+			// instead of deleting it for good from the callback map I just reset it
+			// somehow a way to avoid locking when calling
 			m_write_callback = [this, &callback](utile::web_error err) { 
-				if (callback) 
-					callback(err);  
-				m_write_callback = nullptr; 
+
+				if (this)
+				{
+					{
+						std::scoped_lock lock(m_mutex);
+						m_can_send = true;
+					}
+
+					if (callback && m_socket->is_open())
+						callback(err);
+				} 
 			};
+			m_can_send = false;
 		}
 
 		return m_dispatcher.send_async<http_response>(response, m_write_callback);

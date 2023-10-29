@@ -70,8 +70,19 @@ namespace net
             disconnect(controller);
         }
 
+        if (!m_context.stopped())
+            m_context.stop();
+
         m_clients_controllers.clear();
-        m_controllers_callbacks.clear();
+
+        async_get_callback empty_get_callback = [](std::shared_ptr<ihttp_message>, utile::web_error) {};
+        async_send_callback empty_send_callback = [](utile::web_error err) {};
+        std::pair<async_get_callback, async_send_callback> empty_callback_pair(empty_get_callback, empty_send_callback);
+        
+        for (const auto& [id, _] : m_controllers_callbacks)
+        {
+            m_controllers_callbacks[id] = empty_callback_pair;
+        }
 
         return utile::web_error();
     }
@@ -79,8 +90,6 @@ namespace net
     web_server::~web_server()
     {
         stop();
-
-        m_context.stop();
 
         if (m_thread_context.joinable())
             m_thread_context.join();
@@ -191,7 +200,7 @@ namespace net
 
     void web_server::on_client_disconnect([[maybe_unused]] const std::shared_ptr<boost::asio::ip::tcp::socket> client) noexcept
     {
-        std::cout << "Client with ip: \"" << client->remote_endpoint().address().to_string() << "\" disconnected";
+        std::cout << "Client with ip: \"" << client->remote_endpoint().address().to_string() << "\" disconnected\n";
     }
 
     void web_server::disconnect(const std::shared_ptr<web_message_controller> client_controller) noexcept try
@@ -223,8 +232,13 @@ namespace net
             if (auto it = m_clients_controllers.find(client_id); it != m_clients_controllers.end())
             {
                 signal_bad_request(it->second);
-                disconnect(it->second);
+                std::shared_ptr<web_message_controller> controller = it->second;
+                async_get_callback empty_get_callback = [](std::shared_ptr<ihttp_message>, utile::web_error) {};
+                async_send_callback empty_send_callback = [](utile::web_error err) {};
+                std::pair<async_get_callback, async_send_callback> empty_callback_pair(empty_get_callback, empty_send_callback);
+                m_controllers_callbacks[client_id] = empty_callback_pair;
                 m_clients_controllers.erase(it);
+                disconnect(controller);
                 m_available_connection_ids.push(client_id);
             }
             return;

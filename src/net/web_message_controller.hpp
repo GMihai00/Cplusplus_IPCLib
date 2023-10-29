@@ -36,7 +36,7 @@ namespace net
 		std::shared_ptr<boost::asio::ip::tcp::socket> m_socket;
 		std::function<void()> m_base_timeout_callback;
 		std::mutex m_mutex;
-		std::atomic_bool m_can_send = true;
+		bool m_can_send = true;
 		async_send_callback m_write_callback;
 		std::set<std::shared_ptr<utile::observer<>>, utile::observer_shared_ptr_comparator<>> m_timeout_observers;
 	};
