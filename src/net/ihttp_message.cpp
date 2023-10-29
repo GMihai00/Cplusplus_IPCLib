@@ -68,11 +68,26 @@ namespace net
 
 				if (auto it = line.find(": "); it != std::string::npos && it + 2 < line.size())
 				{
-					auto name = line.substr(0, it);
-					auto value = line.substr(it + 2, line.size());
+					size_t start = 0;
+					size_t end = it;
+					if (line[0] == '\n')
+					{
+						start = 1;
+						end -= 1;
+					}
+
+					auto name = line.substr(start, end);
+					auto value = line.substr(it + 2, line.size() - it - 2);
 					try
 					{
-						auto int_value = std::stof(value);
+						auto int_value = std::stoull(value);
+
+						if (std::to_string(int_value) != value)
+						{
+							m_header_data.emplace(name, value);
+							continue;
+						}
+
 						m_header_data.emplace(name, int_value);
 					}
 					catch (...)

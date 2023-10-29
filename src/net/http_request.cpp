@@ -41,6 +41,7 @@ namespace net
 		ss << "Content-type: " << content_type_to_string(m_content_type) << "\r\n";
 		ss << "Content-Length: " << m_body_data.size() << "\r\n";
 
+		bool header_found = false;
 		if (m_header_data != nullptr)
 		{
 			for (const auto& item : m_header_data.items())
@@ -50,16 +51,19 @@ namespace net
 				ss << key << ": ";
 				if (item.value().is_number())
 				{
+					header_found = true;
 					ss << item.value().get<long double>() << "\r\n";
 					continue;
 				}
 				if (item.value().is_string())
 				{
+					header_found = true;
 					ss << item.value().get<std::string>() << "\r\n";
 					continue;
 				}
 				if (item.value().is_boolean())
 				{
+					header_found = true;
 					ss << (int)(item.value().get<bool>()) << "\r\n";
 					continue;
 				}
@@ -69,7 +73,10 @@ namespace net
 		}
 
 		// delimiter
-		ss << "\r\n\r\n";
+		if (!header_found)
+			ss << "\r\n\r\n";
+		else
+			ss << "\r\n";
 
 		// body
 		if (m_body_data.size() != 0)
@@ -91,13 +98,13 @@ namespace net
 			{
 				m_type = string_to_request_type(line.substr(0, it));
 				auto start = it + 1;
-				it = line.find(" ", start);
-				if (it == std::string::npos)
+				auto it2 = line.find(" ", start);
+				if (it2 == std::string::npos)
 					return false;
 
-				m_method = line.substr(start, it);
+				m_method = line.substr(start, it2 - start);
 
-				auto req_version = line.substr(it + 1, line.size());
+				auto req_version = line.substr(it2 + 1, line.size() - it2 - 1);
 
 				if (req_version != "HTTP/1.1")
 				{

@@ -13,13 +13,16 @@ int main()
 
 	net::web_client web_client{};
 
-	std::string url = "universities.hipolabs.com";
-	std::string method = "/search?country=United+States";
+	/*std::string url = "universities.hipolabs.com";
+	std::string method = "/search?country=United+States";*/
 
 	//std::string url = "api.publicapis.org";
 	//std::string method = "/entries";
 
-	if (!web_client.connect(url))
+	std::string url = "127.0.0.1";
+	std::string method = "/test";
+
+	if (!web_client.connect(url, 54321))
 	{
 		std::cerr << "Failed to connect to server";
 		return 5;

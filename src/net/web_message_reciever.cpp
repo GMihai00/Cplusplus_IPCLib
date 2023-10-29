@@ -259,7 +259,7 @@ namespace net
 
 	void web_message_reciever::async_try_to_extract_body_using_current_lenght(std::shared_ptr<ihttp_message> message, async_get_callback& callback) noexcept
 	{
-		auto body_lenght = message->get_header_value<uint32_t>("Content-Length");
+		auto body_lenght = message->get_header_value<size_t>("Content-Length");
 		if (body_lenght == std::nullopt)
 		{
 			async_try_to_extract_body_using_transfer_encoding(message, callback);
