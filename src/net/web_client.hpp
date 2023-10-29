@@ -10,6 +10,7 @@
 #include "http_response.hpp"
 #include "../utile/timer.hpp"
 #include "web_message_controller.hpp"
+#include "../utile/data_types.hpp"
 
 namespace net
 {
@@ -19,7 +20,7 @@ namespace net
 		web_client();
 		~web_client();
 
-		bool connect(const std::string& url) noexcept;
+		bool connect(const std::string& url, const std::optional<utile::PORT>& port = std::nullopt) noexcept;
 		// to be called if you want to cancel async request
 		void disconnect();
 

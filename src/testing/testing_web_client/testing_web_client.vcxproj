@@ -158,7 +158,7 @@
     <ClCompile Include="testing_web_client.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\src\IPC.vcxproj">
+    <ProjectReference Include="..\..\IPC.vcxproj">
       <Project>{df49742e-e610-4153-a5ca-dce52f361602}</Project>
     </ProjectReference>
   </ItemGroup>

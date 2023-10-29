@@ -6,15 +6,23 @@
 
 namespace net
 {
-    web_server::web_server(const utile::IP_ADRESS& host, utile::PORT port, const uint64_t max_nr_connections) : m_idle_work(m_context), m_connection_accepter(m_context)
+    web_server::web_server(const utile::IP_ADRESS& host, const utile::PORT port, const uint64_t max_nr_connections) : m_idle_work(m_context), m_connection_accepter(m_context)
     {
         assert(max_nr_connections > 0);
 
         for (uint64_t it = 0; it < max_nr_connections; it++)
             m_available_connection_ids.push_unsafe(it);
 
-        // specific port for web servers PORT to be removed from here
-        m_endpoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(host), port);
+        // 80 HTTP 443 HTTPS
+        try
+        {
+            m_endpoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(host), port);
+        }
+        catch (...)
+        {
+            throw std::runtime_error("Invalid host name provided: " + host);
+        }
+
 
         m_thread_context = std::thread([this]() { m_context.run(); });
     }
@@ -56,6 +64,14 @@ namespace net
         }
 
         m_connection_accepter.close();
+
+        for (const auto& [_, controller] : m_clients_controllers)
+        {
+            disconnect(controller);
+        }
+
+        m_clients_controllers.clear();
+        m_controllers_callbacks.clear();
 
         return utile::web_error();
     }

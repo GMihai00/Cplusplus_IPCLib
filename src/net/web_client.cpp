@@ -26,7 +26,7 @@ namespace net
 			m_thread_context.join();
 	}
 
-	bool web_client::connect(const std::string& url) noexcept try
+	bool web_client::connect(const std::string& url, const std::optional<utile::PORT>& port) noexcept try
 	{
 		{
 			std::scoped_lock lock(m_mutex);
@@ -36,10 +36,17 @@ namespace net
 			}
 		}
 
-		boost::asio::ip::tcp::resolver::query query(url, "http");
+		std::string string_port = "http";
+
+		if (port != std::nullopt)
+		{
+			string_port = std::to_string(*port);
+		}
+
+		boost::asio::ip::tcp::resolver::query query(url, string_port);
 		boost::asio::connect(*m_socket, m_resolver.resolve(query));
 		m_socket->set_option(boost::asio::ip::tcp::no_delay(true));
-
+		
 		m_host = url;
 
 		return true;

@@ -20,7 +20,8 @@ namespace net
 	class web_server
 	{
 	public:
-		web_server(const utile::IP_ADRESS& host, utile::PORT port, const uint64_t max_nr_connections = 1000);
+		// can throw if invalid IP_ADRESS is present
+		web_server(const utile::IP_ADRESS& host, const utile::PORT port = 80, const uint64_t max_nr_connections = 1000);
 		~web_server();
 
 		utile::web_error start();
@@ -39,12 +40,12 @@ namespace net
 		void signal_bad_request(const std::shared_ptr<web_message_controller> client_controller) noexcept;
 		void disconnect(const std::shared_ptr<web_message_controller> client_controller) noexcept;
 
+		boost::asio::io_context m_context;
+		boost::asio::io_context::work m_idle_work;
 		boost::asio::ip::tcp::endpoint m_endpoint;
 		boost::asio::ip::tcp::acceptor m_connection_accepter;
-		boost::asio::io_context m_context;
         std::mutex m_mutex;
 		std::thread m_thread_context;
-		boost::asio::io_context::work m_idle_work;
         utile::thread_safe_queue<uint64_t> m_available_connection_ids;
         std::map<std::string, async_req_handle_callback> m_mappings;
         std::map<uint64_t, std::shared_ptr<web_message_controller>> m_clients_controllers;
