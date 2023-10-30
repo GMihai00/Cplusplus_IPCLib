@@ -12,7 +12,12 @@ int main() try
 
 	// add callbacks	
 	net::async_req_handle_callback test_callback = [](std::shared_ptr<net::http_request>) {
-		return net::http_response(200, "OK");
+		nlohmann::json smth_to_send = nlohmann::json({ {"aba", 5}, {"beta", 6} });
+		std::string data = smth_to_send.dump();
+
+		auto body_data = std::vector<uint8_t>(data.begin(), data.end());
+
+		return net::http_response(200, "OK", nullptr, body_data);
 	};
 
 	server.add_mapping("/test", test_callback);
