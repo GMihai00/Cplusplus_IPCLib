@@ -6,9 +6,15 @@
 
 namespace net
 {
-    web_server::web_server(const utile::IP_ADRESS& host, const utile::PORT port, const uint64_t max_nr_connections) : m_idle_work(m_context), m_connection_accepter(m_context)
+    void web_server::worker_function()
+    {
+        m_context.run();
+    }
+
+    web_server::web_server(const utile::IP_ADRESS& host, const utile::PORT port, const uint64_t max_nr_connections, const uint64_t number_threads) : m_idle_work(m_context), m_connection_accepter(m_context)
     {
         assert(max_nr_connections > 0);
+        assert(number_threads > 0);
 
         for (uint64_t it = 0; it < max_nr_connections; it++)
             m_available_connection_ids.push_unsafe(it);
@@ -23,8 +29,11 @@ namespace net
             throw std::runtime_error("Invalid host name provided: " + host);
         }
 
+        for (int i = 0; i < number_threads; i++)
+        {
+            m_worker_threads.create_thread(boost::bind(&web_server::worker_function, this));
+        }
 
-        m_thread_context = std::thread([this]() { m_context.run(); });
     }
 
     utile::web_error web_server::start()
@@ -91,8 +100,7 @@ namespace net
     {
         stop();
 
-        if (m_thread_context.joinable())
-            m_thread_context.join();
+        m_worker_threads.join_all();
     }
 
     void web_server::handle_client_connection(const std::shared_ptr<boost::asio::ip::tcp::socket>& client_socket) noexcept
