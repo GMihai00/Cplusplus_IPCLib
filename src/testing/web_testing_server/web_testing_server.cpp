@@ -20,8 +20,42 @@ int main() try
 		return net::http_response(200, "OK", nullptr, body_data);
 	};
 
-	// bad request to anything else?
+	net::async_req_regex_handle_callback test_regex_callback = [](std::shared_ptr<net::http_request>, const std::smatch& matches) {
+
+		if (matches.size() < 3)
+		{
+			return net::http_response(400, "Bad request");
+		}
+
+		if (!matches[2].matched)
+		{
+			return net::http_response(400, "Bad request");
+		}
+
+		int id = 0;
+
+		try
+		{
+			id = std::stoi(matches[2]);
+		}
+		catch (...)
+		{
+			return net::http_response(400, "Bad request");
+		}
+
+		nlohmann::json smth_to_send = nlohmann::json({ {"id", id}});
+		std::string data = smth_to_send.dump();
+
+		auto body_data = std::vector<uint8_t>(data.begin(), data.end());
+
+		return net::http_response(200, "OK", nullptr, body_data);
+	};
+
+	std::regex test_pattern(R"(^(/test/id=(\d+))$)");
+
 	server.add_mapping("/test", test_callback);
+
+	server.add_regex_mapping(test_pattern, test_regex_callback);
 
 	if (auto ret = server.start(); !ret)
 	{
