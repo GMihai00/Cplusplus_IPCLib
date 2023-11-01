@@ -262,18 +262,24 @@ namespace net
 
         auto method = req->get_method();
 
-        if (auto it = m_mappings.find(method); it != m_mappings.end())
-        {
-            if (auto it2 = m_clients_controllers.find(client_id); it2 != m_clients_controllers.end())
-            {
-                auto reply = (it->second)(req);
 
-                if (auto it3 = m_controllers_callbacks.find(client_id); it3 != m_controllers_callbacks.end())
+        if (auto it = m_clients_controllers.find(client_id); it != m_clients_controllers.end())
+        {
+            if (auto it2 = m_controllers_callbacks.find(client_id); it2 != m_controllers_callbacks.end())
+            {
+                if (auto it3 = m_mappings.find(method); it3 != m_mappings.end())
                 {
-                    it2->second->reply_async(std::move(reply), it3->second.second);
+                    auto reply = (it3->second)(req);
+
+                    it->second->reply_async(std::move(reply), it2->second.second);
+                }
+                else
+                {
+                    signal_bad_request(it->second);
                 }
             }
         }
+        
     }
 
     bool web_server::add_mapping(const std::string& method, async_req_handle_callback action)

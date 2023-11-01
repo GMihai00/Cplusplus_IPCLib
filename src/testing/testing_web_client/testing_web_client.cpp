@@ -61,7 +61,8 @@ int main()
 	//	return 5;
 	//}
 
-	
+	// to send connection close and chuncked message to server
+	// connection close not really practicable as request by client
 	bool can_stop = false;
 
 	net::async_get_callback req_callback;

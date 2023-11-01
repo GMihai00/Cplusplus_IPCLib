@@ -20,6 +20,7 @@ int main() try
 		return net::http_response(200, "OK", nullptr, body_data);
 	};
 
+	// bad request to anything else?
 	server.add_mapping("/test", test_callback);
 
 	if (auto ret = server.start(); !ret)
