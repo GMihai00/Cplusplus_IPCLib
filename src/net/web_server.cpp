@@ -260,6 +260,7 @@ namespace net
         {
             // for debug only
             std::cerr << err.message() << "\n";
+
             if (auto it = m_clients_controllers.find(client_id); it != m_clients_controllers.end())
             {
                 signal_bad_request(it->second);

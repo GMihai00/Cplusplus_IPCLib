@@ -28,14 +28,27 @@ int main()
 		return 5;
 	}
 
+	//nlohmann::json additional_header_data = nlohmann::json({
+	//	{"Accept", "*/*"},
+	//	{"Connection", "keep-alive"},
+	//	{"Accept-Encoding", "gzip, deflate, br"}
+	//	});
+
 	nlohmann::json additional_header_data = nlohmann::json({
 		{"Accept", "*/*"},
 		{"Connection", "keep-alive"},
-		{"Accept-Encoding", "gzip, deflate, br"}
+		{"Accept-Encoding", "gzip, deflate, br"},
+		{"Transfer-Encoding", "chunked"}
 		});
 
-	net::http_request req(net::request_type::GET, method, net::content_type::any, additional_header_data);
+	std::string body_data = "2\r\nab\r\n0\r\n\r\n";
 
+	//net::http_request req(net::request_type::GET, method, net::content_type::any, additional_header_data);
+
+	net::http_request req(net::request_type::GET, 
+		method, net::content_type::any, 
+		additional_header_data,
+		std::vector<uint8_t>(body_data.begin(), body_data.end()));
 	// THIS SEEMS TO WORK FINE
 	//try
 	//{
@@ -74,18 +87,18 @@ int main()
 			exit(5);
 		}
 
-		nlohmann::json additional_header_data = nlohmann::json({
-		{"Accept", "*/*"},
-		{"Connection", "keep-alive"},
-		{"Accept-Encoding", "gzip, deflate, br"}
-			});
+		//nlohmann::json additional_header_data = nlohmann::json({
+		//{"Accept", "*/*"},
+		//{"Connection", "keep-alive"},
+		//{"Accept-Encoding", "gzip, deflate, br"}
+		//	});
 
-		std::cout << "Recieved response: " << response->to_string() << "\n";
+		//std::cout << "Recieved response: " << response->to_string() << "\n";
 
-		net::http_request req(net::request_type::GET, method, net::content_type::any, additional_header_data);
-		
-		web_client.send_async(std::move(req), req_callback);
-		//can_stop = true;
+		//net::http_request req(net::request_type::GET, method, net::content_type::any, additional_header_data);
+		//
+		//web_client.send_async(std::move(req), req_callback);
+		can_stop = true;
 	};
 
 	web_client.send_async(std::move(req), req_callback);

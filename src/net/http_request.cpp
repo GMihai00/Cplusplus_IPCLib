@@ -39,7 +39,12 @@ namespace net
 		// header
 		ss << "Host: " << m_host << "\r\n";
 		ss << "Content-type: " << content_type_to_string(m_content_type) << "\r\n";
-		ss << "Content-Length: " << m_body_data.size() << "\r\n";
+
+		if (auto it = m_header_data.find("Transfer-Encoding"); !(it != m_header_data.end() && it->is_string() && it->get<std::string>() == "chunked"))
+		{
+			ss << "Content-Length: " << m_body_data.size() << "\r\n";
+
+		}
 
 		if (m_header_data != nullptr)
 		{
