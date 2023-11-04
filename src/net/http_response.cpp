@@ -57,7 +57,7 @@ namespace net
 
 				try
 				{
-					m_status = std::stol(line.substr(start, it));
+					m_status = static_cast<uint16_t>(std::stol(line.substr(start, it)));
 				}
 				catch (const std::exception& err)
 				{

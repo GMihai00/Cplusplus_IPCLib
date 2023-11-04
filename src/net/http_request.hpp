@@ -23,7 +23,7 @@ namespace net
 
 		void set_host(const std::string& host);
 		std::string get_method() const;
-
+		request_type get_type() const;
 		virtual std::string to_string() const override;
 		virtual bool load_header_prefix(std::istringstream& iss) noexcept override;
 	private:

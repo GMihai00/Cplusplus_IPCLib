@@ -9,7 +9,7 @@ namespace net
 
 	void web_message_dispatcher::async_write(async_send_callback& callback) noexcept
 	{
-		boost::asio::async_write(*m_socket, m_request_buff, [this, &callback](const boost::system::error_code& error, std::size_t bytes_transferred) {
+		boost::asio::async_write(*m_socket, m_request_buff, [this, &callback](const boost::system::error_code& error, const std::size_t /*bytes_transferred*/) {
 			if (!error)
 			{
 				if (m_request_buff.size() == 0)

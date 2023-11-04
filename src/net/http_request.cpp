@@ -29,6 +29,11 @@ namespace net
 		return m_method;
 	}
 
+	request_type http_request::get_type() const
+	{
+		return m_type;
+	}
+
 	std::string http_request::to_string() const
 	{
 		std::stringstream ss;

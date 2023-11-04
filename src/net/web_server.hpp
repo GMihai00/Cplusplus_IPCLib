@@ -7,6 +7,7 @@
 #include <boost/asio/ts/internet.hpp>
 #include <boost/thread/thread.hpp>
 #include <system_error>
+#include <optional>
 
 #include "../utile/thread_safe_queue.hpp"
 
@@ -30,10 +31,10 @@ namespace net
 
 		utile::web_error start();
         utile::web_error stop();
-        bool add_mapping(const std::string& method, async_req_handle_callback action);
-		void add_regex_mapping(const std::regex& pattern, async_req_regex_handle_callback action);
+        bool add_mapping(const request_type type, const std::string& method, async_req_handle_callback action);
+		void add_regex_mapping(const request_type type, const std::regex& pattern, async_req_regex_handle_callback action);
 
-        void remove_mapping(const std::string& method);
+        void remove_mapping(const request_type type, const std::string& method);
 	protected:
 		virtual bool can_client_connect(const std::shared_ptr<boost::asio::ip::tcp::socket> client) noexcept;
 		virtual void on_client_connect(const std::shared_ptr<boost::asio::ip::tcp::socket> client) noexcept;
@@ -48,8 +49,8 @@ namespace net
 
 		void worker_function();
 
-		std::map<std::string, async_req_handle_callback>::iterator find_apropriate_handle(const std::string& method);
-		std::vector<std::pair<std::regex, async_req_regex_handle_callback>>::iterator find_apropriate_regex_handle(const std::string& method, std::smatch& matches);
+		std::optional<std::map<std::string, async_req_handle_callback>::iterator> find_apropriate_handle(const request_type type, const std::string& method);
+		std::optional < std::vector<std::pair<std::regex, async_req_regex_handle_callback>>::iterator> find_apropriate_regex_handle(const request_type type, const std::string& method, std::smatch& matches);
 
 		boost::asio::io_context m_context;
 		boost::asio::io_context::work m_idle_work;
@@ -58,8 +59,8 @@ namespace net
         std::mutex m_mutex;
 		boost::thread_group m_worker_threads;
         utile::thread_safe_queue<uint64_t> m_available_connection_ids;
-        std::map<std::string, async_req_handle_callback> m_mappings;
-		std::vector<std::pair<std::regex, async_req_regex_handle_callback>> m_regex_mappings;
+        std::map<request_type, std::map<std::string, async_req_handle_callback>> m_mappings;
+		std::map<request_type, std::vector<std::pair<std::regex, async_req_regex_handle_callback>>> m_regex_mappings;
         std::map<uint64_t, std::shared_ptr<web_message_controller>> m_clients_controllers;
 		std::map<uint64_t, std::pair<async_get_callback, async_send_callback>> m_controllers_callbacks;
 	};

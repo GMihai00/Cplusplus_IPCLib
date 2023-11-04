@@ -231,27 +231,30 @@ namespace net
         client_controller->reply(response);
     }
 
-    std::map<std::string, async_req_handle_callback>::iterator web_server::find_apropriate_handle(const std::string& method)
+    std::optional<std::map<std::string, async_req_handle_callback>::iterator> web_server::find_apropriate_handle(const request_type type, const std::string& method)
     {
-        if (auto it = m_mappings.find(method); it != m_mappings.end())
+        auto& mapping = m_mappings[type];
+
+        if (auto it = mapping.find(method); it != mapping.end())
             return it;
 
-        return m_mappings.end();
+        return std::nullopt;
     }
 
-    std::vector<std::pair<std::regex, async_req_regex_handle_callback>>::iterator web_server::find_apropriate_regex_handle(const std::string& method, std::smatch& matches)
+    std::optional<std::vector<std::pair<std::regex, async_req_regex_handle_callback>>::iterator> web_server::find_apropriate_regex_handle(const request_type type, const std::string& method, std::smatch& matches)
     {
+        auto& mapping = m_regex_mappings[type];
         // ex regex ^(\/test\/id=(\d+))$ for /text/id=2
-        auto it = m_regex_mappings.begin();
-        for (; it != m_regex_mappings.end(); it++)
+        auto it = mapping.begin();
+        for (; it != mapping.end(); it++)
         {
             if (std::regex_search(method, matches, it->first))
             {
-                break;
+                return it;
             }
         }
 
-        return it;
+        return std::nullopt;
     }
 
     void web_server::on_message_async(const uint64_t client_id, std::shared_ptr<net::ihttp_message> msg, utile::web_error err) noexcept
@@ -285,7 +288,7 @@ namespace net
         }
 
         auto method = req->get_method();
-
+        auto type = req->get_type();
 
         if (auto it = m_clients_controllers.find(client_id); it != m_clients_controllers.end())
         {
@@ -293,15 +296,15 @@ namespace net
             {
                 std::smatch matches;
 
-                if (auto handle = find_apropriate_handle(method); handle != m_mappings.end())
+                if (auto handle = find_apropriate_handle(type, method); handle != std::nullopt)
                 {
-                    auto reply = (handle->second)(req);
+                    auto reply = ((*handle)->second)(req);
 
                     it->second->reply_async(std::move(reply), it2->second.second);
                 }
-                else if (auto reqex_handle = find_apropriate_regex_handle(method, matches); reqex_handle != m_regex_mappings.end())
+                else if (auto reqex_handle = find_apropriate_regex_handle(type, method, matches); reqex_handle != std::nullopt)
                 {
-                    auto reply = (reqex_handle->second)(req, matches);
+                    auto reply = ((*reqex_handle)->second)(req, matches);
 
                     it->second->reply_async(std::move(reply), it2->second.second);
                 }
@@ -314,19 +317,19 @@ namespace net
         
     }
 
-    bool web_server::add_mapping(const std::string& method, async_req_handle_callback action)
+    bool web_server::add_mapping(const request_type type, const std::string& method, async_req_handle_callback action)
     {
-        return m_mappings.emplace(method, action).second;
+        return m_mappings[type].emplace(method, action).second;
     }
 
-    void web_server::add_regex_mapping(const std::regex& pattern, async_req_regex_handle_callback action)
+    void web_server::add_regex_mapping(const request_type type, const std::regex& pattern, async_req_regex_handle_callback action)
     {
-        m_regex_mappings.push_back({ pattern, action });
+        m_regex_mappings[type].push_back({ pattern, action });
     }
 
-    void web_server::remove_mapping(const std::string& method)
+    void web_server::remove_mapping(const request_type type, const std::string& method)
     {
-        m_mappings.erase(method);
+        m_mappings[type].erase(method);
     }
 
 

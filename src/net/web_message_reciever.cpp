@@ -84,12 +84,12 @@ namespace net
 		}
 
 		// remove already read characters from size of buffer;
-		*body_lenght -= message->get_buffer().size();
+		*body_lenght -= static_cast<uint32_t>(message->get_buffer().size());
 
-		std::size_t available_bytes = 0;
+		uint32_t available_bytes = 0;
 		do
 		{
-			available_bytes = m_socket->available();
+			available_bytes = static_cast<uint32_t>(m_socket->available());
 
 			if (available_bytes >= *body_lenght)
 			{

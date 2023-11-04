@@ -8,6 +8,8 @@ constexpr auto HOST = "127.0.0.1";
 
 int main() try
 {
+	// boost::asio::ip::udp::socket; for udp sockets
+	
 	net::web_server server(HOST, 54321);
 
 	// add callbacks	
@@ -53,9 +55,11 @@ int main() try
 
 	std::regex test_pattern(R"(^(/test/id=(\d+))$)");
 
-	server.add_mapping("/test", test_callback);
+	// mapping should have a type of request in them as well GET POST PUT ETC
 
-	server.add_regex_mapping(test_pattern, test_regex_callback);
+	server.add_mapping(net::request_type::GET, "/test", test_callback);
+
+	server.add_regex_mapping(net::request_type::GET, test_pattern, test_regex_callback);
 
 	if (auto ret = server.start(); !ret)
 	{
