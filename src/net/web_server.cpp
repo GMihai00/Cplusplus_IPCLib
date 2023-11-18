@@ -1,4 +1,5 @@
 
+
 #include "web_server.hpp"
 
 #include <thread>
@@ -74,7 +75,7 @@ namespace net
 
         m_connection_accepter.close();
 
-        for (const auto& [_, controller] : m_clients_controllers)
+        for (auto& [_, controller] : m_clients_controllers)
         {
             disconnect(controller);
         }
@@ -103,7 +104,7 @@ namespace net
         m_worker_threads.join_all();
     }
 
-    void web_server::handle_client_connection(const std::shared_ptr<boost::asio::ip::tcp::socket>& client_socket) noexcept
+    void web_server::handle_client_connection(std::shared_ptr<boost::asio::ip::tcp::socket> client_socket) noexcept
     {
         if (can_client_connect(client_socket))
         {
@@ -134,7 +135,7 @@ namespace net
                 {
                     if (auto it2 = m_controllers_callbacks.find(client_id); it2 != m_controllers_callbacks.end())
                     {
-                        it->second->async_get_request(it2->second.first);
+                        it->second.async_get_request(it2->second.first);
                     }
                 }
             };
@@ -144,7 +145,7 @@ namespace net
             // to be seen when to remove this one, memory just stays there saddly for now until replaced 
             m_controllers_callbacks[client_id] = callback_pair;
 
-            if (auto ret = m_clients_controllers.emplace(client_id, std::make_shared<web_message_controller>(client_socket)); !ret.second)
+            if (auto ret = m_clients_controllers.emplace(client_id, client_socket); !ret.second)
             {
                 std::cerr << "Internal error";
                 return;
@@ -152,7 +153,7 @@ namespace net
             else
             {
                 // start listening to messages
-                ret.first->second->async_get_request(m_controllers_callbacks[client_id].first);
+                ret.first->second.async_get_request(m_controllers_callbacks[client_id].first);
                 on_client_connect(client_socket);
             }
         }
@@ -211,9 +212,9 @@ namespace net
         std::cout << "Client with ip: \"" << client->remote_endpoint().address().to_string() << "\" disconnected\n";
     }
 
-    void web_server::disconnect(const std::shared_ptr<web_message_controller> client_controller) noexcept try
+    void web_server::disconnect(web_message_controller<boost::asio::ip::tcp::socket>& client_controller) noexcept try
     {
-        auto socket = client_controller->get_connection_socket();
+        auto socket = client_controller.get_connection_socket();
 
         on_client_disconnect(socket);
 
@@ -225,10 +226,10 @@ namespace net
 
     }
 
-    void web_server::signal_bad_request(const std::shared_ptr<web_message_controller> client_controller) noexcept
+    void web_server::signal_bad_request(web_message_controller<boost::asio::ip::tcp::socket>& client_controller) noexcept
     {
         http_response response(400, "Bad Request");
-        client_controller->reply(response);
+        client_controller.reply(response);
     }
 
     std::optional<std::map<std::string, async_req_handle_callback>::iterator> web_server::find_apropriate_handle(const request_type type, const std::string& method)
@@ -267,13 +268,12 @@ namespace net
             if (auto it = m_clients_controllers.find(client_id); it != m_clients_controllers.end())
             {
                 signal_bad_request(it->second);
-                std::shared_ptr<web_message_controller> controller = it->second;
                 async_get_callback empty_get_callback = [](std::shared_ptr<ihttp_message>, utile::web_error) {};
                 async_send_callback empty_send_callback = [](utile::web_error err) {};
                 std::pair<async_get_callback, async_send_callback> empty_callback_pair(empty_get_callback, empty_send_callback);
                 m_controllers_callbacks[client_id] = empty_callback_pair;
+                disconnect(it->second);
                 m_clients_controllers.erase(it);
-                disconnect(controller);
                 m_available_connection_ids.push(client_id);
             }
             return;
@@ -300,13 +300,13 @@ namespace net
                 {
                     auto reply = ((*handle)->second)(req);
 
-                    it->second->reply_async(std::move(reply), it2->second.second);
+                    it->second.reply_async(std::move(reply), it2->second.second);
                 }
                 else if (auto reqex_handle = find_apropriate_regex_handle(type, method, matches); reqex_handle != std::nullopt)
                 {
                     auto reply = ((*reqex_handle)->second)(req, matches);
 
-                    it->second->reply_async(std::move(reply), it2->second.second);
+                    it->second.reply_async(std::move(reply), it2->second.second);
                 }
                 else
                 {

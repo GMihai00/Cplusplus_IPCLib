@@ -14,15 +14,20 @@ namespace net
 {
 	typedef std::function<void(utile::web_error)> async_send_callback;
 
+	template <typename T>
 	class web_message_dispatcher
 	{
 	public:
 		web_message_dispatcher() = delete;
 
-		web_message_dispatcher(std::shared_ptr<boost::asio::ip::tcp::socket> socket);
+		web_message_dispatcher(std::shared_ptr<T>& socket)
+			: m_socket(socket)
+		{
 
-		template <typename T>
-		utile::web_error send(const T& message) noexcept try
+		}
+
+		template <typename M>
+		utile::web_error send(const M& message) noexcept try
 		{
 			{
 				std::scoped_lock lock(m_mutex);
@@ -58,8 +63,8 @@ namespace net
 			return INTERNAL_ERROR;
 		}
 
-		template <typename T>
-		void send_async(const T& message, async_send_callback& callback) noexcept
+		template <typename M>
+		void send_async(const M& message, async_send_callback& callback) noexcept
 		{
 			{
 				std::unique_lock<std::mutex> lock(m_mutex);
@@ -80,12 +85,38 @@ namespace net
 			async_write(callback);
 		}
 		
+		void set_socket(std::shared_ptr<T>& socket)
+		{
+			m_socket = socket;
+		}
+
 	private:
-		void async_write(async_send_callback& callback) noexcept;
+		void async_write(async_send_callback& callback) noexcept
+		{
+			boost::asio::async_write(*m_socket, m_request_buff, [this, &callback](const boost::system::error_code& error, const std::size_t /*bytes_transferred*/) {
+				if (!error)
+				{
+					if (m_request_buff.size() == 0)
+					{
+						m_waiting_for_message = false;
+						if (callback) callback(utile::web_error());
+					}
+					else
+					{
+						async_write(callback);
+					}
+				}
+				else
+				{
+					m_waiting_for_message = false;
+					if (callback) callback(utile::web_error(std::error_code(error.value(), std::generic_category()), error.message()));
+				}
+				});
+		}
 
 		boost::asio::streambuf m_request_buff;
 		std::mutex m_mutex;
 		std::atomic_bool m_waiting_for_message = false;
-		std::shared_ptr<boost::asio::ip::tcp::socket> m_socket;
+		std::shared_ptr<T>& m_socket = nullptr;
 	};
 }

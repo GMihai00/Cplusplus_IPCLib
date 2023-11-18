@@ -78,7 +78,7 @@
     <ClInclude Include="net\web_request_helpers.hpp">
       <Filter>Header Files\utile</Filter>
     </ClInclude>
-    <ClInclude Include="net\web_client.hpp">
+    <ClInclude Include="net\base_web_client.hpp">
       <Filter>Header Files\net</Filter>
     </ClInclude>
     <ClInclude Include="net\web_server.hpp">
@@ -102,6 +102,9 @@
     <ClInclude Include="net\ihttp_message.hpp">
       <Filter>Header Files\net</Filter>
     </ClInclude>
+    <ClInclude Include="net\web_client.hpp">
+      <Filter>Header Files\net</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ipc.cpp">
@@ -123,15 +126,6 @@
       <Filter>Source Files\net</Filter>
     </ClCompile>
     <ClCompile Include="net\web_client.cpp">
-      <Filter>Source Files\net</Filter>
-    </ClCompile>
-    <ClCompile Include="net\web_message_dispatcher.cpp">
-      <Filter>Source Files\net</Filter>
-    </ClCompile>
-    <ClCompile Include="net\web_message_reciever.cpp">
-      <Filter>Source Files\net</Filter>
-    </ClCompile>
-    <ClCompile Include="net\web_message_controller.cpp">
       <Filter>Source Files\net</Filter>
     </ClCompile>
     <ClCompile Include="net\web_server.cpp">
