@@ -8,7 +8,7 @@ namespace net
 	class secure_web_client : public base_web_client<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>
 	{
 	public:
-		secure_web_client(const std::function<bool(bool, boost::asio::ssl::verify_context& ctx)>& verify_certificate_callback = nullptr);
+		secure_web_client(const std::vector<std::string>& cert_files, const std::function<bool(bool, boost::asio::ssl::verify_context& ctx)>& verify_certificate_callback = nullptr);
 		virtual ~secure_web_client() = default;
 
 		bool connect(const std::string& url, const std::optional<utile::PORT>& port = std::nullopt) noexcept override;

@@ -37,7 +37,8 @@ int test_web_server_send(T& web_client, const std::string& url, const std::strin
 			" status: " << response.first->get_status() <<
 			" reason: " << response.first->get_reason() << std::endl;
 		std::cout << "Recieved header data: " << response.first->get_header().dump() << std::endl;
-		std::cout << "Recieved body data: " << response.first->get_json_body().dump();
+		auto body = response.first->get_body_raw();
+		std::cout << "Recieved body data: " << std::string(body.begin(), body.end()) << std::endl;
 	}
 	catch (const std::exception& err)
 	{
@@ -154,16 +155,16 @@ int test_web_server_send_in_loop(T& web_client)
 	return 0;
 }
 
-int main()
+int main() try
 {	
 	bool test_web = true;
 
 	//net::web_client web_client{};
-	net::secure_web_client web_client{};
+	net::secure_web_client web_client{ { R"(..\..\..\external\boost_asio\example\cpp11\ssl\ca.pem)"} };
 
 	if (test_web)
 	{
-		if (auto ret = test_web_server_send_async(web_client, "api.publicapis.org", "/entries"); ret != 0)
+		if (auto ret = test_web_server_send_async(web_client, "www.dataaccess.com", "/webservicesserver/numberconversion.wso?WSDL"); ret != 0)
 		{
 			std::cerr << "Send async failed";
 			return ret;
@@ -178,4 +179,9 @@ int main()
 		return test_web_server_send_in_loop(web_client);
 	}
 	
+}
+catch (const std::exception& err)
+{
+	std::cerr << err.what();
+	return 5;
 }
