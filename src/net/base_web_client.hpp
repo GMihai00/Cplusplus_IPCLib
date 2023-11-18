@@ -39,7 +39,7 @@ namespace net
 				m_thread_context.join();
 		}
 
-		virtual bool connect(const std::string& url, const std::optional<utile::PORT>& port = std::nullopt) noexcept
+		virtual bool connect(const std::string& url, const std::optional<utile::PORT>& port = std::nullopt) noexcept try
 		{
 			{
 				std::scoped_lock lock(m_mutex);
@@ -63,6 +63,11 @@ namespace net
 			m_host = url;
 
 			return true;
+		}
+		catch (const std::exception& err)
+		{
+			std::cerr << "Failed to connect to server, err: " << err.what();
+			return false;
 		}
 
 		// to be called if you want to cancel async request
@@ -103,7 +108,6 @@ namespace net
 		std::mutex m_mutex;
 		std::thread m_thread_context;
 		web_message_controller<T> m_controller;
-	private:
 		std::shared_ptr<T> m_socket = nullptr;
 	};
 } // namespace net

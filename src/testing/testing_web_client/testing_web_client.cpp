@@ -1,10 +1,11 @@
 #include <iostream>
 
 #include "net/web_client.hpp"
+#include "net/secure_web_client.hpp"
 #include "utile/finally.hpp"
 
-
-int test_web_server_send(net::web_client& web_client, const std::string& url, const std::string& method)
+template <typename T>
+int test_web_server_send(T& web_client, const std::string& url, const std::string& method)
 {
 	nlohmann::json additional_header_data = nlohmann::json({
 	{"Accept", "*/*"},
@@ -47,7 +48,8 @@ int test_web_server_send(net::web_client& web_client, const std::string& url, co
 	return 0;
 }
 
-int test_web_server_send_async(net::web_client& web_client, const std::string& url, const std::string& method)
+template <typename T>
+int test_web_server_send_async(T& web_client, const std::string& url, const std::string& method)
 {
 
 	nlohmann::json additional_header_data = nlohmann::json({
@@ -91,7 +93,8 @@ int test_web_server_send_async(net::web_client& web_client, const std::string& u
 	return 0;
 }
 
-int test_web_server_send_in_loop(net::web_client& web_client)
+template <typename T>
+int test_web_server_send_in_loop(T& web_client)
 {
 	std::string url = "127.0.0.1";
 	std::string method = "/test";
@@ -153,19 +156,14 @@ int test_web_server_send_in_loop(net::web_client& web_client)
 
 int main()
 {	
-	 //boost::asio::io_service io_service;
-  //  boost::asio::ip::tcp::socket socket(io_service);
+	bool test_web = true;
 
-  //   Wrap the socket in a shared_ptr
-  //  std::shared_ptr<boost::asio::ip::tcp::socket> socketPtr = std::make_shared<boost::asio::ip::tcp::socket>(std::move(socket));
+	//net::web_client web_client{};
+	net::secure_web_client web_client{};
 
-	bool test_web = false;
-
-	net::web_client web_client{};
-	
 	if (test_web)
 	{
-		if (auto ret = test_web_server_send_async(web_client, "universities.hipolabs.com", "/search?country=United+States"); ret != 0)
+		if (auto ret = test_web_server_send_async(web_client, "api.publicapis.org", "/entries"); ret != 0)
 		{
 			std::cerr << "Send async failed";
 			return ret;
@@ -173,7 +171,7 @@ int main()
 
 		web_client.disconnect();
 
-		return test_web_server_send(web_client, "api.publicapis.org", "/entries");
+		return test_web_server_send(web_client, "universities.hipolabs.com", "/search?country=United+States");
 	}
 	else
 	{
