@@ -56,7 +56,8 @@ int test_web_server_send_async(T& web_client, const std::string& url, const std:
 	nlohmann::json additional_header_data = nlohmann::json({
 	{"Accept", "*/*"},
 	{"Connection", "keep-alive"},
-	{"Accept-Encoding", "gzip, deflate, br"}
+	/*{"Accept-Encoding", "gzip, deflate, br"}*/
+	{"Accept-Encoding", "br"}
 		});
 
 	if (!web_client.connect(url))
@@ -78,7 +79,7 @@ int test_web_server_send_async(T& web_client, const std::string& url, const std:
 			exit(5);
 		}
 
-		std::cout << "Recieved response: " << response->to_string() << "\n";
+		std::cout << "Recieved response: " << response->to_string() << std::endl;
 
 		can_stop = true;
 	};
