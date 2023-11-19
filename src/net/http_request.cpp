@@ -34,7 +34,7 @@ namespace net
 		return m_type;
 	}
 
-	std::string http_request::to_string() const
+	std::string http_request::to_string(const bool decrypt) const
 	{
 		std::stringstream ss;
 
@@ -84,8 +84,15 @@ namespace net
 		// body
 		if (m_body_data.size() != 0)
 		{
-			auto decrypted_body = get_body_decrypted();
-			ss << std::string(decrypted_body.begin(), decrypted_body.end());
+			if (decrypt)
+			{
+				auto decrypted_body = get_body_decrypted();
+				ss << std::string(decrypted_body.begin(), decrypted_body.end());
+			}
+			else
+			{
+				ss << std::string(m_body_data.begin(), m_body_data.end());
+			}
 		}
 
 		return ss.str();

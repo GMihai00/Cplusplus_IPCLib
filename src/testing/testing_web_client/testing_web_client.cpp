@@ -79,7 +79,7 @@ int test_web_server_send_async(T& web_client, const std::string& url, const std:
 			exit(5);
 		}
 
-		std::cout << "Recieved response: " << response->to_string() << std::endl;
+		std::cout << "Recieved response: " << response->to_string(true) << std::endl;
 
 		can_stop = true;
 	};
@@ -122,7 +122,7 @@ int test_web_server_send_in_loop(T& web_client)
 		std::vector<uint8_t>(body_data.begin(), body_data.end()));
 
 	// seems to be an issue with compression to take a look or an issue on the server side
-	//req.gzip_compress_body();
+	req.gzip_compress_body();
 
 	bool can_stop = false;
 
@@ -161,13 +161,12 @@ int test_web_server_send_in_loop(T& web_client)
 
 int main() try
 {	
-	bool test_web = false;
-	net::web_client web_client{};
+	//bool test_web = false;
+	//net::web_client web_client{};
 	 
-	//bool test_web = true;
-	//net::secure_web_client web_client{ { R"(..\..\..\external\boost_asio\example\cpp11\ssl\ca.pem)"} };
+	bool test_web = true;
+	net::secure_web_client web_client{ { R"(..\..\..\external\boost_asio\example\cpp11\ssl\ca.pem)"} };
 	
-
 	if (test_web)
 	{
 		if (auto ret = test_web_server_send_async(web_client, "www.dataaccess.com", "/webservicesserver/numberconversion.wso?WSDL"); ret != 0)

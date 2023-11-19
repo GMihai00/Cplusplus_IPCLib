@@ -16,7 +16,7 @@ namespace net
 	{
 	public:
 
-		virtual std::string to_string() const = 0;
+		virtual std::string to_string(const bool decrypt = false) const = 0;
 		virtual bool load_header_prefix(std::istringstream& iss) noexcept = 0;
 
 		boost::asio::streambuf& get_buffer();

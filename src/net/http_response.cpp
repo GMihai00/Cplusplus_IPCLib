@@ -11,7 +11,7 @@ namespace net
 		m_header_data["Content-Length"] = body_data.size();
 	}
 
-	std::string http_response::to_string() const
+	std::string http_response::to_string(const bool decrypt) const
 	{
 		std::stringstream ss;
 
@@ -35,8 +35,15 @@ namespace net
 
 		if (m_body_data.size() != 0)
 		{
-			auto decrypted_body = get_body_decrypted();
-			ss << std::string(decrypted_body.begin(), decrypted_body.end());
+			if (decrypt)
+			{
+				auto decrypted_body = get_body_decrypted();
+				ss << std::string(decrypted_body.begin(), decrypted_body.end());
+			}
+			else
+			{
+				ss << std::string(m_body_data.begin(), m_body_data.end());
+			}
 		}
 
 		return ss.str();

@@ -24,7 +24,7 @@ namespace net
 		void set_host(const std::string& host);
 		std::string get_method() const;
 		request_type get_type() const;
-		virtual std::string to_string() const override;
+		virtual std::string to_string(const bool decrypt = false) const override;
 		virtual bool load_header_prefix(std::istringstream& iss) noexcept override;
 	private:
 		request_type m_type = request_type::OPTIONS;

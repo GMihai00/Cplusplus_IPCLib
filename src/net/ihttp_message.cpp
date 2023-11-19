@@ -51,7 +51,7 @@ namespace net
 
 	utile::gzip_error ihttp_message::gzip_compress_body()
 	{
-		utile::gzip_error rez;
+		utile::gzip_error rez; 
 
 		if (auto it = m_header_data.find("Content-Encoding"); it == m_header_data.end())
 		{

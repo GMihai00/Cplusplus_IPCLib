@@ -20,7 +20,7 @@ namespace net
 		uint16_t get_status() const;
 		std::string get_reason() const;
 
-		virtual std::string to_string() const override;
+		virtual std::string to_string(const bool decrypt = false) const override;
 		virtual bool load_header_prefix(std::istringstream& iss) noexcept override;
 
 	private:
