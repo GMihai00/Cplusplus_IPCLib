@@ -105,6 +105,9 @@
     <ClInclude Include="net\web_client.hpp">
       <Filter>Header Files\net</Filter>
     </ClInclude>
+    <ClInclude Include="utile\gzip_helpers.hpp">
+      <Filter>Header Files\utile</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ipc.cpp">
@@ -133,6 +136,9 @@
     </ClCompile>
     <ClCompile Include="net\ihttp_message.cpp">
       <Filter>Source Files\net</Filter>
+    </ClCompile>
+    <ClCompile Include="utile\gzip_helpers.cpp">
+      <Filter>Source Files\utile</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

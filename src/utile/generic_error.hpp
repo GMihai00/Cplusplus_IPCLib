@@ -44,5 +44,6 @@ namespace utile
 	};
 
 	typedef utile::generic_error<std::string> web_error;
+	typedef utile::generic_error<std::string> gzip_error;
 	typedef utile::generic_error<std::wstring> web_werror;
 }

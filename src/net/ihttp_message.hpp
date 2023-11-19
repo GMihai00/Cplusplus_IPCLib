@@ -8,6 +8,8 @@
 
 #include "web_request_helpers.hpp"
 
+#include "../utile/generic_error.hpp"
+
 namespace net
 {
 	class ihttp_message
@@ -22,6 +24,8 @@ namespace net
 		std::vector<uint8_t> get_body_raw() const;
 		std::vector<uint8_t> get_body_decrypted() const;
 		nlohmann::json get_json_body() const;
+
+		utile::gzip_error gzip_compress_body();
 
 		template <typename T>
 		std::optional<T> get_header_value(const std::string& name) try

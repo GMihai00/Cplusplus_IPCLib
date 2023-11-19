@@ -111,7 +111,7 @@ int test_web_server_send_in_loop(T& web_client)
 		{"Accept", "*/*"},
 		{"Connection", "keep-alive"},
 		{"Accept-Encoding", "gzip, deflate, br"},
-		{"Transfer-Encoding", "chunked"}
+		/*{"Transfer-Encoding", "chunked"}*/
 		});
 
 	std::string body_data = "2\r\nab\r\n0\r\n\r\n";
@@ -120,6 +120,9 @@ int test_web_server_send_in_loop(T& web_client)
 		method, net::content_type::any,
 		additional_header_data,
 		std::vector<uint8_t>(body_data.begin(), body_data.end()));
+
+	// seems to be an issue with compression to take a look or an issue on the server side
+	//req.gzip_compress_body();
 
 	bool can_stop = false;
 
@@ -158,11 +161,11 @@ int test_web_server_send_in_loop(T& web_client)
 
 int main() try
 {	
-	//bool test_web = false;
-	//net::web_client web_client{};
+	bool test_web = false;
+	net::web_client web_client{};
 	 
-	bool test_web = true;
-	net::secure_web_client web_client{ { R"(..\..\..\external\boost_asio\example\cpp11\ssl\ca.pem)"} };
+	//bool test_web = true;
+	//net::secure_web_client web_client{ { R"(..\..\..\external\boost_asio\example\cpp11\ssl\ca.pem)"} };
 	
 
 	if (test_web)
