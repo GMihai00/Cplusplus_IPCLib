@@ -71,24 +71,24 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)..\external\json\include;$(SolutionDir)..\external\openssl\include;$(SolutionDir)..\external\boost_asio\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>C:\PathPrograms\vcpkg\installed\x64-windows\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
-    <OutDir>$(SolutionDir)..\bin\$(Configuration)\$(Platform)</OutDir>
+    <IncludePath>$(SolutionDir)..\external\zlib;$(SolutionDir)..\external\json\include;$(SolutionDir)..\external\openssl\include;$(SolutionDir)..\external\boost_asio\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration);C:\PathPrograms\vcpkg\installed\x64-windows\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
+    <OutDir>$(SolutionDir)..\bin\$(Platform)\$(Configuration)</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)..\external\json\include;$(SolutionDir)..\external\openssl\include;$(SolutionDir)..\external\boost_asio\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>C:\PathPrograms\vcpkg\installed\x64-windows\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
-    <OutDir>$(SolutionDir)..\bin\$(Configuration)\$(Platform)</OutDir>
+    <IncludePath>$(SolutionDir)..\external\zlib;$(SolutionDir)..\external\json\include;$(SolutionDir)..\external\openssl\include;$(SolutionDir)..\external\boost_asio\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration);C:\PathPrograms\vcpkg\installed\x64-windows\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
+    <OutDir>$(SolutionDir)..\bin\$(Platform)\$(Configuration)</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)..\external\json\include;$(SolutionDir)..\external\openssl\include;$(SolutionDir)..\external\boost_asio\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>C:\PathPrograms\vcpkg\installed\x64-windows\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
-    <OutDir>$(SolutionDir)..\bin\$(Configuration)\$(Platform)</OutDir>
+    <IncludePath>$(SolutionDir)..\external\zlib;$(SolutionDir)..\external\json\include;$(SolutionDir)..\external\openssl\include;$(SolutionDir)..\external\boost_asio\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration);C:\PathPrograms\vcpkg\installed\x64-windows\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <OutDir>$(SolutionDir)..\bin\$(Platform)\$(Configuration)</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)..\external\json\include;$(SolutionDir)..\external\openssl\include;$(SolutionDir)..\external\boost_asio\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>C:\PathPrograms\vcpkg\installed\x64-windows\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
-    <OutDir>$(SolutionDir)..\bin\$(Configuration)\$(Platform)</OutDir>
+    <IncludePath>$(SolutionDir)..\external\zlib;$(SolutionDir)..\external\json\include;$(SolutionDir)..\external\openssl\include;$(SolutionDir)..\external\boost_asio\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration);C:\PathPrograms\vcpkg\installed\x64-windows\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <OutDir>$(SolutionDir)..\bin\$(Platform)\$(Configuration)</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -194,6 +194,11 @@
     <ClInclude Include="utile\serializable_data.hpp" />
     <ClInclude Include="utile\thread_safe_queue.hpp" />
     <ClInclude Include="utile\timer.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\external\zlib\build-VS2022\libz-static\libz-static.vcxproj">
+      <Project>{b56d17bc-072b-42f3-844a-870a07afbaaa}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

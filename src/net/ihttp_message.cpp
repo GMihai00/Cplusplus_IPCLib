@@ -1,9 +1,57 @@
 #include "ihttp_message.hpp"
 
 #include <iostream>
+#include <zlib.h>
 
 namespace net
 {
+	namespace details
+	{
+		std::vector<uint8_t> decompress(const std::vector<uint8_t>& compressedData) {
+			std::vector<uint8_t> decompressedData;
+
+			z_stream stream;
+			stream.zalloc = Z_NULL;
+			stream.zfree = Z_NULL;
+			stream.opaque = Z_NULL;
+			stream.avail_in = 0;
+			stream.next_in = Z_NULL;
+
+			int ret = inflateInit2(&stream, 16 + MAX_WBITS); // Use zlib format with gzip wrapper
+			if (ret != Z_OK) {
+				throw std::runtime_error("Failed to initialize zlib");
+			}
+
+			stream.avail_in = static_cast<uInt>(compressedData.size());
+			stream.next_in = reinterpret_cast<Bytef*>(const_cast<uint8_t*>(compressedData.data()));
+
+			const size_t bufferSize = 4096;
+			std::vector<uint8_t> buffer(bufferSize);
+
+			do {
+				stream.avail_out = bufferSize;
+				stream.next_out = reinterpret_cast<Bytef*>(buffer.data());
+				ret = inflate(&stream, Z_NO_FLUSH);
+
+				switch (ret) {
+				case Z_NEED_DICT:
+				case Z_DATA_ERROR:
+				case Z_MEM_ERROR:
+					inflateEnd(&stream);
+					throw std::runtime_error("Decompression error");
+				}
+
+				size_t have = bufferSize - stream.avail_out;
+				decompressedData.insert(decompressedData.end(), buffer.begin(), buffer.begin() + have);
+
+			} while (stream.avail_out == 0);
+
+			inflateEnd(&stream);
+
+			return decompressedData;
+		}
+	}
+
 	boost::asio::streambuf& ihttp_message::get_buffer()
 	{
 		return m_buffer;
@@ -19,10 +67,27 @@ namespace net
 		return m_body_data;
 	}
 
+	std::vector<uint8_t> ihttp_message::get_body_decrypted() const
+	{
+		if (auto it = m_header_data.find("Content-Encoding"); it != m_header_data.end() && it->is_string())
+		{
+			auto encoding_type = it->get<std::string>();
+
+			// only gzip support for now
+			if (encoding_type.find("gzip") != std::string::npos)
+				return details::decompress(m_body_data);
+		}
+
+		return m_body_data;
+	}
+
 	nlohmann::json ihttp_message::get_json_body() const
 	{
 		if (!m_body_data.empty())
-			return nlohmann::json::parse(std::string(m_body_data.begin(), m_body_data.end()));
+		{
+			auto decrypted_body = get_body_decrypted();
+			return nlohmann::json::parse(std::string(decrypted_body.begin(), decrypted_body.end()));
+		}
 
 		return nlohmann::json();
 	}

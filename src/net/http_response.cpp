@@ -33,7 +33,11 @@ namespace net
 		
 		ss << "\r\n";
 
-		ss << std::string(m_body_data.begin(), m_body_data.end());
+		if (m_body_data.size() != 0)
+		{
+			auto decrypted_body = get_body_decrypted();
+			ss << std::string(decrypted_body.begin(), decrypted_body.end());
+		}
 
 		return ss.str();
 	}

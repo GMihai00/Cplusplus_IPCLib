@@ -83,7 +83,10 @@ namespace net
 
 		// body
 		if (m_body_data.size() != 0)
-			ss << std::string(m_body_data.begin(), m_body_data.end());
+		{
+			auto decrypted_body = get_body_decrypted();
+			ss << std::string(decrypted_body.begin(), decrypted_body.end());
+		}
 
 		return ss.str();
 	}

@@ -20,6 +20,7 @@ namespace net
 		boost::asio::streambuf& get_buffer();
 		nlohmann::json get_header() const;
 		std::vector<uint8_t> get_body_raw() const;
+		std::vector<uint8_t> get_body_decrypted() const;
 		nlohmann::json get_json_body() const;
 
 		template <typename T>

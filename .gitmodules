@@ -7,3 +7,6 @@
 [submodule "external/json"]
 	path = external/json
 	url = https://github.com/nlohmann/json.git
+[submodule "external/zlib"]
+	path = external/zlib
+	url = https://github.com/kiyolee/zlib-win-build.git

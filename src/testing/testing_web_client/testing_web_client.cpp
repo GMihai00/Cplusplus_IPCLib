@@ -56,8 +56,8 @@ int test_web_server_send_async(T& web_client, const std::string& url, const std:
 	nlohmann::json additional_header_data = nlohmann::json({
 	{"Accept", "*/*"},
 	{"Connection", "keep-alive"},
-	/*{"Accept-Encoding", "gzip, deflate, br"}*/
-	{"Accept-Encoding", "br"}
+	{"Accept-Encoding", "gzip, deflate, br"}
+	/*{"Accept-Encoding", "br"}*/
 		});
 
 	if (!web_client.connect(url))
@@ -158,10 +158,12 @@ int test_web_server_send_in_loop(T& web_client)
 
 int main() try
 {	
-	bool test_web = true;
-
+	//bool test_web = false;
 	//net::web_client web_client{};
+	 
+	bool test_web = true;
 	net::secure_web_client web_client{ { R"(..\..\..\external\boost_asio\example\cpp11\ssl\ca.pem)"} };
+	
 
 	if (test_web)
 	{
