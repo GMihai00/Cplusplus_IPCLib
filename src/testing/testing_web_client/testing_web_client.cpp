@@ -13,7 +13,8 @@ int test_web_server_send(T& web_client, const std::string& url, const std::strin
 	{"Accept-Encoding", "gzip, deflate, br"}
 	});
 
-	if (!web_client.connect(url))
+	// for testing sending to http from https client
+	if (!web_client.connect(url, 80))
 	{
 		std::cerr << "Failed to connect to server";
 		return 5;
@@ -161,10 +162,16 @@ int test_web_server_send_in_loop(T& web_client)
 
 int main() try
 {	
+	bool test_web = true;
+	net::secure_web_client web_client{ { R"(..\..\..\external\boost_asio\example\cpp11\ssl\ca.pem)"} };
+
 	//bool test_web = false;
 	//net::web_client web_client{};
-	 
-	bool test_web = true;
+	return test_web_server_send(web_client, "universities.hipolabs.com", "/search?country=United+States");
+
+	//return test_web_server_send(web_client, "www.dataaccess.com", "/webservicesserver/numberconversion.wso?WSDL");
+
+	/*bool test_web = true;
 	net::secure_web_client web_client{ { R"(..\..\..\external\boost_asio\example\cpp11\ssl\ca.pem)"} };
 	
 	if (test_web)
@@ -182,7 +189,7 @@ int main() try
 	else
 	{
 		return test_web_server_send_in_loop(web_client);
-	}
+	}*/
 	
 }
 catch (const std::exception& err)

@@ -5,7 +5,7 @@
 #include <nlohmann/json.hpp>
 #include <boost/asio.hpp>
 
-#include "web_request_helpers.hpp"
+#include "web_helpers.hpp"
 #include "ihttp_message.hpp"
 
 namespace net
@@ -23,6 +23,7 @@ namespace net
 
 		void set_host(const std::string& host);
 		std::string get_method() const;
+		void set_method(const std::string& method);
 		request_type get_type() const;
 		virtual std::string to_string(const bool decrypt = false) const override;
 		virtual bool load_header_prefix(std::istringstream& iss) noexcept override;

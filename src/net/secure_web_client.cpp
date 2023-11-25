@@ -34,7 +34,7 @@ namespace net
 	}
 
 
-	bool secure_web_client::connect(const std::string& url, const std::optional<utile::PORT>& /*port*/) noexcept try
+	bool secure_web_client::connect(const std::string& url, const std::optional<utile::PORT>& port) noexcept try
 	{
 		{
 			std::scoped_lock lock(m_mutex);
@@ -44,7 +44,14 @@ namespace net
 			}
 		}
 
-		boost::asio::ip::tcp::resolver::query query(url, "https");
+		std::string string_port = "https";
+
+		if (port != std::nullopt)
+		{
+			string_port = std::to_string(*port);
+		}
+
+		boost::asio::ip::tcp::resolver::query query(url, string_port);
 		boost::asio::connect(m_socket->lowest_layer(), m_resolver.resolve(query));
 		m_socket->lowest_layer().set_option(boost::asio::ip::tcp::no_delay(true));
 
@@ -53,7 +60,8 @@ namespace net
 			m_ssl_context.set_verify_callback(boost::asio::ssl::rfc2818_verification(url));
 		}
 
-		m_socket->handshake(boost::asio::ssl::stream<boost::asio::ip::tcp::socket>::client);
+		if (string_port == "https" || string_port == "443")
+			m_socket->handshake(boost::asio::ssl::stream<boost::asio::ip::tcp::socket>::client);
 
 		m_host = url;
 

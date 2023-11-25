@@ -32,7 +32,7 @@ namespace net
 
 		}
 
-		std::pair<std::shared_ptr<http_response>, utile::web_error> send(http_request&& request, const uint16_t timeout = 0) noexcept
+		std::pair<std::shared_ptr<http_response>, utile::web_error> send(http_request&& request, const uint16_t timeout = 0, const bool should_follow_redirects = false) noexcept
 		{
 			assert(m_socket);
 
@@ -52,7 +52,31 @@ namespace net
 				return { nullptr, err };
 			}
 
-			return m_reciever.get<http_response>();
+			auto response = m_reciever.get<http_response>();
+
+			// getting response failed
+			if (!response.second)
+			{
+				return response;
+			}
+
+			if (should_follow_redirects && response.first->get_status() == 301)
+			{
+				auto header_data = response.first->get_header();
+				
+				if (auto it = header_data.find("Location"); it != header_data.end() && it->is_string())
+				{
+					auto redirect_location = it->get<std::string>();
+				}
+				else
+				{
+					// if no location to redirect it is an invalid redirect message
+					// chose to just return the response
+					return response;
+				}
+			}
+
+			return response;
 		}
 
 		void send_async(http_request&& request, async_get_callback& callback) noexcept

@@ -29,6 +29,11 @@ namespace net
 		return m_method;
 	}
 
+	void http_request::set_method(const std::string& method)
+	{
+		m_method = method;
+	}
+
 	request_type http_request::get_type() const
 	{
 		return m_type;
