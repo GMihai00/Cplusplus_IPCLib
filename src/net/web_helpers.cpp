@@ -1,6 +1,7 @@
 #pragma once
 
 #include "web_helpers.hpp"
+#include <iostream>
 
 namespace net
 {
@@ -14,6 +15,21 @@ namespace net
 			});
 	}
 	
+	std::optional<web_location> from_json(const nlohmann::json& data) try
+	{
+		web_location rez;
+
+		rez.m_method = data.at("method").get<std::string>();
+		rez.m_port = data.at("port").get<std::string>();
+		rez.m_host = data.at("host").get<std::string>();
+
+		return rez;
+	}
+	catch (const std::exception& e) {
+		//debug only
+		std::cerr << "Error parsing JSON: " << e.what() << std::endl;
+		return std::nullopt;
+	}
 
 	request_type string_to_request_type(const std::string& req_type)
 	{

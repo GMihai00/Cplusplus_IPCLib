@@ -20,7 +20,6 @@ namespace net
         for (uint64_t it = 0; it < max_nr_connections; it++)
             m_available_connection_ids.push_unsafe(it);
 
-        // 80 HTTP 443 HTTPS
         try
         {
             m_endpoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(host), port);

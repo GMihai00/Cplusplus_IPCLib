@@ -89,11 +89,92 @@ namespace net
 		{
 			request.set_host(m_host);
 
-			return m_controller.send(std::move(request), timeout, should_follow_redirects);
+			auto rez = m_controller.send(std::move(request), timeout, should_follow_redirects);
+
+			if (should_follow_redirects && rez.second.value() == 301) try
+			{
+				auto redirect_json_data = nlohmann::json::parse(rez.second.message());
+
+				auto time_left = 0u;
+
+				if (auto it = redirect_json_data.find("remaining_time"); it != redirect_json_data.end() && it->is_number())
+				{
+					time_left = it->get<uint16_t>();
+				}
+
+				if (auto redirect_data = net::from_json(redirect_json_data); redirect_data != std::nullopt)
+				{
+					disconnect();
+
+					if (connect(redirect_data->m_host, redirect_data->m_port))
+					{
+						request.set_host(m_host);
+						request.set_method(redirect_data->m_method);
+
+						return send(std::move(request), time_left, should_follow_redirects);
+					}
+					else
+					{
+						// in case of failed connection stop
+						return { rez.first, utile::web_error(std::error_code(ERROR_INVALID_ADDRESS, std::generic_category()), "Bad redirect")};
+					}
+				}
+			}
+			catch (const std::exception& err)
+			{
+				return { rez.first, utile::web_error(std::error_code(ERROR_INTERNAL_ERROR, std::generic_category()), err.what()) };
+			}
+
+			return rez;
 		}
 
 		void send_async(http_request&& request, async_get_callback& callback, const uint16_t timeout = 0, const bool should_follow_redirects = false) noexcept
 		{
+			if (!m_controller.can_send())
+			{
+				if (callback)
+					callback( nullptr, utile::web_error(std::error_code(5, std::generic_category()), "Request already ongoing") );
+				return;
+			}
+
+			m_get_callback = [this, &callback, &request, should_follow_redirects](std::shared_ptr<ihttp_message> message, utile::web_error err) {
+				if (should_follow_redirects && err.value() == 301) try
+				{
+					auto redirect_json_data = nlohmann::json::parse(err.message());
+
+					auto time_left = 0u;
+
+					if (auto it = redirect_json_data.find("remaining_time");  it != redirect_json_data.end() && it->is_number())
+					{
+						time_left = it->get<uint16_t>();
+					}
+
+					if (auto redirect_data = net::from_json(redirect_json_data); redirect_data != std::nullopt)
+					{
+						disconnect();
+
+						if (connect(redirect_data->m_host, redirect_data->m_port))
+						{
+							request.set_host(m_host);
+							request.set_method(redirect_data->m_method);
+
+							send_async(std::move(request), callback, time_left, should_follow_redirects);
+						}
+						else
+						{
+							// in case of failed connection stop
+							if (callback)
+								callback(message, utile::web_error(std::error_code(ERROR_INVALID_ADDRESS, std::generic_category()), "Bad redirect"));
+						}
+					}
+				}
+				catch (const std::exception& err)
+				{
+					if (callback)
+						callback(message, utile::web_error(std::error_code(ERROR_INTERNAL_ERROR, std::generic_category()), err.what()));
+				}
+			};
+
 			request.set_host(m_host);
 
 			m_controller.send_async(std::move(request), callback, timeout, should_follow_redirects);
@@ -114,5 +195,7 @@ namespace net
 		std::thread m_thread_context;
 		web_message_controller<T> m_controller;
 		std::shared_ptr<T> m_socket = nullptr;
+		async_get_callback m_get_callback;
+
 	};
 } // namespace net

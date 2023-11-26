@@ -121,6 +121,11 @@ namespace utile
 		{
 			return m_time_left;
 		}
+
+		bool is_running()
+		{
+			return !m_paused;
+		}
 	};
 
 } // namespace utile

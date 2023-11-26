@@ -58,12 +58,14 @@ namespace net
 				{
 					if (redirect_location.value().m_port != "" || redirect_location.value().m_host != "")
 					{
-						// redirection to another client should be done by the client not by the controller
+						// redirection to another client is done by the client not by the controller
 						auto helper_err_data = redirect_location->to_json();
 
-						m_cancel_timer.pause();
-
-						helper_err_data.emplace("remaining_time", m_cancel_timer.get_time_left());
+						if (m_cancel_timer.is_running())
+						{
+							m_cancel_timer.pause();
+							helper_err_data.emplace("remaining_time", m_cancel_timer.get_time_left());
+						}
 
 						return { response.first, utile::web_error(std::error_code(301, std::generic_category()), helper_err_data.dump()) };
 					}
@@ -186,6 +188,11 @@ namespace net
 			m_reciever.set_socket(m_socket);
 		}
 
+		bool can_send() const
+		{
+			return m_can_send;
+		}
+
 	private:
 		void get_response_post_async_send(utile::web_error err, http_request& request, async_get_callback& callback, const bool should_follow_redirects)
 		{
@@ -211,8 +218,7 @@ namespace net
 					{
 						if (redirect_location.value().m_port != "" || redirect_location.value().m_host != "")
 						{
-							// redirection to another client should be done by the client not by the controller
-
+							// redirection to another client is done by the client not by the controller
 							m_cancel_timer.pause();
 
 							{
@@ -220,7 +226,15 @@ namespace net
 								m_can_send = true;
 							}
 
-							callback(message, utile::web_error(std::error_code(301, std::generic_category()), redirect_location->to_json().dump()));
+							auto helper_err_data = redirect_location->to_json();
+
+							if (m_cancel_timer.is_running())
+							{
+								m_cancel_timer.pause();
+								helper_err_data.emplace("remaining_time", m_cancel_timer.get_time_left());
+							}
+
+							callback(message, utile::web_error(std::error_code(301, std::generic_category()), helper_err_data.dump()));
 						}
 
 						request.set_method(redirect_location.value().m_method);

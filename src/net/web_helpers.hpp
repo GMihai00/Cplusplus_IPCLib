@@ -52,6 +52,8 @@ namespace net
 	};
 
 
+	std::optional<web_location> from_json(const nlohmann::json& data);
+
 	request_type string_to_request_type(const std::string& req_type);
 
 	std::string request_type_to_string(const request_type req_type);

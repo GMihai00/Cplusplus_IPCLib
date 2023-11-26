@@ -50,6 +50,51 @@ int test_web_server_send(T& web_client, const std::string& url, const std::strin
 }
 
 template <typename T>
+int test_web_server_send_follow_redirects(T& web_client, const std::string& url, const std::string& method)
+{
+	nlohmann::json additional_header_data = nlohmann::json({
+	{"Accept", "*/*"},
+	{"Connection", "keep-alive"},
+	{"Accept-Encoding", "gzip, deflate, br"}
+		});
+
+	if (!web_client.connect(url))
+	{
+		std::cerr << "Failed to connect to server";
+		return 5;
+	}
+
+	net::http_request req(net::request_type::GET, method, net::content_type::any, additional_header_data);
+
+	try
+	{
+		std::cout << "Request: " << req.to_string() << std::endl;
+		auto response = web_client.send(std::move(req), 0, true);
+
+
+		if (!response.second)
+		{
+			std::cerr << "Failed to get response err: " << response.second.message();
+			return 5;
+		}
+
+		std::cout << "version: " << response.first->get_version() <<
+			" status: " << response.first->get_status() <<
+			" reason: " << response.first->get_reason() << std::endl;
+		std::cout << "Recieved header data: " << response.first->get_header().dump() << std::endl;
+		auto body = response.first->get_body_raw();
+		std::cout << "Recieved body data: " << std::string(body.begin(), body.end()) << std::endl;
+	}
+	catch (const std::exception& err)
+	{
+		std::cerr << "Request failed, err: " << err.what();
+		return 5;
+	}
+
+	return 0;
+}
+
+template <typename T>
 int test_web_server_send_async(T& web_client, const std::string& url, const std::string& method)
 {
 
@@ -170,7 +215,7 @@ int main() try
 	
 	//return test_web_server_send_async(web_client, "universities.hipolabs.com", "/search?country=United+States");
 
-	//return test_web_server_send(web_client, "www.dataaccess.com", "/webservicesserver/numberconversion.wso?WSDL");
+	return test_web_server_send_follow_redirects(web_client, "www.dataaccess.com", "/webservicesserver/numberconversion.wso?WSDL");
 
 	if (test_web)
 	{
