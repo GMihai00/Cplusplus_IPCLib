@@ -54,46 +54,30 @@ namespace net
 
 			auto response = m_reciever.get<http_response>();
 
-			// getting response failed
-			if (!response.second)
+			if (should_follow_redirects && response.second && response.first && response.first->get_status() == 301)
 			{
-				return response;
-			}
-
-			if (should_follow_redirects && response.first->get_status() == 301)
-			{
-				auto header_data = response.first->get_header();
-				
 				if (auto redirect_location = get_redirect_location(response.first); redirect_location != std::nullopt)
 				{
-				
-					if (redirect_location.value().m_port == "https")
-					{
-						// unable to redirect to https server from http client
-						return response;
-					}
-					else if (redirect_location.value().m_port != "" || redirect_location.value().m_host != "")
+					if (redirect_location.value().m_port != "" || redirect_location.value().m_host != "")
 					{
 						// redirection to another client should be done by the client not by the controller
-						return { response.first, utile::web_error(std::error_code(301, std::generic_category()), redirect_location->to_json().dump()) };
+						auto helper_err_data = redirect_location->to_json();
+
+						helper_err_data.emplace("remaining_time", cancel_timer.get_time_left());
+
+						return { response.first, utile::web_error(std::error_code(301, std::generic_category()), helper_err_data.dump()) };
 					}
 
 					request.set_method(redirect_location.value().m_method);
 
 					return send(std::move(request), 0, should_follow_redirects);
 				}
-				else
-				{
-					// if no location to redirect it is an invalid redirect message
-					// chose to just return the response
-					return response;
-				}
 			}
 
 			return response;
 		}
 
-		void send_async(http_request&& request, async_get_callback& callback) noexcept
+		void send_async(http_request&& request, async_get_callback& callback, const bool should_follow_redirects = false) noexcept
 		{
 			assert(m_socket);
 
@@ -110,7 +94,9 @@ namespace net
 				m_write_callback = std::bind(&web_message_controller::get_response_post_async_send,
 					this,
 					std::placeholders::_1,
-					std::ref(callback));
+					std::ref(request),
+					std::ref(callback),
+					should_follow_redirects);
 
 				m_can_send = false;
 			}
@@ -195,7 +181,7 @@ namespace net
 		}
 
 	private:
-		void get_response_post_async_send(utile::web_error err, async_get_callback& callback)
+		void get_response_post_async_send(utile::web_error err, http_request& request, async_get_callback& callback, const bool should_follow_redirects)
 		{
 			if (!err)
 			{
@@ -208,9 +194,45 @@ namespace net
 				return;
 			}
 
-			auto delete_callback_on_exit = utile::finally([this]() { if (this) { std::scoped_lock lock(m_mutex); m_can_send = true; } });
+			m_get_callback = [this, &callback, &request, should_follow_redirects](std::shared_ptr<ihttp_message> message, utile::web_error err) {
 
-			m_reciever.async_get<http_response>(callback);
+				auto response = std::dynamic_pointer_cast<http_response>(message);
+				if (should_follow_redirects && err && response && response->get_status() == 301)
+				{
+					if (auto redirect_location = get_redirect_location(message); redirect_location != std::nullopt)
+					{
+						if (redirect_location.value().m_port != "" || redirect_location.value().m_host != "")
+						{
+							// redirection to another client should be done by the client not by the controller
+
+							{
+								std::scoped_lock lock(m_mutex);
+								m_can_send = true;
+							}
+
+							callback(message, utile::web_error(std::error_code(301, std::generic_category()), redirect_location->to_json().dump()));
+						}
+
+						request.set_method(redirect_location.value().m_method);
+
+						{ 
+							std::scoped_lock lock(m_mutex); 
+							m_can_send = true; 
+						}
+
+						send_async(std::move(request), callback, should_follow_redirects);
+					}
+				}
+
+				{
+					std::scoped_lock lock(m_mutex);
+					m_can_send = true;
+				}
+
+				callback(message, err);
+			};
+
+			m_reciever.async_get<http_response>(m_get_callback);
 		}
 
 		web_message_dispatcher<T> m_dispatcher;
@@ -220,6 +242,7 @@ namespace net
 		std::mutex m_mutex;
 		bool m_can_send = true;
 		async_send_callback m_write_callback;
+		async_get_callback m_get_callback;
 		std::set<std::shared_ptr<utile::observer<>>, utile::observer_shared_ptr_comparator<>> m_timeout_observers;
 	};
 }

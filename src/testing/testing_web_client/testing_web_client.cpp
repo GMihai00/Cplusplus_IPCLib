@@ -162,18 +162,16 @@ int test_web_server_send_in_loop(T& web_client)
 int main() try
 {	
 
-	bool test_web = true;
-	net::secure_web_client web_client{ { R"(..\..\..\external\boost_asio\example\cpp11\ssl\ca.pem)"} };
+	bool test_web = false;
+	net::web_client web_client{};
 
 	//bool test_web = false;
-	//net::web_client web_client{};
-	return test_web_server_send(web_client, "universities.hipolabs.com", "/search?country=United+States");
+	//net::secure_web_client web_client{ { R"(..\..\..\external\boost_asio\example\cpp11\ssl\ca.pem)"} };
+	
+	//return test_web_server_send_async(web_client, "universities.hipolabs.com", "/search?country=United+States");
 
 	//return test_web_server_send(web_client, "www.dataaccess.com", "/webservicesserver/numberconversion.wso?WSDL");
 
-	/*bool test_web = true;
-	net::secure_web_client web_client{ { R"(..\..\..\external\boost_asio\example\cpp11\ssl\ca.pem)"} };
-	
 	if (test_web)
 	{
 		if (auto ret = test_web_server_send_async(web_client, "www.dataaccess.com", "/webservicesserver/numberconversion.wso?WSDL"); ret != 0)
@@ -189,7 +187,7 @@ int main() try
 	else
 	{
 		return test_web_server_send_in_loop(web_client);
-	}*/
+	}
 	
 }
 catch (const std::exception& err)

@@ -116,6 +116,11 @@ namespace utile
 		{
 			return m_expired;
 		}
+
+		uint16_t get_time_left()
+		{
+			return m_time_left;
+		}
 	};
 
 } // namespace utile
