@@ -92,11 +92,11 @@ namespace net
 			return m_controller.send(std::move(request), timeout, should_follow_redirects);
 		}
 
-		void send_async(http_request&& request, async_get_callback& callback) noexcept
+		void send_async(http_request&& request, async_get_callback& callback, const uint16_t timeout = 0, const bool should_follow_redirects = false) noexcept
 		{
 			request.set_host(m_host);
 
-			m_controller.send_async(std::move(request), callback);
+			m_controller.send_async(std::move(request), callback, timeout, should_follow_redirects);
 		}
 	protected:
 

@@ -19,6 +19,7 @@ namespace net
 			: m_socket(socket)
 			, m_dispatcher(m_socket)
 			, m_reciever(m_socket)
+			, m_cancel_timer(0)
 		{
 			m_base_timeout_callback = [this]()
 			{
@@ -28,24 +29,21 @@ namespace net
 				}
 			};
 
-			m_timeout_observers.insert(std::make_shared<utile::observer<>>(m_base_timeout_callback));
-
+			m_base_timeout_observer = std::make_shared<utile::observer<>>(m_base_timeout_callback);
+			m_cancel_timer.subscribe(m_base_timeout_observer);
 		}
 
 		std::pair<std::shared_ptr<http_response>, utile::web_error> send(http_request&& request, const uint16_t timeout = 0, const bool should_follow_redirects = false) noexcept
 		{
 			assert(m_socket);
 
-			utile::timer<> cancel_timer(0);
-
-			for (const auto& timeout_observer : m_timeout_observers)
-				cancel_timer.subscribe(timeout_observer);
-
 			if (timeout)
 			{
-				cancel_timer.reset(timeout);
-				cancel_timer.resume();
+				m_cancel_timer.reset(timeout);
+				m_cancel_timer.resume();
 			}
+
+			auto pause_timer = [this]() { m_cancel_timer.pause(); };
 
 			if (auto err = m_dispatcher.send(request); !err)
 			{
@@ -63,7 +61,9 @@ namespace net
 						// redirection to another client should be done by the client not by the controller
 						auto helper_err_data = redirect_location->to_json();
 
-						helper_err_data.emplace("remaining_time", cancel_timer.get_time_left());
+						m_cancel_timer.pause();
+
+						helper_err_data.emplace("remaining_time", m_cancel_timer.get_time_left());
 
 						return { response.first, utile::web_error(std::error_code(301, std::generic_category()), helper_err_data.dump()) };
 					}
@@ -77,7 +77,7 @@ namespace net
 			return response;
 		}
 
-		void send_async(http_request&& request, async_get_callback& callback, const bool should_follow_redirects = false) noexcept
+		void send_async(http_request&& request, async_get_callback& callback, const uint16_t timeout = 0, const bool should_follow_redirects = false) noexcept
 		{
 			assert(m_socket);
 
@@ -101,17 +101,23 @@ namespace net
 				m_can_send = false;
 			}
 
+			if (timeout)
+			{
+				m_cancel_timer.reset(timeout);
+				m_cancel_timer.resume();
+			}
+
 			m_dispatcher.send_async(request, m_write_callback);
 		}
 
 		void attach_timeout_observer(const std::shared_ptr<utile::observer<>>& obs)
 		{
-			m_timeout_observers.insert(obs);
+			m_cancel_timer.subscribe(obs);
 		}
 
 		void remove_observer(const std::shared_ptr<utile::observer<>>& obs)
 		{
-			m_timeout_observers.erase(obs);
+			m_cancel_timer.unsubscribe(obs);
 		}
 
 		std::pair<std::shared_ptr<http_request>, utile::web_error> get_request() noexcept
@@ -185,6 +191,8 @@ namespace net
 		{
 			if (!err)
 			{
+				m_cancel_timer.pause();
+
 				{
 					std::scoped_lock lock(m_mutex);
 					m_can_send = true;
@@ -205,6 +213,8 @@ namespace net
 						{
 							// redirection to another client should be done by the client not by the controller
 
+							m_cancel_timer.pause();
+
 							{
 								std::scoped_lock lock(m_mutex);
 								m_can_send = true;
@@ -224,6 +234,8 @@ namespace net
 					}
 				}
 
+				m_cancel_timer.pause();
+
 				{
 					std::scoped_lock lock(m_mutex);
 					m_can_send = true;
@@ -241,8 +253,9 @@ namespace net
 		std::function<void()> m_base_timeout_callback;
 		std::mutex m_mutex;
 		bool m_can_send = true;
+		utile::timer<> m_cancel_timer;
 		async_send_callback m_write_callback;
 		async_get_callback m_get_callback;
-		std::set<std::shared_ptr<utile::observer<>>, utile::observer_shared_ptr_comparator<>> m_timeout_observers;
+		std::shared_ptr<utile::observer<>> m_base_timeout_observer;
 	};
 }

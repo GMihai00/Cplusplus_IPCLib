@@ -146,10 +146,10 @@ int test_web_server_send_in_loop(T& web_client)
 
 		net::http_request req(net::request_type::GET, method, net::content_type::any, additional_header_data);
 		
-		web_client.send_async(std::move(req), req_callback);
+		web_client.send_async(std::move(req), req_callback, 5000);
 	};
 
-	web_client.send_async(std::move(req), req_callback);
+	web_client.send_async(std::move(req), req_callback, 5000);
 
 	while (!can_stop)
 	{
