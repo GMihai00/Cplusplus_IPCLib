@@ -39,7 +39,12 @@ namespace net
 				m_thread_context.join();
 		}
 
-		virtual bool connect(const std::string& url, const std::optional<utile::PORT>& port = std::nullopt) noexcept try
+		bool connect(const std::string& url, const utile::PORT& port)
+		{
+			return connect(url, std::to_string(port));
+		}
+
+		virtual bool connect(const std::string& url, const std::optional<std::string>& port = std::nullopt) noexcept try
 		{
 			{
 				std::scoped_lock lock(m_mutex);
@@ -53,7 +58,7 @@ namespace net
 
 			if (port != std::nullopt)
 			{
-				string_port = std::to_string(*port);
+				string_port = *port;
 			}
 
 			boost::asio::ip::tcp::resolver::query query(url, string_port);
@@ -80,11 +85,11 @@ namespace net
 			}
 		}
 
-		std::pair<std::shared_ptr<http_response>, utile::web_error> send(http_request&& request, const uint16_t timeout = 0)
+		std::pair<std::shared_ptr<http_response>, utile::web_error> send(http_request&& request, const uint16_t timeout = 0, const bool should_follow_redirects = false)
 		{
 			request.set_host(m_host);
 
-			return m_controller.send(std::move(request), timeout);
+			return m_controller.send(std::move(request), timeout, should_follow_redirects);
 		}
 
 		void send_async(http_request&& request, async_get_callback& callback) noexcept

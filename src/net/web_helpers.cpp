@@ -4,6 +4,17 @@
 
 namespace net
 {
+
+	nlohmann::json web_location::to_json()
+	{
+		return nlohmann::json({
+			{"method", m_method},
+			{"port", m_port},
+			{"host", m_host}
+			});
+	}
+	
+
 	request_type string_to_request_type(const std::string& req_type)
 	{
 		if (req_type == "GET") {
@@ -85,7 +96,7 @@ namespace net
 		throw std::runtime_error("Failed to find coresponding context type");
 	}
 
-	std::optional<std::pair<std::string, std::string>> get_redirect_location(const std::shared_ptr<ihttp_message>& message)
+	std::optional<web_location> get_redirect_location(const std::shared_ptr<ihttp_message>& message)
 	{
 		auto header_data = message->get_header();
 
@@ -93,7 +104,37 @@ namespace net
 		{
 			auto redirect_location = it->get<std::string>();
 
+			web_location rez;
 
+			auto poz = redirect_location.find("://");
+
+			if (poz != std::string::npos)
+			{
+				rez.m_port = redirect_location.substr(0, poz);
+
+				poz += 3;
+			}
+			else
+			{
+				poz = 0;
+			}
+
+			auto old_poz = poz;
+			poz = redirect_location.find("/", poz);
+
+			if (poz != std::string::npos)
+			{
+				rez.m_host = redirect_location.substr(old_poz, poz - old_poz);
+
+			}
+			else
+			{
+				poz = 0;
+			}
+
+			rez.m_method = redirect_location.substr(poz, redirect_location.size() - poz);
+
+			return rez;
 
 		}
 

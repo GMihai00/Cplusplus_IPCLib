@@ -13,8 +13,7 @@ int test_web_server_send(T& web_client, const std::string& url, const std::strin
 	{"Accept-Encoding", "gzip, deflate, br"}
 	});
 
-	// for testing sending to http from https client
-	if (!web_client.connect(url, 80))
+	if (!web_client.connect(url))
 	{
 		std::cerr << "Failed to connect to server";
 		return 5;
@@ -162,6 +161,7 @@ int test_web_server_send_in_loop(T& web_client)
 
 int main() try
 {	
+
 	bool test_web = true;
 	net::secure_web_client web_client{ { R"(..\..\..\external\boost_asio\example\cpp11\ssl\ca.pem)"} };
 

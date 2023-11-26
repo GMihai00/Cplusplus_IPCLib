@@ -1,5 +1,7 @@
 #pragma once
 
+#include <nlohmann/json.hpp>
+
 #include "ihttp_message.hpp"
 
 namespace net
@@ -40,12 +42,22 @@ namespace net
 		any
 	};
 
+	struct web_location
+	{
+		std::string m_method{};
+		std::string m_host{};
+		std::string m_port{};
+
+		nlohmann::json to_json();
+	};
+
+
 	request_type string_to_request_type(const std::string& req_type);
 
 	std::string request_type_to_string(const request_type req_type);
 
 	std::string content_type_to_string(const content_type con_type);
 
-	std::optional<std::pair<std::string, std::string>> get_redirect_location(const std::shared_ptr<ihttp_message>& message);
+	std::optional<web_location> get_redirect_location(const std::shared_ptr<ihttp_message>& message);
 
 }

@@ -64,9 +64,23 @@ namespace net
 			{
 				auto header_data = response.first->get_header();
 				
-				if (auto it = header_data.find("Location"); it != header_data.end() && it->is_string())
+				if (auto redirect_location = get_redirect_location(response.first); redirect_location != std::nullopt)
 				{
-					auto redirect_location = it->get<std::string>();
+				
+					if (redirect_location.value().m_port == "https")
+					{
+						// unable to redirect to https server from http client
+						return response;
+					}
+					else if (redirect_location.value().m_port != "" || redirect_location.value().m_host != "")
+					{
+						// redirection to another client should be done by the client not by the controller
+						return { response.first, utile::web_error(std::error_code(301, std::generic_category()), redirect_location->to_json().dump()) };
+					}
+
+					request.set_method(redirect_location.value().m_method);
+
+					return send(std::move(request), 0, should_follow_redirects);
 				}
 				else
 				{
