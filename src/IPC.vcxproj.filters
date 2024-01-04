@@ -31,7 +31,7 @@
     <Filter Include="Source Files\security">
       <UniqueIdentifier>{9da68ac1-d1c7-4384-9a09-34d6a4938f18}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\net\legacy">
+    <Filter Include="Header Files\net\legacy_fast_ipc">
       <UniqueIdentifier>{8427fb97-28e9-4f06-85ec-223b2dc9b0ae}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -100,16 +100,16 @@
       <Filter>Header Files\utile</Filter>
     </ClInclude>
     <ClInclude Include="net\client.hpp">
-      <Filter>Header Files\net\legacy</Filter>
+      <Filter>Header Files\net\legacy_fast_ipc</Filter>
     </ClInclude>
     <ClInclude Include="net\connection.hpp">
-      <Filter>Header Files\net\legacy</Filter>
+      <Filter>Header Files\net\legacy_fast_ipc</Filter>
     </ClInclude>
     <ClInclude Include="net\message.hpp">
-      <Filter>Header Files\net\legacy</Filter>
+      <Filter>Header Files\net\legacy_fast_ipc</Filter>
     </ClInclude>
     <ClInclude Include="net\server.hpp">
-      <Filter>Header Files\net\legacy</Filter>
+      <Filter>Header Files\net\legacy_fast_ipc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

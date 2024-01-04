@@ -306,7 +306,6 @@ namespace net
         // In theoury a server should respond in 1 minute to a request but need to add the other check as well
         bool read_header()
         {
-            // PARE CA UNDEVA PE ACI SE DUCE DRACU
             std::vector<uint8_t> vBuffer(sizeof(message_header<T>));
 
             if (!read_data(vBuffer, sizeof(message_header<T>), (m_owner == owner::Server) ? 60000 : 0)) { return false; }
