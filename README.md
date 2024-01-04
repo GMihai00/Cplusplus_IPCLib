@@ -438,6 +438,45 @@ msg >> var2_cpy;
 msg >> var1_cpy;
 ...
 ```
+### Server
+
+**Note**: To be able to create a server you will need to implement the server interface. It has almost the same methods as with the web server but methods mapping is no longer done trough callbacks, but through only one method "on_message", making it harder to scale.
+
+```cpp
+#include "net/server.hpp"
+
+class test_server : public net::server<TestingMessage>
+{
+  virtual void on_message(std::shared_ptr<net::connection<TestingMessage>> client, net::message<TestingMessage>& msg) noexcept override
+  {
+    switch (msg.m_header.m_type)
+    {
+    case TestingMessage::TEST:
+    	// do smth
+    	break;
+    ...
+    }
+  }
+};
+
+constexpr auto URL = "127.0.0.1";
+constexpr auto PORT = 54321;
+
+int main()
+{
+  test_server server(URL, PORT);
+  
+  server.start();
+  
+  // infinite loop to prevent main thread exit
+  while (true)
+	{
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+	}
+
+  return 0;
+}
+```
 
 ### Client
 
@@ -489,46 +528,6 @@ auto& msg = ans.value().m_msg;
 // handle response
 ...
 
-```
-
-### Server
-
-**Note**: To be able to create a server you will need to implement the server interface. It has almost the same methods as with the web server but methods mapping is no longer done trough callbacks, but through only one method "on_message", making it harder to scale.
-
-```cpp
-#include "net/server.hpp"
-
-class test_server : public net::server<TestingMessage>
-{
-  virtual void on_message(std::shared_ptr<net::connection<TestingMessage>> client, net::message<TestingMessage>& msg) noexcept override
-  {
-    switch (msg.m_header.m_type)
-    {
-    case TestingMessage::TEST:
-    	// do smth
-    	break;
-    ...
-    }
-  }
-};
-
-constexpr auto URL = "127.0.0.1";
-constexpr auto PORT = 54321;
-
-int main()
-{
-  test_server server(URL, PORT);
-  
-  server.start();
-  
-  // infinite loop to prevent main thread exit
-  while (true)
-	{
-		std::this_thread::sleep_for(std::chrono::seconds(1));
-	}
-
-  return 0;
-}
 ```
 # Contributing
 
