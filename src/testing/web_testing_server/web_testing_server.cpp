@@ -15,13 +15,37 @@ int main() try
 	// add callbacks	
 	net::async_req_handle_callback test_callback = [](std::shared_ptr<net::http_request> req) {
 
-		std::cout << "Recieved request: " << req->to_string(req->is_body_encoded()) << '\n';
-		nlohmann::json smth_to_send = nlohmann::json({ {"aba", 5}, {"beta", 6} });
-		std::string data = smth_to_send.dump();
+		auto req_data = req->to_string(req->is_body_encoded());
 
-		auto body_data = std::vector<uint8_t>(data.begin(), data.end());
+		std::cout << "/////////////////////////////////////////\n";
+		std::cout << "Recieved request: " << req->to_string(req->is_body_encoded()) << "\n";
+		std::cout << "/////////////////////////////////////////\n";
 
-		return net::http_response(200, "OK", nullptr, body_data);
+		try
+		{
+			auto json_data = req->get_json_body();
+
+			unsigned long long a = json_data["a"].get<unsigned long long>();
+			unsigned long long b = json_data["b"].get<unsigned long long>();
+			
+			auto c = a + b;
+			a = b;
+			b = c;
+
+			json_data["a"] = a;
+			json_data["b"] = b;
+
+			std::string dumped_json = json_data.dump();
+
+			auto body_data = std::vector<uint8_t>(dumped_json.begin(), dumped_json.end());
+
+
+			return net::http_response(200, "OK", nullptr, body_data);
+		}
+		catch(const std::exception& err)
+		{
+			return net::http_response(400, std::string(err.what()));
+		}
 	};
 
 	net::async_req_regex_handle_callback test_regex_callback = [](std::shared_ptr<net::http_request>, const std::smatch& matches) {

@@ -185,11 +185,10 @@ void test_web_server_send_in_loop(T& web_client)
 	nlohmann::json additional_header_data = nlohmann::json({
 		{"Accept", "*/*"},
 		{"Connection", "keep-alive"},
-		{"Accept-Encoding", "gzip, deflate, br"},
-		/*{"Transfer-Encoding", "chunked"}*/
+		{"Accept-Encoding", "gzip, deflate, br"}
 		});
 
-	std::string body_data = "2\r\nab\r\n0\r\n\r\n";
+	std::string body_data = R"({"a": 1, "b": 1 })";
 
 	net::http_request req(net::request_type::GET,
 		method, net::content_type::any,
@@ -216,11 +215,37 @@ void test_web_server_send_in_loop(T& web_client)
 		{"Accept-Encoding", "gzip, deflate, br"}
 			});
 
+		std::cout << "/////////////////////////////////////////\n";
 		std::cout << "Recieved response: " << response->to_string() << "\n";
+		std::cout << "/////////////////////////////////////////\n";
 
-		net::http_request req(net::request_type::GET, method, net::content_type::any, additional_header_data);
-		
-		web_client.send_async(std::move(req), req_callback, 5000);
+		try
+		{
+			auto json_data = response->get_json_body();
+
+			unsigned long long a = json_data["a"].get<unsigned long long>();
+			unsigned long long b = json_data["b"].get<unsigned long long>();
+
+			auto c = a + b;
+			a = b;
+			b = c;
+
+			json_data["a"] = a;
+			json_data["b"] = b;
+
+			std::string body_data = json_data.dump();
+
+			net::http_request req(net::request_type::GET,
+				method, net::content_type::any,
+				additional_header_data,
+				std::vector<uint8_t>(body_data.begin(), body_data.end()));
+
+			web_client.send_async(std::move(req), req_callback, 5000);
+		}
+		catch (const std::exception& err)
+		{
+			std::cerr << "Invalid json body recieved: " << err.what();
+		}
 	};
 
 	web_client.send_async(std::move(req), req_callback, 5000);
