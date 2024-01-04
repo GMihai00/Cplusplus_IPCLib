@@ -385,7 +385,7 @@ is being sent as raw bits through the sockets.
 ```cpp
 
 net::message<TestingMessage> msg;
-msg.m_header.m_type = TestingMessage::NOK_MESSAGE;
+msg.m_header.m_type = TestingMessage::OK_MESSAGE;
 
 msg << false;
 
@@ -393,27 +393,23 @@ msg << false;
 
 **Vector of bytes**
 ```cpp
-
 net::message<TestingMessage> msg;
 msg.m_header.m_type = TestingMessage::BIG_DATA;
 
 std::vector<uint8_t> data(100000, 1);
 
 msg << data;
-
 ```
 
 **Json**
 
 ```cpp
-
 net::message<TestingMessage> msg;
 msg.m_header.m_type = TestingMessage::BIG_DATA;
 
 auto json_data = nlohman::json::parse(R"({"a": 1})");
 
 msg << json_data;
-
 ```
 
 **Note**: Be careful when reading data from messages as if you add in this order A B C you would retrieve C B A. This is done due to avoiding more data allocations of std::vector container.
@@ -421,25 +417,19 @@ msg << json_data;
 **Example**
 
 ```cpp
-
 net::message<TestingMessage> msg;
-msg.m_header.m_type = TestingMessage::NOK_MESSAGE;
+msg.m_header.m_type = TestingMessage::OK_MESSAGE;
 
 auto var1 = false;
-
 auto var2 = true;
 
-
 msg << var1;
-
 msg << var2;
 
 bool var1_cpy;
-
 bool var2_cpy;
 
-msg >> var2_cpy;
-
+msg >> var2_cpy;=
 msg >> var1_cpy;
 
 ```
