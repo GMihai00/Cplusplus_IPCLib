@@ -191,7 +191,172 @@ int main() try
 ```
 ### Creating a client
 
-TO DO
+```cpp
+
+#include <iostream>
+#include "net/web_client.hpp"
+
+constexpr auto URL = "127.0.0.1";
+constexpr auto PORT = 54321;
+  
+int main()
+{
+  net::web_client web_client{};
+  
+  if (!web_client.connect(URL, PORT))
+  {
+  	std::cerr << "Failed to connect to server";
+  	return;
+  }
+}
+```
+
+**HTTPS client**
+```cpp
+
+auto verify_certificate_callback =  [](bool preverified, boost::asio::ssl::verify_context& ctx) -> bool {
+        // Your custom verification logic here
+        // You can access preverified and verify_context as needed
+        // Return true if the certificate is accepted, false otherwise
+        return true;  // Example: Always accept the certificate
+    }; // by default nullptr
+
+std::vector<std::string> cert_files = { R"(..\..\..\external\boost_asio\example\cpp11\ssl\ca.pem)" };
+
+net::secure_web_client web_client{cert_files, verify_certificate_callback};
+
+if (!web_client.connect(URL))
+{
+  std::cerr << "Failed to connect to server";
+  return;
+}
+``` 
+
+**Sending basic empty request**
+
+```cpp
+
+...
+std::string method = "/test";
+
+net::http_request req(net::request_type::GET,
+	method, net::content_type::any);
+	
+auto response = web_client.send(std::move(req));
+
+
+if (!response.second)
+{
+	std::cerr << "Failed to get response err: " << response.second .message();
+	return 5;
+}
+...
+```
+**Sending additional header flags**
+```cpp
+...
+
+nlohmann::json additional_header_data = nlohmann::json({
+	{"Accept", "*/*"},
+	{"Connection", "keep-alive"}
+	});
+
+net::http_request req(net::request_type::GET,
+	method, net::content_type::any,
+	additional_header_data);
+	
+auto timeout = 5000; // miliseconds
+
+auto response = web_client.send(std::move(req), timeout);
+
+// handle recieved message
+response->get_json_body(); // response->get_body_raw() for raw data
+
+... 
+
+```
+
+**Adding a body**
+```cpp
+...
+
+nlohmann::json additional_header_data = nlohmann::json({
+	{"Accept", "*/*"},
+	{"Connection", "keep-alive"}
+	});
+
+std::string body_data = R"({"a": 1, "b": 1 })";
+
+net::http_request req(net::request_type::GET,
+	method, net::content_type::any,
+	additional_header_data,
+	std::vector<uint8_t>(body_data.begin(), body_data.end()));
+	
+auto timeout = 5000;
+
+auto response = web_client.send(std::move(req), timeout);
+...
+
+```
+
+**Compressing data**
+```cpp
+...
+req.gzip_compress_body();
+
+auto timeout = 5000;
+auto follow_redirects = true;
+
+web_client.send(std::move(req), timeout, follow_redirects);
+...
+
+```
+**Sending messages asynchronously**
+```cpp
+
+nlohmann::json additional_header_data = nlohmann::json({
+{"Accept", "*/*"},
+{"Connection", "keep-alive"},
+{"Accept-Encoding", "gzip, deflate, br"}
+});
+
+net::http_request req(net::request_type::GET, method, net::content_type::any, additional_header_data);
+
+net::async_get_callback req_callback;
+
+bool can_stop = false;
+
+req_callback = [&can_stop, &method, &url, &web_client, &req_callback](std::shared_ptr<net::ihttp_message> response, utile::web_error err_msg) {
+	if (!response)
+	{
+		std::cerr << "Failed: " << err_msg.message();
+		exit(5);
+	}
+
+	auto is_encoded = response->is_body_encoded();
+  
+	auto response_data_decoded = response->to_string(is_encoded);
+  ...
+  
+  // in case raw undecoded data is needed
+	if (is_encoded)
+	{
+		auto response_data_encoded = response->to_string();
+		...
+	}
+
+	can_stop = true;
+};
+
+web_client.send_async(std::move(req), req_callback);
+
+// prevent main loop return
+while (!can_stop)
+{
+	std::this_thread::sleep_for(std::chrono::seconds(1));
+}
+
+```
 
 ### Legacy
 
