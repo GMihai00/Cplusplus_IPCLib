@@ -6,6 +6,8 @@ This project aims to provide an easier to use C++ IPC library. It's build to be 
 
 - [Installation](#installation)
 - [Usage](#usage)
+  -[Web-based](#web_based)
+  -[Legacy](#local)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -21,7 +23,10 @@ Requirements: MSVC Compiler, Visual Studio is suggested to be used
 
 ## Usage
 
+### Web-based
 TO DO
+
+### Legacy
 
 ## Contributing
 
