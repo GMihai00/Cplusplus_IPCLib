@@ -26,6 +26,41 @@ Requirements: MSVC Compiler, Visual Studio is suggested to be used
 ### Web-based
 TO DO
 
+### Creating a server 
+
+```cpp
+#include <iostream>
+
+#include "net/web_server.hpp"
+
+constexpr auto HOST = "127.0.0.1";
+constexpr auto PORT = 54321;
+int main() try
+{
+  net::web_server server(HOST, PORT);
+
+  if (auto ret = server.start(); !ret)
+  {
+  	std::cerr << ret.message();
+  	return 1;
+  }
+
+  // server running on separate thread, infinite loop to make sure executable doesn't exit from memory
+  // to be changed with desired stopping condition
+  while (true)
+	{
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+	}
+
+  return 0;
+}
+catch (const std::exception& err)
+{
+	std::cerr << err.what();
+	return 1;
+}
+```
+
 ### Legacy
 
 ## Contributing
