@@ -6,8 +6,8 @@ This project aims to provide an easier to use C++ IPC library. It's build to be 
 
 - [Installation](#installation)
 - [Usage](#usage)
-  -[Web-based](#web_based)
-  -[Legacy](#local)
+  - [Web-based](#web-based)
+  - [Legacy](#local)
 - [Contributing](#contributing)
 - [License](#license)
 
