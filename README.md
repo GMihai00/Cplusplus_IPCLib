@@ -447,7 +447,8 @@ msg >> var1_cpy;
 
 class test_server : public net::server<TestingMessage>
 {
-  virtual void on_message(std::shared_ptr<net::connection<TestingMessage>> client, net::message<TestingMessage>& msg) noexcept override
+protected:
+  void on_message(std::shared_ptr<net::connection<TestingMessage>> client, net::message<TestingMessage>& msg) noexcept override
   {
     switch (msg.m_header.m_type)
     {
