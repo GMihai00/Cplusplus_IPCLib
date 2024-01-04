@@ -1,8 +1,26 @@
 #include <iostream>
+#include <fstream>
+#include <boost/thread/thread.hpp>
 
 #include "net/web_client.hpp"
 #include "net/secure_web_client.hpp"
 #include "utile/finally.hpp"
+
+void save_to_file(const std::string& data, const std::string& file_name)
+{
+	std::ofstream file(file_name);
+
+
+	if (!file.is_open())
+	{
+		std::cerr << "Failed to save output to file\n";
+		return;
+	}
+
+	file << data;
+
+	file.close();
+}
 
 template <typename T>
 int test_web_server_send(T& web_client, const std::string& url, const std::string& method)
@@ -117,14 +135,26 @@ int test_web_server_send_async(T& web_client, const std::string& url, const std:
 
 	bool can_stop = false;
 
-	req_callback = [&can_stop, &method, &web_client, &req_callback](std::shared_ptr<net::ihttp_message> response, utile::web_error err_msg) {
+	req_callback = [&can_stop, &method, &url, &web_client, &req_callback](std::shared_ptr<net::ihttp_message> response, utile::web_error err_msg) {
 		if (!response)
 		{
 			std::cerr << "Failed: " << err_msg.message();
 			exit(5);
 		}
 
-		std::cout << "Recieved response: " << response->to_string(true) << std::endl;
+		auto is_encoded = response->is_body_encoded();
+
+		auto response_data = response->to_string(is_encoded);
+		std::cout << "Recieved response: " << response_data << std::endl;
+
+		save_to_file(response_data, url + "_response.txt");
+
+		if (is_encoded)
+		{
+			auto response_data_encoded = response->to_string(false);
+
+			save_to_file(response_data_encoded, url + "_encoded_response.txt");
+		}
 
 		can_stop = true;
 	};
@@ -141,7 +171,7 @@ int test_web_server_send_async(T& web_client, const std::string& url, const std:
 }
 
 template <typename T>
-int test_web_server_send_in_loop(T& web_client)
+void test_web_server_send_in_loop(T& web_client)
 {
 	std::string url = "127.0.0.1";
 	std::string method = "/test";
@@ -149,7 +179,7 @@ int test_web_server_send_in_loop(T& web_client)
 	if (!web_client.connect(url, 54321))
 	{
 		std::cerr << "Failed to connect to server";
-		return 5;
+		return;
 	}
 
 	nlohmann::json additional_header_data = nlohmann::json({
@@ -166,7 +196,6 @@ int test_web_server_send_in_loop(T& web_client)
 		additional_header_data,
 		std::vector<uint8_t>(body_data.begin(), body_data.end()));
 
-	// seems to be an issue with compression to take a look or an issue on the server side
 	req.gzip_compress_body();
 
 	bool can_stop = false;
@@ -201,39 +230,69 @@ int test_web_server_send_in_loop(T& web_client)
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 
-	return 0;
 }
+
+int test_http_connection_to_public_web_service()
+{
+	int ret = 0;
+
+	net::web_client web_client{};
+
+	return test_web_server_send_async(web_client, "universities.hipolabs.com", "/search?country=United+States");
+}
+
+int test_https_connection_to_public_web_service()
+{
+	int ret = 0;
+
+	net::secure_web_client web_client{ { R"(..\..\..\external\boost_asio\example\cpp11\ssl\ca.pem)"} };
+
+	if (ret = test_web_server_send_async(web_client, "www.dataaccess.com", "/webservicesserver/numberconversion.wso?WSDL"); ret != 0)
+	{
+		std::cerr << "Send async failed\n";
+	}
+
+	return ret;
+}
+
+void test_local_client_server_send_in_loop()
+{
+	net::web_client web_client{};
+
+	test_web_server_send_in_loop(web_client);
+}
+
 
 int main() try
 {	
-
-	bool test_web = false;
-	net::web_client web_client{};
-
-	//bool test_web = false;
-	//net::secure_web_client web_client{ { R"(..\..\..\external\boost_asio\example\cpp11\ssl\ca.pem)"} };
-	
-	//return test_web_server_send_async(web_client, "universities.hipolabs.com", "/search?country=United+States");
-
-	return test_web_server_send_follow_redirects(web_client, "www.dataaccess.com", "/webservicesserver/numberconversion.wso?WSDL");
-
-	if (test_web)
+	if (auto ret = test_http_connection_to_public_web_service(); ret != 0)
 	{
-		if (auto ret = test_web_server_send_async(web_client, "www.dataaccess.com", "/webservicesserver/numberconversion.wso?WSDL"); ret != 0)
-		{
-			std::cerr << "Send async failed";
-			return ret;
-		}
-
-		web_client.disconnect();
-
-		return test_web_server_send(web_client, "universities.hipolabs.com", "/search?country=United+States");
+		return ret;
 	}
-	else
+
+	if (auto ret = test_https_connection_to_public_web_service(); ret != 0)
 	{
-		return test_web_server_send_in_loop(web_client);
+		return ret;
 	}
-	
+
+	constexpr auto NR_CLIENTS = 5;
+
+	boost::thread_group m_worker_threads;
+
+	for (int i = 0; i < NR_CLIENTS; i++)
+	{
+		m_worker_threads.create_thread(boost::bind(&test_local_client_server_send_in_loop));
+	}
+
+	std::this_thread::sleep_for(std::chrono::seconds(10));
+	// INFINIT LOOP IF WANTED
+	//bool can_stop = false;
+	//
+	//while (!can_stop)
+	//{
+	//	std::this_thread::sleep_for(std::chrono::seconds(1));
+	//}
+	return 0;
 }
 catch (const std::exception& err)
 {

@@ -13,7 +13,9 @@ int main() try
 	net::web_server server(HOST, 54321);
 
 	// add callbacks	
-	net::async_req_handle_callback test_callback = [](std::shared_ptr<net::http_request>) {
+	net::async_req_handle_callback test_callback = [](std::shared_ptr<net::http_request> req) {
+
+		std::cout << "Recieved request: " << req->to_string(req->is_body_encoded()) << '\n';
 		nlohmann::json smth_to_send = nlohmann::json({ {"aba", 5}, {"beta", 6} });
 		std::string data = smth_to_send.dump();
 
@@ -54,8 +56,6 @@ int main() try
 	};
 
 	std::regex test_pattern(R"(^(/test/id=(\d+))$)");
-
-	// mapping should have a type of request in them as well GET POST PUT ETC
 
 	server.add_mapping(net::request_type::GET, "/test", test_callback);
 

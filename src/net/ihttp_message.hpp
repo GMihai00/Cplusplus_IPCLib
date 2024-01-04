@@ -45,6 +45,7 @@ namespace net
 		bool build_header_from_data_recieved();
 		void finalize_message();
 
+		bool is_body_encoded() const;
 	protected:
 
 		std::string extract_header_from_buffer();

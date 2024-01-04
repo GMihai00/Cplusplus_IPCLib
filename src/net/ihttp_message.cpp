@@ -20,6 +20,13 @@ namespace net
 		return m_body_data;
 	}
 
+	bool ihttp_message::is_body_encoded() const
+	{
+		auto it = m_header_data.find("Content-Encoding");
+
+		return it != m_header_data.end() && it->is_string();
+	}
+
 	std::vector<uint8_t> ihttp_message::get_body_decrypted() const
 	{
 		if (auto it = m_header_data.find("Content-Encoding"); it != m_header_data.end() && it->is_string())
