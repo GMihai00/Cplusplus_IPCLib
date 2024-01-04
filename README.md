@@ -64,7 +64,7 @@ catch (const std::exception& err)
 
 **Adding mappings**
 
-Note: Mappings can be added even at runtime, there is no need to add them before starting the server, but it is recommended to do so. 
+**Note**: Mappings can be added even at runtime, there is no need to add them before starting the server, but it is recommended to do so before starting. 
 
 **Fixed address mapping**
 ```cpp
@@ -141,6 +141,54 @@ server.add_regex_mapping(net::request_type::GET, test_pattern, test_regex_callba
 ...
 ```
 
+**Adding constraints and events on connection**
+```cpp
+#include "net/web_server.hpp"
+
+class test_web_server : public web_server
+{
+protected:
+  bool can_client_connect(const std::shared_ptr<boost::asio::ip::tcp::socket> client) noexcept override
+  {
+    bool can_connect = true;
+    
+    // check constraints
+    
+    return can_connect;
+  }
+  void on_client_connect(const std::shared_ptr<boost::asio::ip::tcp::socket> client) noexcept override
+  {
+    // Ex: send event  
+  }
+  
+  void on_client_disconnect(const std::shared_ptr<boost::asio::ip::tcp::socket> client) noexcept override
+  {
+    // Ex: send event  
+  }
+};
+
+```
+
+**Performance tweaking**
+
+You can set a gap to the number of clients that can connect to the server to prevent overloading. Also, apart from that you can set the number of working threads that handle incoming requests. By default, it's left as 4 as many computers this day have at least 4 cores.
+
+```cpp
+#include <iostream>
+
+#include "net/web_server.hpp"
+
+constexpr auto HOST = "127.0.0.1";
+constexpr auto PORT = 54321;
+constexpr auto MAXIMUM_NR_CONNECTIONS = 100; // default 1000
+constexpr auto NR_THREADS = 10; // default 4
+
+int main() try
+{
+  net::web_server server(HOST, PORT, MAXIMUM_NR_CONNECTIONS, NR_THREADS);
+  ...
+
+```
 ### Creating a client
 
 TO DO
