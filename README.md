@@ -2,18 +2,21 @@
 
 This project aims to provide an easier to use C++ IPC library. It's build to be easy to debug, fast and versitile. The ideeea of creating this project was due to not finding any easy to use librarys for sending messages over the network while writing my licence. It first started as a quick local IPC that can be found in IPC.vcxproj under net/legacy_fast_ipc that still might have few crashes due to concurency issues that had yet to be solved (Note: I'm not planning to invest time into solving them in the near future). If despite this you still want to use it, I will have a section describing it at the end. The bread and butter of this project is an web-based IPC system. During the development of this project I managed to cover almost all HTTP1.0 messages, providing an client for http and https as well as a server using http (Note: Planning to add a https one as well). While developing the library, I was following what Postman does and tried to include all the features that I found there, apart from that, I added "Transfer-Encoding: chuncked" compatibility as I remarked that Postman doesn't support it( While debugging the library with Postman I saw that I get random data inside my body when sending messages with that flag on.) Right now it supports sync and asyncronious sending/handling messages, gzip, formats bodys to json and follows redirects (can't follow from http to https and backwards due to design flow a.t.m.). By using the library you are able to code servers in no time, in few lines of code, almost like using a high level language like python.
 
-## Table of Contents
+# Table of Contents
 
 - [Installation](#installation)
 - [Usage](#usage)
   - [Web-based](#web-based)
-    - [Creating a server](#Creating-a-server)
-    - [Creating a client](#Creating-a-client)
-  - [Legacy](#local)
+    - [Creating a server](#creating-a-server)
+    - [Creating a client](#creating-a-client)
+  - [Legacy](#legacy)
+    - [Message format](#message-format)
+    - [Server](#server)
+    - [Client](#client)
 - [Contributing](#contributing)
 - [License](#license)
 
-## Installation
+# Installation
 
 Requirements: MSVC Compiler, Visual Studio is suggested to be used
 
@@ -23,9 +26,9 @@ Requirements: MSVC Compiler, Visual Studio is suggested to be used
 4. Libraries to be added as Additional Dependencies: IPC.lib;libz-static.lib;libcrypto.lib;libssl.lib; (Make sure library directory has been added to Library directories)
 5. Include headers depending on your needs (web_server.hpp/secure_web_client.hpp/web_client.hpp for web-based newer IPC client.hpp and server.hpp for older local IPC)
 
-## Usage
+# Usage
 
-### Web-based
+## Web-based
 
 ### Creating a server 
 
@@ -358,11 +361,97 @@ while (!can_stop)
 
 ```
 
-### Legacy
+## Legacy
 
+### Message format
+
+**Note**: Data will be presented in json format for easier understanding, it 
+is being sent as raw bits through the sockets.
+```json
+{
+  "header": 
+  {
+    "id": "<nr>",
+    "type":  "<nr>",
+    "size_t": "<nr>"
+  },
+  "body": "<raw_bytes>"
+}
+```
+
+**Note**: Messages can take 4 types of data: basic data types, json, std::vector<uint8_t> representing raw bytes and anything inheriting serializable_data. This is due to them copying raw data to the message body. So to be able to store them within messages we would need to have a way to serialize and deserialize data as well as take it's size.
+
+**Basic data types**
+```cpp
+
+net::message<TestingMessage> msg;
+msg.m_header.m_type = TestingMessage::NOK_MESSAGE;
+
+msg << false;
+
+```
+
+**Vector of bytes**
+```cpp
+
+net::message<TestingMessage> msg;
+msg.m_header.m_type = TestingMessage::BIG_DATA;
+
+std::vector<uint8_t> data(100000, 1);
+
+msg << data;
+
+```
+
+**Json**
+
+```cpp
+
+net::message<TestingMessage> msg;
+msg.m_header.m_type = TestingMessage::BIG_DATA;
+
+auto json_data = nlohman::json::parse(R"({"a": 1})");
+
+msg << json_data;
+
+```
+
+**Note**: Be careful when reading data from messages as if you add in this order A B C you would retrieve C B A. This is done due to avoiding more data allocations of std::vector container.
+
+**Example**
+
+```cpp
+
+net::message<TestingMessage> msg;
+msg.m_header.m_type = TestingMessage::NOK_MESSAGE;
+
+auto var1 = false;
+
+auto var2 = true;
+
+
+msg << var1;
+
+msg << var2;
+
+bool var1_cpy;
+
+bool var2_cpy;
+
+msg >> var2_cpy;
+
+msg >> var1_cpy;
+
+```
+
+### Client
 TO DO
 
-## Contributing
+### Server
+
+TO DO 
+
+# Contributing
 
 1. Fork the repository
 2. Create a new branch: `git checkout -b feature-name`
@@ -370,6 +459,6 @@ TO DO
 4. Push to the branch: `git push origin feature-name`
 5. Submit a pull request
 
-## License
+# License
 
 This project is licensed under the [MIT License](LICENSE.MD).
