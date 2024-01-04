@@ -36,3 +36,5 @@ bin/*
 
 x64/
 .vs/
+
+.vscode/
