@@ -7,6 +7,8 @@ This project aims to provide an easier to use C++ IPC library. It's build to be 
 - [Installation](#installation)
 - [Usage](#usage)
   - [Web-based](#web-based)
+    - [Creating a server](#Creating-a-server)
+    - [Creating a client](#Creating-a-client)
   - [Legacy](#local)
 - [Contributing](#contributing)
 - [License](#license)
@@ -24,7 +26,6 @@ Requirements: MSVC Compiler, Visual Studio is suggested to be used
 ## Usage
 
 ### Web-based
-TO DO
 
 ### Creating a server 
 
@@ -35,6 +36,7 @@ TO DO
 
 constexpr auto HOST = "127.0.0.1";
 constexpr auto PORT = 54321;
+
 int main() try
 {
   net::web_server server(HOST, PORT);
@@ -45,8 +47,7 @@ int main() try
   	return 1;
   }
 
-  // server running on separate thread, infinite loop to make sure executable doesn't exit from memory
-  // to be changed with desired stopping condition
+  // infinite loop to prevent main thread exit
   while (true)
 	{
 		std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -61,7 +62,92 @@ catch (const std::exception& err)
 }
 ```
 
+**Adding mappings**
+
+Note: Mappings can be added even at runtime, there is no need to add them before starting the server, but it is recommended to do so. 
+
+**Fixed address mapping**
+```cpp
+...
+
+net::async_req_handle_callback test_callback = [](std::shared_ptr<net::http_request> req) {
+
+	bool ok = false;
+
+	req->get_json_body(); // req->get_body_raw() for raw data
+
+	// handle request
+
+	if (ok)
+	{
+		std::vector<uint8_t> body_data; 
+		
+		/* add data to body if needed
+		   Ex: std::string data = "smth_to_send_back" 
+		   body_data = std::vector<uint8_t>(data.begin(), data.end()); */
+
+		return net::http_response(200, "OK", nullptr, body_data);
+	}
+	else
+	{
+		return net::http_response(400, "Bad request");
+	}
+}
+
+server.add_mapping(net::request_type::GET, "/test", test_callback);
+
+...
+```
+
+**Volatile address mapping**
+```cpp
+...
+
+net::async_req_regex_handle_callback test_regex_callback = [](std::shared_ptr<net::http_request>, const std::smatch& matches) {
+
+	if (matches.size() < 3)
+	{
+		return net::http_response(400, "Bad request");
+	}
+
+	if (!matches[2].matched)
+	{
+		return net::http_response(400, "Bad request");
+	}
+
+	int id = 0;
+
+	try
+	{
+		id = std::stoi(matches[2]);
+	}
+	catch (...)
+	{
+		return net::http_response(400, "Bad request");
+	}
+
+	nlohmann::json smth_to_send = nlohmann::json({ {"id", id}});
+	std::string data = smth_to_send.dump();
+
+	auto body_data = std::vector<uint8_t>(data.begin(), data.end());
+
+	return net::http_response(200, "OK", nullptr, body_data);
+};
+
+std::regex test_pattern(R"(^(/test/id=(\d+))$)");
+
+server.add_regex_mapping(net::request_type::GET, test_pattern, test_regex_callback);
+
+...
+```
+
+### Creating a client
+
+TO DO
+
 ### Legacy
+
+TO DO
 
 ## Contributing
 
