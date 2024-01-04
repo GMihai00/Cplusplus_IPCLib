@@ -383,33 +383,37 @@ is being sent as raw bits through the sockets.
 
 **Basic data types**
 ```cpp
-
+...
 net::message<TestingMessage> msg;
 msg.m_header.m_type = TestingMessage::OK_MESSAGE;
 
 msg << false;
-
+...
 ```
 
 **Vector of bytes**
 ```cpp
+...
 net::message<TestingMessage> msg;
 msg.m_header.m_type = TestingMessage::BIG_DATA;
 
 std::vector<uint8_t> data(100000, 1);
 
 msg << data;
+...
 ```
 
 **Json**
 
 ```cpp
+...
 net::message<TestingMessage> msg;
 msg.m_header.m_type = TestingMessage::BIG_DATA;
 
 auto json_data = nlohman::json::parse(R"({"a": 1})");
 
 msg << json_data;
+...
 ```
 
 **Note**: Be careful when reading data from messages as if you add in this order A B C you would retrieve C B A. This is done due to avoiding more data allocations of std::vector container.
@@ -417,6 +421,7 @@ msg << json_data;
 **Example**
 
 ```cpp
+...
 net::message<TestingMessage> msg;
 msg.m_header.m_type = TestingMessage::OK_MESSAGE;
 
@@ -429,18 +434,102 @@ msg << var2;
 bool var1_cpy;
 bool var2_cpy;
 
-msg >> var2_cpy;=
+msg >> var2_cpy;
 msg >> var1_cpy;
-
+...
 ```
 
 ### Client
-TO DO
+
+```cpp
+#include "net/client.hpp"
+
+constexpr auto URL = "127.0.0.1";
+constexpr auto PORT = 54321;
+
+int main()
+{
+  net::client<TestingMessage> client{};
+  
+  if (!client.connect(URL, PORT))
+  {
+  	std::cerr << "Failed to connect to the server";
+  	return 1;
+  }
+  
+  return 0;
+}
+```
+
+**Sending messages**
+
+**Note**: Sending is always done asynchronously with the help of a message queue.
+
+```cpp
+...
+net::message<TestingMessage> msg;
+msg.m_header.m_type = TestingMessage::BIG_DATA;
+
+std::vector<uint8_t> data(100000, 1);
+
+msg << data;
+
+client.send(msg);
+
+auto ans = client.wait_for_answear(5000);
+
+if (ans == std::nullopt)
+{
+	std::cerr << "Test failed timeout reciving answear";
+  return;
+}
+
+auto& msg = ans.value().m_msg;
+
+// handle response
+...
+
+```
 
 ### Server
 
-TO DO 
+**Note**: To be able to create a server you will need to implement the server interface. It has almost the same methods as with the web server but methods mapping is no longer done trough callbacks, but through only one method "on_message", making it harder to scale.
 
+```cpp
+#include "net/server.hpp"
+
+class test_server : public net::server<TestingMessage>
+{
+  virtual void on_message(std::shared_ptr<net::connection<TestingMessage>> client, net::message<TestingMessage>& msg) noexcept override
+  {
+    switch (msg.m_header.m_type)
+    {
+    case TestingMessage::TEST:
+    	// do smth
+    	break;
+    ...
+    }
+  }
+};
+
+constexpr auto URL = "127.0.0.1";
+constexpr auto PORT = 54321;
+
+int main()
+{
+  test_server server(URL, PORT);
+  
+  server.start();
+  
+  // infinite loop to prevent main thread exit
+  while (true)
+	{
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+	}
+
+  return 0;
+}
+```
 # Contributing
 
 1. Fork the repository
