@@ -17,4 +17,7 @@ namespace utile
 
 		std::optional<std::string_view> get_option(const std::string_view& option_name) const;
 	};
+
+	std::string_view get_option_or_quit(utile::command_line_parser& cmd_parser, std::string name);
+
 }

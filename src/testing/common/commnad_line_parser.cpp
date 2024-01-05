@@ -1,5 +1,7 @@
 #include "command_line_parser.hpp"
 
+#include "Windows.h"
+
 namespace utile
 {
 	command_line_parser::command_line_parser(int argc, char* argv[]) :
@@ -28,4 +30,15 @@ namespace utile
 
 		return option;
 	}
+
+	std::string_view get_option_or_quit(utile::command_line_parser& cmd_parser, std::string name)
+	{
+		auto maybe_option = cmd_parser.get_option(name);
+
+		if (maybe_option == std::nullopt)
+			exit(ERROR_NOT_FOUND);
+
+		return maybe_option.value();
+	}
+
 }

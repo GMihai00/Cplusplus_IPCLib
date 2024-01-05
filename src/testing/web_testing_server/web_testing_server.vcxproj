@@ -155,12 +155,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\common\commnad_line_parser.cpp" />
     <ClCompile Include="web_testing_server.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\IPC.vcxproj">
       <Project>{df49742e-e610-4153-a5ca-dce52f361602}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\common\command_line_parser.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

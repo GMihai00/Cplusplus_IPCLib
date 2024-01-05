@@ -168,15 +168,6 @@ const std::map<std::string, actionfn> ACTION_MAP =
 	{ "big_data", big_data_run }
 };
 
-std::string_view get_option_or_quit(utile::command_line_parser& cmd_parser, std::string name)
-{
-	auto maybe_option = cmd_parser.get_option(name);
-
-	if (maybe_option == std::nullopt)
-		exit(ERROR_NOT_FOUND);
-
-	return maybe_option.value();
-}
 
 int main(int argc, char* argv[])
 {
@@ -184,10 +175,10 @@ int main(int argc, char* argv[])
 	
 	HANDLE_START_EVENT(cmd_parser);
 
-	auto action = std::string(get_option_or_quit(cmd_parser, "--cmd"));
-	auto server_ip = utile::IP_ADRESS(get_option_or_quit(cmd_parser, "--srv_ip"));
-	auto server_port = (utile::PORT) std::stoi(std::string(get_option_or_quit(cmd_parser, "--srv_port")));
-	auto timeout = (uint16_t) std::stoi(std::string(get_option_or_quit(cmd_parser, "--timeout")));
+	auto action = std::string(utile::get_option_or_quit(cmd_parser, "--cmd"));
+	auto server_ip = utile::IP_ADRESS(utile::get_option_or_quit(cmd_parser, "--srv_ip"));
+	auto server_port = (utile::PORT) std::stoi(std::string(utile::get_option_or_quit(cmd_parser, "--srv_port")));
+	auto timeout = (uint16_t) std::stoi(std::string(utile::get_option_or_quit(cmd_parser, "--timeout")));
 
 	if (auto it = ACTION_MAP.find(action); it != ACTION_MAP.end())
 	{

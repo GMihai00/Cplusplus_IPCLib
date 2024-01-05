@@ -1,16 +1,18 @@
 #include <iostream>
 
 #include "net/web_server.hpp"
+#include "../common/command_line_parser.hpp"
 
-// naming not yet enabled... Need to use IP ADRESS INSTEAD
+// boost::asio::ip::udp::socket; for udp sockets
 
-constexpr auto HOST = "127.0.0.1";
+int main(int argc, char* argv[]) try
+{	
+	utile::command_line_parser cmd_parser(argc, argv);
 
-int main() try
-{
-	// boost::asio::ip::udp::socket; for udp sockets
-	
-	net::web_server server(HOST, 54321);
+	auto server_ip = std::string(get_option_or_quit(cmd_parser, "--ip"));
+	auto server_port = std::stoi(std::string(get_option_or_quit(cmd_parser, "--port")));
+
+	net::web_server server(server_ip, server_port);
 
 	// add callbacks	
 	net::async_req_handle_callback test_callback = [](std::shared_ptr<net::http_request> req) {
@@ -89,6 +91,10 @@ int main() try
 	{
 		std::cerr << ret.message();
 		return 1;
+	}
+	else
+	{
+		std::cout << "Server started: " << server_ip << ":" << server_port << "\n";
 	}
 
 	while (true)
