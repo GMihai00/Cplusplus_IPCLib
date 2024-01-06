@@ -13,6 +13,7 @@ This project aims to provide an easier to use C++ IPC library. It's build to be 
     - [Message format](#message-format)
     - [Server](#server)
     - [Client](#client)
+  - [Docker Test Image](#docker-test-image)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -530,6 +531,21 @@ auto& msg = ans.value().m_msg;
 ...
 
 ```
+
+## Docker Test Image
+
+To be able to run the docker image please use windows container as the executable is using msvc redistributables.
+It will spawn a server that can be connected to from localhost:54321. It only has one method available for testing purposes "/test" that 
+is supposed to receive a json body of form "{"a": <nr>, "b": <nr>}".
+
+Build container:
+
+docker build --tag <image_name> .
+
+To run container:
+
+docker run -p 54321:54321 <image_name>
+
 # Contributing
 
 1. Fork the repository

@@ -312,7 +312,6 @@ int main() try
 	std::this_thread::sleep_for(std::chrono::seconds(10));
 	// INFINIT LOOP IF WANTED
 	//bool can_stop = false;
-	//
 	//while (!can_stop)
 	//{
 	//	std::this_thread::sleep_for(std::chrono::seconds(1));
