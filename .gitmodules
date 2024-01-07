@@ -31,3 +31,15 @@
 [submodule "external/boost_winapi"]
 	path = external/boost_winapi
 	url = https://github.com/boostorg/winapi.git
+[submodule "external/boost_predef"]
+	path = external/boost_predef
+	url = https://github.com/boostorg/predef.git
+[submodule "external/boost_date_time"]
+	path = external/boost_date_time
+	url = https://github.com/boostorg/date_time.git
+[submodule "external/boost_smart_ptr"]
+	path = external/boost_smart_ptr
+	url = https://github.com/boostorg/smart_ptr.git
+[submodule "external/boost_core"]
+	path = external/boost_core
+	url = https://github.com/boostorg/core.git
