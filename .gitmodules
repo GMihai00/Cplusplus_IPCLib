@@ -10,3 +10,24 @@
 [submodule "external/zlib"]
 	path = external/zlib
 	url = https://github.com/kiyolee/zlib-win-build.git
+[submodule "src/external"]
+	path = src/external
+	url = https://github.com/boostorg/thread.git
+[submodule "external/boost_thread"]
+	path = external/boost_thread
+	url = https://github.com/boostorg/thread.git
+[submodule "external/boost_config"]
+	path = external/boost_config
+	url = https://github.com/boostorg/config.git
+[submodule "external/boost_throw_exception"]
+	path = external/boost_throw_exception
+	url = https://github.com/boostorg/throw_exception.git
+[submodule "external/boost_assert"]
+	path = external/boost_assert
+	url = https://github.com/boostorg/assert.git
+[submodule "external/boost_system"]
+	path = external/boost_system
+	url = https://github.com/boostorg/system.git
+[submodule "external/boost_winapi"]
+	path = external/boost_winapi
+	url = https://github.com/boostorg/winapi.git

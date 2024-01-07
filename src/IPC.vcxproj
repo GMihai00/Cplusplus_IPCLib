@@ -71,22 +71,22 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)..\external\zlib;$(SolutionDir)..\external\json\include;$(SolutionDir)..\external\openssl\include;$(SolutionDir)..\external\boost_asio\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\external\boost_winapi\include;$(SolutionDir)..\external\boost_system\include;$(SolutionDir)..\external\boost_assert\include;$(SolutionDir)..\external\boost_throw_exception\include;$(SolutionDir)..\external\boost_config\include;$(SolutionDir)..\external\boost_thread\include;$(SolutionDir)..\external\zlib;$(SolutionDir)..\external\json\include;$(SolutionDir)..\external\openssl\include;$(SolutionDir)..\external\boost_asio\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration);C:\PathPrograms\vcpkg\installed\x64-windows\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
     <OutDir>$(SolutionDir)..\bin\$(Platform)\$(Configuration)</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)..\external\zlib;$(SolutionDir)..\external\json\include;$(SolutionDir)..\external\openssl\include;$(SolutionDir)..\external\boost_asio\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\external\boost_winapi\include;$(SolutionDir)..\external\boost_system\include;$(SolutionDir)..\external\boost_assert\include;$(SolutionDir)..\external\boost_throw_exception\include;$(SolutionDir)..\external\boost_config\include;$(SolutionDir)..\external\boost_thread\include;$(SolutionDir)..\external\zlib;$(SolutionDir)..\external\json\include;$(SolutionDir)..\external\openssl\include;$(SolutionDir)..\external\boost_asio\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration);C:\PathPrograms\vcpkg\installed\x64-windows\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
     <OutDir>$(SolutionDir)..\bin\$(Platform)\$(Configuration)</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)..\external\zlib;$(SolutionDir)..\external\json\include;$(SolutionDir)..\external\openssl\include;$(SolutionDir)..\external\boost_asio\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\external\boost_winapi\include;$(SolutionDir)..\external\boost_system\include;$(SolutionDir)..\external\boost_assert\include;$(SolutionDir)..\external\boost_throw_exception\include;$(SolutionDir)..\external\boost_config\include;$(SolutionDir)..\external\boost_thread\include;$(SolutionDir)..\external\zlib;$(SolutionDir)..\external\json\include;$(SolutionDir)..\external\openssl\include;$(SolutionDir)..\external\boost_asio\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration);C:\PathPrograms\vcpkg\installed\x64-windows\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
     <OutDir>$(SolutionDir)..\bin\$(Platform)\$(Configuration)</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)..\external\zlib;$(SolutionDir)..\external\json\include;$(SolutionDir)..\external\openssl\include;$(SolutionDir)..\external\boost_asio\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\external\boost_winapi\include;$(SolutionDir)..\external\boost_system\include;$(SolutionDir)..\external\boost_assert\include;$(SolutionDir)..\external\boost_throw_exception\include;$(SolutionDir)..\external\boost_config\include;$(SolutionDir)..\external\boost_thread\include;$(SolutionDir)..\external\zlib;$(SolutionDir)..\external\json\include;$(SolutionDir)..\external\openssl\include;$(SolutionDir)..\external\boost_asio\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration);C:\PathPrograms\vcpkg\installed\x64-windows\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
     <OutDir>$(SolutionDir)..\bin\$(Platform)\$(Configuration)</OutDir>
   </PropertyGroup>
