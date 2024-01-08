@@ -43,3 +43,45 @@
 [submodule "external/boost_core"]
 	path = external/boost_core
 	url = https://github.com/boostorg/core.git
+[submodule "external/boost_utility"]
+	path = external/boost_utility
+	url = https://github.com/boostorg/utility.git
+[submodule "external/boost_static_assert"]
+	path = external/boost_static_assert
+	url = https://github.com/boostorg/static_assert.git
+[submodule "external/boost_type_traits"]
+	path = external/boost_type_traits
+	url = https://github.com/boostorg/type_traits.git
+[submodule "external/boost_numeric_conversion"]
+	path = external/boost_numeric_conversion
+	url = https://github.com/boostorg/numeric_conversion.git
+[submodule "external/boost_mpl"]
+	path = external/boost_mpl
+	url = https://github.com/boostorg/mpl.git
+[submodule "external/boost_preprocessor"]
+	path = external/boost_preprocessor
+	url = https://github.com/boostorg/preprocessor.git
+[submodule "external/boost_bind"]
+	path = external/boost_bind
+	url = https://github.com/boostorg/bind.git
+[submodule "external/boost_regex"]
+	path = external/boost_regex
+	url = https://github.com/boostorg/regex.git
+[submodule "external/boost_chrono"]
+	path = external/boost_chrono
+	url = https://github.com/boostorg/chrono.git
+[submodule "external/boost_ratio"]
+	path = external/boost_ratio
+	url = https://github.com/boostorg/ratio.git
+[submodule "external/boost_integer"]
+	path = external/boost_integer
+	url = https://github.com/boostorg/integer.git
+[submodule "external/boost_move"]
+	path = external/boost_move
+	url = https://github.com/boostorg/move.git
+[submodule "external/boost_io"]
+	path = external/boost_io
+	url = https://github.com/boostorg/io.git
+[submodule "external/boost_functional"]
+	path = external/boost_functional
+	url = https://github.com/boostorg/functional.git
