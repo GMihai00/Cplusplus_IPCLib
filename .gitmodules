@@ -85,3 +85,12 @@
 [submodule "external/boost_functional"]
 	path = external/boost_functional
 	url = https://github.com/boostorg/functional.git
+[submodule "external/boost_container_hash"]
+	path = external/boost_container_hash
+	url = https://github.com/boostorg/container_hash.git
+[submodule "external/boost_describe"]
+	path = external/boost_describe
+	url = https://github.com/boostorg/describe.git
+[submodule "external/boost_mp11"]
+	path = external/boost_mp11
+	url = https://github.com/boostorg/mp11.git
