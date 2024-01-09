@@ -1,6 +1,6 @@
 # Cplusplus_IPCLib
 
-This project aims to provide an easier to use C++ IPC library. It's build to be easy to debug, fast and versitile. The ideea of creating this project was due to not finding any easy to use libraries for sending messages over the network while writing my license degree. It first started as a quick local IPC that can be found in IPC.vcxproj under net/legacy_fast_ipc. Despite beeing unmaintained code(Won't invest time into fixing bugs found), if you still want to use it, I will have a section describing it at the end. The bread and butter of this project is an web-based IPC system. During the development of this project I managed to cover almost all HTTP1.0 messages, providing a client for http and https as well as a server using http (Note: Planning to add a https one as well). While developing the library, I was following what Postman does and tried to include all the features that I found there, apart from that, I added "Transfer-Encoding: chuncked" compatibility as I remarked that Postman doesn't support it(While debugging the library with Postman I saw that I get random data inside my body when sending messages with that flag on.) Right now it supports sync and asyncronious sending/handling messages, gzip compressing, formats bodies to json and follows redirects (can't follow from http to https and backwards due to design flow a.t.m.). By using the library you are able to code servers in no time, in few lines of code, almost like using a high level language like python.
+This project aims to provide an easier to use C++ IPC library. It's build to be easy to debug, fast and versatile. The idea of creating this project was due to not finding any easy to use libraries for sending messages over the network while writing my license degree. It first started as a quick local IPC that can be found in IPC.vcxproj under net/legacy_fast_ipc. Despite being unmaintained code(Won't invest time into fixing bugs found), if you still want to use it, I will have a section describing it at the end. The bread and butter of this project is a web-based IPC system. During the development of this project I managed to cover almost all HTTP1.0 messages, providing a client for http and https as well as a server using http (Note: Planning to add a https one as well). While developing the library, I was following what Postman does and tried to include all the features that I found there, apart from that, I added "Transfer-Encoding: chucked" compatibility as I remarked that Postman doesn't support it(While debugging the library with Postman I saw that I get random data inside my body when sending messages with that flag on.) Right now it supports sync and asynchronous sending/handling messages, gzip compressing, formats bodies to json and follows redirects (can't follow from http to https and backwards due to design flow a.t.m.). By using the library you are able to code servers in no time, in few lines of code, almost like using a high level language like python.
 
 # Table of Contents
 
@@ -24,8 +24,8 @@ Requirements: MSVC Compiler, Visual Studio is suggested to be used
 1. Clone the repository: `git clone [https://github.com/GMihai00/Cplusplus_IPCLib.git](https://github.com/GMihai00/Cplusplus_IPCLib.git)`
 2. Navigate to the project directory: `cd yourproject`
 3. Update submodules: git submodule update --init --recursive
-4. Install boost and openssl using vcpkg (currently working on removing this dependecy, did not notice it due to it already beeing installed on my system)
-5. Open IPC.sln and build project IPC, this will generate a statically library
+4. Install boost and openssl using vcpkg (currently working on removing this dependency, did not notice it due to it already being installed on my system)
+5. Open IPC.sln and build project IPC, this will generate a static library
 6. Libraries to be added as Additional Dependencies: IPC.lib;libz-static.lib;libcrypto.lib;libssl.lib; (Make sure library directory has been added to Library directories)
 7. Include headers depending on your needs (web_server.hpp/secure_web_client.hpp/web_client.hpp for web-based newer IPC client.hpp and server.hpp for older local IPC)
 
@@ -45,21 +45,21 @@ constexpr auto PORT = 54321;
 
 int main() try
 {
-  net::web_server server(HOST, PORT);
+	net::web_server server(HOST, PORT);
 
-  if (auto ret = server.start(); !ret)
-  {
-  	std::cerr << ret.message();
-  	return 1;
-  }
-
-  // infinite loop to prevent main thread exit
-  while (true)
+	if (auto ret = server.start(); !ret)
 	{
-		std::this_thread::sleep_for(std::chrono::seconds(1));
+		std::cerr << ret.message();
+		return 1;
 	}
 
-  return 0;
+    // infinite loop to prevent main thread exit
+    while (true)
+	{
+	  std::this_thread::sleep_for(std::chrono::seconds(1));
+	}
+
+    return 0;
 }
 catch (const std::exception& err)
 {
@@ -76,31 +76,34 @@ catch (const std::exception& err)
 ```cpp
 ...
 
-net::async_req_handle_callback test_callback = [](std::shared_ptr<net::http_request> req) {
+net::async_req_handle_callback test_callback = []       (std::shared_ptr<net::http_request> req) {
 
 	bool ok = false;
 
-	req->get_json_body(); // req->get_body_raw() for raw data
+	req->get_json_body(); 
+	// req->get_body_raw() for raw data
 
 	// handle request
-
 	if (ok)
 	{
 		std::vector<uint8_t> body_data; 
 		
 		/* add data to body if needed
-		   Ex: std::string data = "smth_to_send_back" 
-		   body_data = std::vector<uint8_t>(data.begin(), data.end()); */
+		Ex: std::string data = "smth_to_send_back" 
+		body_data = std::vector<uint8_t>(data.begin(), 
+			data.end());*/
 
-		return net::http_response(200, "OK", nullptr, body_data);
+		return net::http_response(200, "OK", 
+			nullptr, body_data);
 	}
 	else
 	{
 		return net::http_response(400, "Bad request");
 	}
-}
+};
 
-server.add_mapping(net::request_type::GET, "/test", test_callback);
+server.add_mapping(net::request_type::GET, 
+	"/test", test_callback);
 
 ...
 ```
@@ -109,7 +112,7 @@ server.add_mapping(net::request_type::GET, "/test", test_callback);
 ```cpp
 ...
 
-net::async_req_regex_handle_callback test_regex_callback = [](std::shared_ptr<net::http_request>, const std::smatch& matches) {
+net::async_req_regex_handle_callback test_regex_callback =  [](std::shared_ptr<net::http_request>, const std::smatch& matches) {
 
 	if (matches.size() < 3)
 	{
@@ -132,12 +135,15 @@ net::async_req_regex_handle_callback test_regex_callback = [](std::shared_ptr<ne
 		return net::http_response(400, "Bad request");
 	}
 
-	nlohmann::json smth_to_send = nlohmann::json({ {"id", id}});
+	nlohmann::json smth_to_send = 
+		nlohmann::json({ {"id", id}});
+
 	std::string data = smth_to_send.dump();
 
 	auto body_data = std::vector<uint8_t>(data.begin(), data.end());
 
-	return net::http_response(200, "OK", nullptr, body_data);
+	return net::http_response(200, "OK", 
+		nullptr, body_data);
 };
 
 std::regex test_pattern(R"(^(/test/id=(\d+))$)");
@@ -186,12 +192,16 @@ You can set a gap to the number of clients that can connect to the server to pre
 
 constexpr auto HOST = "127.0.0.1";
 constexpr auto PORT = 54321;
-constexpr auto MAXIMUM_NR_CONNECTIONS = 100; // default 1000
-constexpr auto NR_THREADS = 10; // default 4
+
+// default 1000
+constexpr auto MAXIMUM_NR_CONNECTIONS = 100;
+
+// default 4
+constexpr auto NR_THREADS = 10;
 
 int main() try
 {
-  net::web_server server(HOST, PORT, MAXIMUM_NR_CONNECTIONS, NR_THREADS);
+	net::web_server server(HOST, PORT,MAXIMUM_NR_CONNECTIONS, NR_THREADS);
   ...
 
 ```
@@ -209,32 +219,37 @@ int main()
 {
   net::web_client web_client{};
   
-  if (!web_client.connect(URL, PORT))
-  {
-  	std::cerr << "Failed to connect to server";
-  	return;
-  }
+	if (!web_client.connect(URL, PORT))
+	{
+	  	std::cerr << "Failed to connect to server";
+		return;
+	}
 }
 ```
 
 **HTTPS client**
 ```cpp
 
+// by default nullptr
 auto verify_certificate_callback =  [](bool preverified, boost::asio::ssl::verify_context& ctx) -> bool {
         // Your custom verification logic here
-        // You can access preverified and verify_context as needed
-        // Return true if the certificate is accepted, false otherwise
-        return true;  // Example: Always accept the certificate
-    }; // by default nullptr
-
+        // You can access preverified 
+        // and verify_context as needed
+        // Return true if the certificate is accepted, 
+        // false otherwise
+        
+        // Example: Always accept the certificate
+        return true;  
+    };
+    
 std::vector<std::string> cert_files = { R"(..\..\..\external\boost_asio\example\cpp11\ssl\ca.pem)" };
 
 net::secure_web_client web_client{cert_files, verify_certificate_callback};
 
 if (!web_client.connect(URL))
 {
-  std::cerr << "Failed to connect to server";
-  return;
+	std::cerr << "Failed to connect to server";
+	return;
 }
 ``` 
 
@@ -250,10 +265,10 @@ net::http_request req(net::request_type::GET,
 	
 auto response = web_client.send(std::move(req));
 
-
 if (!response.second)
 {
-	std::cerr << "Failed to get response err: " << response.second .message();
+	std::cerr << "Failed to get response err: " 
+		<< response.second .message();
 	return 5;
 }
 ...
@@ -276,7 +291,9 @@ auto timeout = 5000; // miliseconds
 auto response = web_client.send(std::move(req), timeout);
 
 // handle recieved message
-response->get_json_body(); // response->get_body_raw() for raw data
+
+response->get_json_body(); 
+// response->get_body_raw() for raw data
 
 ... 
 
@@ -341,10 +358,10 @@ req_callback = [&can_stop, &method, &url, &web_client, &req_callback](std::share
 
 	auto is_encoded = response->is_body_encoded();
   
-	auto response_data_decoded = response->to_string(is_encoded);
-  ...
+	auto response_data_decoded = 
+		response->to_string(is_encoded);
   
-  // in case raw undecoded data is needed
+    // in case raw undecoded data is needed
 	if (is_encoded)
 	{
 		auto response_data_encoded = response->to_string();
