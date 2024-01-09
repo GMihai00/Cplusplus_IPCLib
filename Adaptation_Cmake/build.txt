@@ -1,0 +1,5 @@
+cd ./build 
+
+cmake -S .. -B . -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_GENERATOR="Unix Makefiles"
+
+mingw32-make.exe
