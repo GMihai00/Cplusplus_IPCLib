@@ -19,15 +19,4 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>
-    <Text Include="universities.hipolabs.com_response.txt">
-      <Filter>Resource Files</Filter>
-    </Text>
-    <Text Include="www.dataaccess.com_encoded_response.txt">
-      <Filter>Resource Files</Filter>
-    </Text>
-    <Text Include="www.dataaccess.com_response.txt">
-      <Filter>Resource Files</Filter>
-    </Text>
-  </ItemGroup>
 </Project>

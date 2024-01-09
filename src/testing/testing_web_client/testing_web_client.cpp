@@ -147,13 +147,13 @@ int test_web_server_send_async(T& web_client, const std::string& url, const std:
 		auto response_data = response->to_string(is_encoded);
 		std::cout << "Recieved response: " << response_data << std::endl;
 
-		save_to_file(response_data, url + "_response.txt");
+		save_to_file(response_data, url + "_response.log");
 
 		if (is_encoded)
 		{
 			auto response_data_encoded = response->to_string(false);
 
-			save_to_file(response_data_encoded, url + "_encoded_response.txt");
+			save_to_file(response_data_encoded, url + "_encoded_response.log");
 		}
 
 		can_stop = true;
