@@ -19,12 +19,12 @@ This project aims to provide an easier to use C++ IPC library. It's build to be 
 
 # Installation
 
-Requirements: MSVC Compiler, Visual Studio is suggested to be used
+Requirements: vcpkg, MSVC Compiler(CMake GCC support will be added later), Visual Studio is suggested to be used
 
 1. Clone the repository: `git clone [https://github.com/GMihai00/Cplusplus_IPCLib.git](https://github.com/GMihai00/Cplusplus_IPCLib.git)`
 2. Navigate to the project directory: `cd yourproject`
 3. Update submodules: git submodule update --init --recursive
-4. Install boost and openssl using vcpkg (currently working on removing this dependency, did not notice it due to it already being installed on my system)
+4. Install openssl using vcpkg if not already on system (currently working on removing this dependency, did not notice it due to it already being installed on my system)
 5. Open IPC.sln and build project IPC, this will generate a static library
 6. Libraries to be added as Additional Dependencies: IPC.lib;libz-static.lib;libcrypto.lib;libssl.lib; (Make sure library directory has been added to Library directories)
 7. Include headers depending on your needs (web_server.hpp/secure_web_client.hpp/web_client.hpp for web-based newer IPC client.hpp and server.hpp for older local IPC)
