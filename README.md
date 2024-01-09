@@ -19,7 +19,7 @@ This project aims to provide an easier to use C++ IPC library. It's build to be 
 
 # Installation
 
-Requirements: vcpkg, MSVC Compiler(CMake GCC support will be added later), Visual Studio is suggested to be used
+Requirements: vcpkg, MSVC Compiler(CMake GCC support will be added soon), Visual Studio is suggested to be used
 
 1. Clone the repository: `git clone [https://github.com/GMihai00/Cplusplus_IPCLib.git](https://github.com/GMihai00/Cplusplus_IPCLib.git)`
 2. Navigate to the project directory: `cd yourproject`
