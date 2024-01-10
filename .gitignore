@@ -41,6 +41,7 @@ x64/
 
 *.log
 
-Adaptation_Cmake/build/*
+cross-platform/build/*
 
-Adaptation_Cmake/ipc_lib/build/*
+
+

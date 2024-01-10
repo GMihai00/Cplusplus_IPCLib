@@ -94,3 +94,6 @@
 [submodule "external/boost/mp11"]
 	path = external/boost/mp11
 	url = https://github.com/boostorg/mp11.git
+[submodule "external/boost/align"]
+	path = external/boost/align
+	url = https://github.com/boostorg/align.git
