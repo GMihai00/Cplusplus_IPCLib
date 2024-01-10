@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "ipc_lib/lib.h"
+#include "lib.h"
 
 int main()
 {
