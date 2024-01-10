@@ -70,10 +70,12 @@ else()
     message(FATAL_ERROR "Boost not found")
 endif()
 
+add_subdirectory(../external/zlib-cmake build)
+
 add_library(${PROJECT_NAME} ${LIB_SOURCES} ${LIB_HEADERS})
 
 #PRIVATE ${EXTERNAL_INCLUDE_DIRECTORIES}
 
 target_include_directories(${PROJECT_NAME} PRIVATE ../src)
 # target_linking_directories(${PROJECT_NAME})
-target_link_libraries(${PROJECT_NAME} PRIVATE OpenSSL::SSL OpenSSL::Crypto ${Boost_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PRIVATE zlib OpenSSL::SSL OpenSSL::Crypto ${Boost_LIBRARIES})
