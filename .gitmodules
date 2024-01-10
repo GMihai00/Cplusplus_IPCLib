@@ -1,6 +1,96 @@
+[submodule "external/openssl"]
+	path = external/openssl
+	url = https://github.com/openssl/openssl.git
+[submodule "external/boost_asio"]
+	path = external/boost_asio
+	url = https://github.com/boostorg/asio.git
 [submodule "external/json"]
 	path = external/json
 	url = https://github.com/nlohmann/json.git
 [submodule "external/zlib"]
 	path = external/zlib
 	url = https://github.com/kiyolee/zlib-win-build.git
+[submodule "src/external"]
+	path = src/external
+	url = https://github.com/boostorg/thread.git
+[submodule "external/boost_thread"]
+	path = external/boost_thread
+	url = https://github.com/boostorg/thread.git
+[submodule "external/boost_config"]
+	path = external/boost_config
+	url = https://github.com/boostorg/config.git
+[submodule "external/boost_throw_exception"]
+	path = external/boost_throw_exception
+	url = https://github.com/boostorg/throw_exception.git
+[submodule "external/boost_assert"]
+	path = external/boost_assert
+	url = https://github.com/boostorg/assert.git
+[submodule "external/boost_system"]
+	path = external/boost_system
+	url = https://github.com/boostorg/system.git
+[submodule "external/boost_winapi"]
+	path = external/boost_winapi
+	url = https://github.com/boostorg/winapi.git
+[submodule "external/boost_predef"]
+	path = external/boost_predef
+	url = https://github.com/boostorg/predef.git
+[submodule "external/boost_date_time"]
+	path = external/boost_date_time
+	url = https://github.com/boostorg/date_time.git
+[submodule "external/boost_smart_ptr"]
+	path = external/boost_smart_ptr
+	url = https://github.com/boostorg/smart_ptr.git
+[submodule "external/boost_core"]
+	path = external/boost_core
+	url = https://github.com/boostorg/core.git
+[submodule "external/boost_utility"]
+	path = external/boost_utility
+	url = https://github.com/boostorg/utility.git
+[submodule "external/boost_static_assert"]
+	path = external/boost_static_assert
+	url = https://github.com/boostorg/static_assert.git
+[submodule "external/boost_type_traits"]
+	path = external/boost_type_traits
+	url = https://github.com/boostorg/type_traits.git
+[submodule "external/boost_numeric_conversion"]
+	path = external/boost_numeric_conversion
+	url = https://github.com/boostorg/numeric_conversion.git
+[submodule "external/boost_mpl"]
+	path = external/boost_mpl
+	url = https://github.com/boostorg/mpl.git
+[submodule "external/boost_preprocessor"]
+	path = external/boost_preprocessor
+	url = https://github.com/boostorg/preprocessor.git
+[submodule "external/boost_bind"]
+	path = external/boost_bind
+	url = https://github.com/boostorg/bind.git
+[submodule "external/boost_regex"]
+	path = external/boost_regex
+	url = https://github.com/boostorg/regex.git
+[submodule "external/boost_chrono"]
+	path = external/boost_chrono
+	url = https://github.com/boostorg/chrono.git
+[submodule "external/boost_ratio"]
+	path = external/boost_ratio
+	url = https://github.com/boostorg/ratio.git
+[submodule "external/boost_integer"]
+	path = external/boost_integer
+	url = https://github.com/boostorg/integer.git
+[submodule "external/boost_move"]
+	path = external/boost_move
+	url = https://github.com/boostorg/move.git
+[submodule "external/boost_io"]
+	path = external/boost_io
+	url = https://github.com/boostorg/io.git
+[submodule "external/boost_functional"]
+	path = external/boost_functional
+	url = https://github.com/boostorg/functional.git
+[submodule "external/boost_container_hash"]
+	path = external/boost_container_hash
+	url = https://github.com/boostorg/container_hash.git
+[submodule "external/boost_describe"]
+	path = external/boost_describe
+	url = https://github.com/boostorg/describe.git
+[submodule "external/boost_mp11"]
+	path = external/boost_mp11
+	url = https://github.com/boostorg/mp11.git
