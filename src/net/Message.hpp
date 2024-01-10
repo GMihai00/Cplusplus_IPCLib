@@ -165,7 +165,7 @@ namespace net
             {
                 size_t size_after_pop = msg.m_body.size() - data->size();
                 std::vector<uint8_t> intermidiate(data->size());
-                std::memcpy(&intermidiate, msg.m_body.data() + size_after_pop, data.size());
+                std::memcpy(&intermidiate, msg.m_body.data() + size_after_pop, data->size());
 
                 data->serialize(intermidiate);
 

@@ -50,7 +50,7 @@ namespace net
 				return { nullptr, err };
 			}
 
-			auto response = m_reciever.get<http_response>();
+			auto response = m_reciever.template get<http_response>();
 
 			if (should_follow_redirects && response.second && response.first && response.first->get_status() == 301)
 			{
@@ -126,21 +126,21 @@ namespace net
 		{
 			assert(m_socket);
 
-			return m_reciever.get<http_request>();
+			return m_reciever.template get<http_request>();
 		}
 
 		void async_get_request(async_get_callback& callback) noexcept
 		{
 			assert(m_socket);
 
-			return m_reciever.async_get<http_request>(callback);
+			return m_reciever.template async_get<http_request>(callback);
 		}
 
 		utile::web_error reply(http_response& response) noexcept
 		{
 			assert(m_socket);
 
-			return m_dispatcher.send<http_response>(response);
+			return m_dispatcher.template send<http_response>(response);
 		}
 
 		void reply_async(http_response&& response, async_send_callback& callback) noexcept
@@ -173,7 +173,7 @@ namespace net
 				m_can_send = false;
 			}
 
-			return m_dispatcher.send_async<http_response>(response, m_write_callback);
+			return m_dispatcher.template send_async<http_response>(response, m_write_callback);
 		}
 
 		std::shared_ptr<T>& get_connection_socket() noexcept
@@ -258,7 +258,7 @@ namespace net
 				callback(message, err);
 			};
 
-			m_reciever.async_get<http_response>(m_get_callback);
+			m_reciever.template async_get<http_response>(m_get_callback);
 		}
 
 		web_message_dispatcher<T> m_dispatcher;

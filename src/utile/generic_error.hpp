@@ -23,10 +23,10 @@ namespace utile
 			return m_error.value();
 		}
 
-		std::error_category category() const noexcept
-		{
-			return m_error.category();
-		}
+		// std::error_category category() const noexcept
+		// {
+		// 	return m_error.category();
+		// }
 
 		T message() const noexcept
 		{

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.25.0)
 
 
-# project(IPC LANGUAGES CXX)
+project(IPC LANGUAGES CXX)
 
 # Add all .cpp files to lib
 file(GLOB_RECURSE LIB_SOURCES ../src/*.cpp)
@@ -54,8 +54,10 @@ foreach(item ${EXTERNAL_INCLUDE_DIRECTORIES})
     message("-- ${item}")
 endforeach()
 
+find_package(OpenSSL REQUIRED)
+
 add_library(${PROJECT_NAME} ${LIB_SOURCES} ${LIB_HEADERS})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ../src PRIVATE ${EXTERNAL_INCLUDE_DIRECTORIES})
 # target_linking_directories(${PROJECT_NAME})
-target_link_libraries(${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenSSL::SSL OpenSSL::Crypto)
