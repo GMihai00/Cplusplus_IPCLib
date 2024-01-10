@@ -10,9 +10,6 @@
 [submodule "external/zlib"]
 	path = external/zlib
 	url = https://github.com/kiyolee/zlib-win-build.git
-[submodule "src/external"]
-	path = src/external
-	url = https://github.com/boostorg/thread.git
 [submodule "external/boost_thread"]
 	path = external/boost_thread
 	url = https://github.com/boostorg/thread.git
@@ -94,3 +91,6 @@
 [submodule "external/boost_mp11"]
 	path = external/boost_mp11
 	url = https://github.com/boostorg/mp11.git
+[submodule "external/zlib-cmake"]
+	path = external/zlib-cmake
+	url = https://github.com/madler/zlib.git
