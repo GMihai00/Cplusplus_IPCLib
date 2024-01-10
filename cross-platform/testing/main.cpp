@@ -12,6 +12,7 @@ int main(int argc, char* argv[]) try
 	// auto server_ip = std::string(get_option_or_quit(cmd_parser, "--ip"));
 	// auto server_port = std::stoi(std::string(get_option_or_quit(cmd_parser, "--port")));
 
+    
     auto server_ip = "127.0.0.1";
     auto server_port = 54321;
     
