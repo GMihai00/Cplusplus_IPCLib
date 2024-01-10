@@ -1,7 +1,7 @@
-#pragma once
-
 #include "web_helpers.hpp"
+
 #include <iostream>
+#include <optional>
 
 namespace net
 {

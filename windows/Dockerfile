@@ -11,12 +11,11 @@ WORKDIR C:\\app
 COPY ./vc_redist/* C:\\app/
 
 # Copy executable
-COPY ./bin/x64/Release/web_testing_server.exe C:\\app
+COPY ./x64/Release/web_testing_server.exe C:\\app
 
 # Copy dependencies
-COPY ./bin/x64/Release/*.lib C:\\app/
-COPY ./bin/x64/Release/*.dll C:\\app/
-COPY ./src/x64/Release/*.lib C:\\app/
+COPY ./x64/Release/*.lib C:\\app/
+COPY ./x64/Release/*.dll C:\\app/
 
 #list all files inside directory
 RUN dir

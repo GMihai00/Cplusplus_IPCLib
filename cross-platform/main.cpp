@@ -1,9 +1,9 @@
 #include <iostream>
 
-#include "lib.h"
 
 int main()
 {
-    test::print_smth();
+    std::cout << "OK";
+    
     return 0;
 }
