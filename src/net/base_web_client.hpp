@@ -99,7 +99,7 @@ namespace net
 
 				if (auto it = redirect_json_data.find("remaining_time"); it != redirect_json_data.end() && it->is_number())
 				{
-					time_left = it->get<uint16_t>();
+					time_left = it->template get<uint16_t>();
 				}
 
 				if (auto redirect_data = net::from_json(redirect_json_data); redirect_data != std::nullopt)

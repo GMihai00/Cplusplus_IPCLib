@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{5ca657a3-af05-4f9d-9c41-c848c2136603}</ProjectGuid>
-    <RootNamespace>testingserver</RootNamespace>
+    <ProjectGuid>{baab0ea2-b8bf-4634-ac76-9e6db353faed}</ProjectGuid>
+    <RootNamespace>testing</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -71,24 +71,24 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir);$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)</OutDir>
+    <IncludePath>$(SolutionDir)..\src;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)..\bin\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-    <OutDir>$(SolutionDir)..\bin\$(Platform)\$(Configuration)</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir);$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)</OutDir>
+    <IncludePath>$(SolutionDir)..\src;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)..\bin\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-    <OutDir>$(SolutionDir)..\bin\$(Platform)\$(Configuration)</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir);$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)</OutDir>
+    <IncludePath>$(SolutionDir)..\src;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)..\bin\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-    <OutDir>$(SolutionDir)..\bin\$(Platform)\$(Configuration)</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir);$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)</OutDir>
+    <IncludePath>$(SolutionDir)..\src;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)..\bin\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-    <OutDir>$(SolutionDir)..\bin\$(Platform)\$(Configuration)</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -102,7 +102,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>IPC.lib;libz-static.lib;libcrypto.lib
-;libssl.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -121,7 +121,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>IPC.lib;libz-static.lib;libcrypto.lib
-;libssl.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -136,7 +136,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>IPC.lib;libz-static.lib;libcrypto.lib
-;libssl.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -155,24 +155,20 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>IPC.lib;libz-static.lib;libcrypto.lib
-;libssl.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\common\commnad_line_parser.cpp" />
-    <ClCompile Include="..\common\event_helpers.cpp" />
-    <ClCompile Include="..\common\type_converters.cpp" />
-    <ClCompile Include="testing_server.cpp" />
-    <ClCompile Include="test_server.cpp" />
+    <ClCompile Include="testing.cpp" />
+    <ClCompile Include="win_process_manager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\utile\observer.hpp" />
-    <ClInclude Include="..\..\utile\timer.hpp" />
-    <ClInclude Include="..\common\command_line_parser.hpp" />
-    <ClInclude Include="..\common\event_helpers.hpp" />
-    <ClInclude Include="..\common\message_types.hpp" />
-    <ClInclude Include="..\common\type_converters.hpp" />
-    <ClInclude Include="test_server.hpp" />
+    <ClInclude Include="win_process_manager.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IPC.vcxproj">
+      <Project>{df49742e-e610-4153-a5ca-dce52f361602}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

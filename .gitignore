@@ -40,3 +40,8 @@ x64/
 .vscode/
 
 *.log
+
+cross-platform/build/*
+cross-platform/testing/build/*
+
+

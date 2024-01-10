@@ -10,7 +10,6 @@ void save_to_file(const std::string& data, const std::string& file_name)
 {
 	std::ofstream file(file_name);
 
-
 	if (!file.is_open())
 	{
 		std::cerr << "Failed to save output to file\n";
