@@ -42,6 +42,6 @@ x64/
 *.log
 
 cross-platform/build/*
-
+cross-platform/testing/build/*
 
 

@@ -1,6 +1,5 @@
 #include "command_line_parser.hpp"
 
-#include "Windows.h"
 
 namespace utile
 {
@@ -36,7 +35,7 @@ namespace utile
 		auto maybe_option = cmd_parser.get_option(name);
 
 		if (maybe_option == std::nullopt)
-			exit(ERROR_NOT_FOUND);
+			exit(1168);
 
 		return maybe_option.value();
 	}

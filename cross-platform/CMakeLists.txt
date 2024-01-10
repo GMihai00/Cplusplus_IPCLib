@@ -9,11 +9,9 @@ file(GLOB_RECURSE LIB_SOURCES ../src/*.cpp)
 # Add all .hpp files to lib
 file(GLOB_RECURSE LIB_HEADERS ../src/*.hpp)
 
-message(${CMAKE_CURRENT_SOURCE_DIR})
+# file(GLOB_RECURSE EXTERNAL_INCLUDE_DIRECTORIES_FULL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../external/*/include/*)
 
-file(GLOB_RECURSE EXTERNAL_INCLUDE_DIRECTORIES_FULL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../external/*/include/*)
-
-file(GLOB_RECURSE BOOST_EXTERNAL_INCLUDE_DIRECTORIES_FULL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../external/boost/*/include/*)
+# file(GLOB_RECURSE BOOST_EXTERNAL_INCLUDE_DIRECTORIES_FULL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../external/boost/*/include/*)
 
 # Print the cpp files
 message("Source Files:")
@@ -27,37 +25,55 @@ foreach(header_file ${LIB_HEADERS})
     message("-- ${header_file}")
 endforeach()
 
-set(EXTERNAL_INCLUDE_DIRECTORIES)
-# Print the paths up to and including "include"
+# set(EXTERNAL_INCLUDE_DIRECTORIES)
+# # Print the paths up to and including "include"
 
-foreach(item ${EXTERNAL_INCLUDE_DIRECTORIES_FULL_PATH})
-    string(FIND ${item} "include" index REVERSE)
-    if(NOT ${index} EQUAL -1)
-        string(SUBSTRING ${item} 0 ${index} item)
-    endif()
-    list(APPEND EXTERNAL_INCLUDE_DIRECTORIES ${item}include/)
-endforeach()
+# foreach(item ${EXTERNAL_INCLUDE_DIRECTORIES_FULL_PATH})
+#     string(FIND ${item} "include" index REVERSE)
+#     if(NOT ${index} EQUAL -1)
+#         string(SUBSTRING ${item} 0 ${index} item)
+#     endif()
+#     list(APPEND EXTERNAL_INCLUDE_DIRECTORIES ${item}include/)
+# endforeach()
 
-foreach(item ${BOOST_EXTERNAL_INCLUDE_DIRECTORIES_FULL_PATH})
-    string(FIND ${item} "include" index REVERSE)
-    if(NOT ${index} EQUAL -1)
-        string(SUBSTRING ${item} 0 ${index} item)
-    endif()
-    list(APPEND EXTERNAL_INCLUDE_DIRECTORIES ${item}include/)
-endforeach()
+# foreach(item ${BOOST_EXTERNAL_INCLUDE_DIRECTORIES_FULL_PATH})
+#     string(FIND ${item} "include" index REVERSE)
+#     if(NOT ${index} EQUAL -1)
+#         string(SUBSTRING ${item} 0 ${index} item)
+#     endif()
+#     list(APPEND EXTERNAL_INCLUDE_DIRECTORIES ${item}include/)
+# endforeach()
 
-# Remove duplicates from the list
-list(REMOVE_DUPLICATES EXTERNAL_INCLUDE_DIRECTORIES)
+# # Remove duplicates from the list
+# list(REMOVE_DUPLICATES EXTERNAL_INCLUDE_DIRECTORIES)
 
-message("Include Directories:")
-foreach(item ${EXTERNAL_INCLUDE_DIRECTORIES})
-    message("-- ${item}")
-endforeach()
+# message("Include Directories:")
+# foreach(item ${EXTERNAL_INCLUDE_DIRECTORIES})
+#     message("-- ${item}")
+# endforeach()
 
 find_package(OpenSSL REQUIRED)
 
+if(OPENSSL_FOUND)
+    message(STATUS "OpenSSL found")
+    include_directories(${OPENSSL_INCLUDE_DIR})
+else()
+    message(FATAL_ERROR "OpenSSL not found")
+endif()
+
+find_package(Boost REQUIRED)
+
+if(Boost_FOUND)
+    message(STATUS "Boost found")
+    include_directories(${Boost_INCLUDE_DIRS})
+else()
+    message(FATAL_ERROR "Boost not found")
+endif()
+
 add_library(${PROJECT_NAME} ${LIB_SOURCES} ${LIB_HEADERS})
 
-target_include_directories(${PROJECT_NAME} PRIVATE ../src PRIVATE ${EXTERNAL_INCLUDE_DIRECTORIES})
+#PRIVATE ${EXTERNAL_INCLUDE_DIRECTORIES}
+
+target_include_directories(${PROJECT_NAME} PRIVATE ../src)
 # target_linking_directories(${PROJECT_NAME})
-target_link_libraries(${PROJECT_NAME} PRIVATE OpenSSL::SSL OpenSSL::Crypto)
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenSSL::SSL OpenSSL::Crypto ${Boost_LIBRARIES})
