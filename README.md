@@ -6,6 +6,7 @@ This project aims to provide an easier to use C++ IPC library. It's build to be 
 
 - [Installation](#installation)
   - [MSVC-VCPKG](#msvc-vcpkg)
+  - [CMAKE](#cmake)
 - [Usage](#usage)
   - [Web-based](#web-based)
     - [Creating a server](#creating-a-server)
