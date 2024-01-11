@@ -23,6 +23,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/.. build_ipc)
 find_package(OpenSSL REQUIRED)
 
 if(OPENSSL_FOUND)
+    message("OpenSSL found")
     include_directories(${OPENSSL_INCLUDE_DIR})
     link_directories(${OPENSSL_LIBRARY_DIR})
 else()
