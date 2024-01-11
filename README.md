@@ -5,6 +5,7 @@ This project aims to provide an easier to use C++ IPC library. It's build to be 
 # Table of Contents
 
 - [Installation](#installation)
+  - [MSVC-VCPKG](#msvc-vcpkg)
 - [Usage](#usage)
   - [Web-based](#web-based)
     - [Creating a server](#creating-a-server)
@@ -19,15 +20,32 @@ This project aims to provide an easier to use C++ IPC library. It's build to be 
 
 # Installation
 
+## MSVC-VCPKG
+Note: Windows Only
 Requirements: vcpkg, MSVC Compiler(CMake GCC support will be added soon), Visual Studio is suggested to be used
 
 1. Clone the repository: `git clone [https://github.com/GMihai00/Cplusplus_IPCLib.git](https://github.com/GMihai00/Cplusplus_IPCLib.git)`
 2. Navigate to the project directory: `cd yourproject`
 3. Update submodules: git submodule update --init --recursive
 4. Install openssl and boost using vcpkg if not already on system
-5. Open IPC.sln and build project IPC, this will generate a static library
-6. Libraries to be added as Additional Dependencies: IPC.lib;libz-static.lib;libcrypto.lib;libssl.lib; (Make sure library directory has been added to Library directories)
-7. Include headers depending on your needs (web_server.hpp/secure_web_client.hpp/web_client.hpp for web-based newer IPC client.hpp and server.hpp for older local IPC)
+5. Change to windows directory
+6. Open IPC.sln and build project IPC, this will generate a static library
+7. Libraries to be added as Additional Dependencies: IPC.lib;libz-static.lib;libcrypto.lib;libssl.lib; (Make sure library directory has been added to Library directories)
+8. Include headers depending on your needs (web_server.hpp/secure_web_client.hpp/web_client.hpp for web-based newer IPC client.hpp and server.hpp for older local IPC)
+
+
+## CMAKE
+
+Requirements: openssl installed on system, cmake, make, gcc, g++
+
+1. Clone the repository: `git clone [https://github.com/GMihai00/Cplusplus_IPCLib.git](https://github.com/GMihai00/Cplusplus_IPCLib.git)`
+2. Navigate to the project directory: `cd yourproject`
+3. Update submodules: git submodule update --init --recursive
+4. Install openssl if not already on system
+5. Change to cross-platform directory
+6. run cmake + run make to build IPC lib
+7. Libraries to be added as Additional Dependencies: IPC and all other dependencies that can be found inside CMake depending on platform 
+8. Include headers depending on your needs (web_server.hpp/secure_web_client.hpp/web_client.hpp for web-based newer IPC client.hpp and server.hpp for older local IPC)
 
 # Usage
 
