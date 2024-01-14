@@ -1,20 +1,20 @@
 #include <iostream>
 
 #include "net/web_server.hpp"
-// #include "../windows/testing/common/command_line_parser.hpp"
+#include "command_line_parser.hpp"
 
 // boost::asio::ip::udp::socket; for udp sockets
 
 int main(int argc, char* argv[]) try
 {	
-	// utile::command_line_parser cmd_parser(argc, argv);
+	utile::command_line_parser cmd_parser(argc, argv);
 
-	// auto server_ip = std::string(get_option_or_quit(cmd_parser, "--ip"));
-	// auto server_port = std::stoi(std::string(get_option_or_quit(cmd_parser, "--port")));
+	auto server_ip = std::string(get_option_or_quit(cmd_parser, "--ip"));
+	auto server_port = std::stoi(std::string(get_option_or_quit(cmd_parser, "--port")));
 
     
-    auto server_ip = "127.0.0.1";
-    auto server_port = 54321;
+    // auto server_ip = "127.0.0.1";
+    // auto server_port = 54321;
     
 	net::web_server server(server_ip, server_port);
 

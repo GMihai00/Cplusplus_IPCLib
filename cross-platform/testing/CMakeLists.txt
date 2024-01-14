@@ -18,7 +18,9 @@ file(GLOB_RECURSE EXTERNAL_INCLUDE_DIRECTORIES_FULL_PATH ${CMAKE_CURRENT_SOURCE_
 
 file(GLOB_RECURSE BOOST_EXTERNAL_INCLUDE_DIRECTORIES_FULL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../external/boost/*/include/*)
 
-add_executable(${PROJECT_NAME} main.cpp)
+file(GLOB SOURCES "*.cpp")
+add_executable(${PROJECT_NAME} ${SOURCES})
+
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/.. build_ipc)
 
@@ -51,7 +53,7 @@ if (LOG_ALL)
     endforeach()
 endif()
 
-target_include_directories(${PROJECT_NAME} PRIVATE ../../src PRIVATE ${EXTERNAL_INCLUDE_DIRECTORIES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE ../../src PRIVATE ${EXTERNAL_INCLUDE_DIRECTORIES})
 
 link_directories(${CMAKE_CURRENT_SOURCE_DIR}/build/build_ipc)
 
