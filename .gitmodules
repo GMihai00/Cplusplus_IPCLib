@@ -169,3 +169,6 @@
 [submodule "external/boost/unordered"]
 	path = external/boost/unordered
 	url = https://github.com/boostorg/unordered.git
+[submodule "external/openssl-cmake"]
+	path = external/openssl-cmake
+	url = https://github.com/janbar/openssl-cmake.git

@@ -12,6 +12,11 @@
 #include "web_message_controller.hpp"
 #include "../utile/data_types.hpp"
 
+#ifdef __linux__
+	#define ERROR_INVALID_ADDRESS EVP_R_INVALID_DIGEST
+	#define ERROR_INTERNAL_ERROR ERR_R_INTERNAL_ERROR
+#endif
+
 namespace net
 {
 	template <typename T>

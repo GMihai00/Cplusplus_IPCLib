@@ -8,6 +8,8 @@ endif()
 
 project(IPC LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 17)
+
 option(LOG_ALL "Log everything" ON)
 
 # Add all .cpp files to lib
@@ -63,6 +65,7 @@ if (LOG_ALL)
     endforeach()
 endif()
 
+# if openssl already on system
 find_package(OpenSSL REQUIRED)
 
 if(OPENSSL_FOUND)
@@ -73,6 +76,7 @@ else()
     message(FATAL_ERROR "OpenSSL not found")
 endif()
 
+# WIP add_subdirectory(../external/openssl-cmake build_openssl)
 
 add_subdirectory(../external/zlib-cmake build_zlib)
 add_subdirectory(../external/boost/align build_boost_align)

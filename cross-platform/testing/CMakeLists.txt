@@ -8,6 +8,8 @@ endif()
 
 project(web_testing_server LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 17)
+
 set(EXE_NAME web_testing_server)
 
 option(LOG_ALL "Log everything" ON)
@@ -19,16 +21,6 @@ file(GLOB_RECURSE BOOST_EXTERNAL_INCLUDE_DIRECTORIES_FULL_PATH ${CMAKE_CURRENT_S
 add_executable(${PROJECT_NAME} main.cpp)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/.. build_ipc)
-
-find_package(OpenSSL REQUIRED)
-
-if(OPENSSL_FOUND)
-    message("OpenSSL found")
-    include_directories(${OPENSSL_INCLUDE_DIR})
-    link_directories(${OPENSSL_LIBRARY_DIR})
-else()
-    message(FATAL_ERROR "OpenSSL not found")
-endif()
 
 set(EXTERNAL_INCLUDE_DIRECTORIES)
 # Print the paths up to and including "include"
@@ -72,16 +64,33 @@ foreach(BOOST_LIB ${BOOST_LIBRARIES})
         $<TARGET_FILE_DIR:${EXE_NAME}>)
 endforeach()
 
-    
 add_custom_command(TARGET ${EXE_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_CURRENT_SOURCE_DIR}/build/build_ipc/build_zlib/
     $<TARGET_FILE_DIR:${EXE_NAME}>)
     
+# if openssl already on system
+find_package(OpenSSL REQUIRED)
+
+if(OPENSSL_FOUND)
+    message("OpenSSL found")
+    include_directories(${OPENSSL_INCLUDE_DIR})
+    link_directories(${OPENSSL_LIBRARY_DIR})
+else()
+    message(FATAL_ERROR "OpenSSL not found")
+endif()
+
+#WIP
+# add_custom_command(TARGET ${EXE_NAME} POST_BUILD
+#     COMMAND ${CMAKE_COMMAND} -E copy_directory
+#     ${CMAKE_CURRENT_SOURCE_DIR}/build/build_ipc/build_openssl/
+#     $<TARGET_FILE_DIR:${EXE_NAME}>)
+    
 add_custom_command(TARGET ${EXE_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_CURRENT_SOURCE_DIR}/build/build_ipc/libIPC.a
     $<TARGET_FILE_DIR:${EXE_NAME}>)
+
 
 if(WIN32)
     target_link_libraries(${PROJECT_NAME} 
