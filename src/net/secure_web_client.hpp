@@ -1,7 +1,7 @@
 #pragma once
 
-#include <boost/asio/ssl.hpp>
 #include "base_web_client.hpp"
+#include <boost/asio/ssl.hpp>
 
 namespace net
 {

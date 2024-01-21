@@ -1,6 +1,6 @@
 #include "web_client.hpp"
 #include "../utile/finally.hpp"
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 namespace net
 {
