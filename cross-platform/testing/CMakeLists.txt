@@ -35,6 +35,11 @@ foreach(item ${EXTERNAL_INCLUDE_DIRECTORIES_FULL_PATH})
     list(APPEND EXTERNAL_INCLUDE_DIRECTORIES ${item}include/)
 endforeach()
 
+#adding missing zlib include dir
+list(APPEND EXTERNAL_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/../../external/zlib-cmake)
+
+#zconf.h output from cmake compile needs to be added to include path
+list(APPEND XTERNAL_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/build/build_ipc/build_zlib/)
 foreach(item ${BOOST_EXTERNAL_INCLUDE_DIRECTORIES_FULL_PATH})
     string(FIND ${item} "include" index REVERSE)
     if(NOT ${index} EQUAL -1)

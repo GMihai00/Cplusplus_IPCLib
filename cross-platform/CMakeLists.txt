@@ -55,6 +55,9 @@ foreach(item ${EXTERNAL_INCLUDE_DIRECTORIES_FULL_PATH})
     list(APPEND EXTERNAL_INCLUDE_DIRECTORIES ${item}include/)
 endforeach()
 
+#adding missing zlib include dir
+list(APPEND EXTERNAL_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/../external/zlib-cmake)
+
 # Remove duplicates from the list
 list(REMOVE_DUPLICATES EXTERNAL_INCLUDE_DIRECTORIES)
 

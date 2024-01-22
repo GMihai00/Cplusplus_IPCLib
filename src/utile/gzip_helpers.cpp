@@ -1,6 +1,6 @@
 #include "gzip_helpers.hpp"
 
-#include <zlib.h>
+#include "zlib.h"
 #include "finally.hpp"
 
 namespace utile
