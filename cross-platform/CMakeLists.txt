@@ -12,6 +12,8 @@ set(CMAKE_CXX_STANDARD 17)
 
 option(LOG_ALL "Log everything" ON)
 
+set(ZLIB_BUILD_EXAMPLES OFF CACHE BOOL "disable zlib testing" FORCE)
+
 # Add all .cpp files to lib
 file(GLOB_RECURSE LIB_SOURCES ../src/*.cpp)
 
@@ -57,6 +59,9 @@ endforeach()
 
 #adding missing zlib include dir
 list(APPEND EXTERNAL_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/../external/zlib-cmake)
+
+#zconf.h output from cmake compile needs to be added to include path
+list(APPEND EXTERNAL_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/build/build_ipc/build_zlib/)
 
 # Remove duplicates from the list
 list(REMOVE_DUPLICATES EXTERNAL_INCLUDE_DIRECTORIES)
@@ -139,7 +144,7 @@ add_subdirectory(../external/boost/fusion build_boost_fusion)
 add_library(${PROJECT_NAME} ${LIB_SOURCES} ${LIB_HEADERS})
 
 # target_include_directories(${PROJECT_NAME} PRIVATE ../src)
-target_include_directories(${PROJECT_NAME} PRIVATE ../src PRIVATE ${EXTERNAL_INCLUDE_DIRECTORIES})
+target_include_directories(${PROJECT_NAME} PRIVATE ../src PRIVATE ${EXTERNAL_INCLUDE_DIRECTORIES} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/build_zlib)
 
 if(WIN32)
     target_link_libraries(${PROJECT_NAME} 

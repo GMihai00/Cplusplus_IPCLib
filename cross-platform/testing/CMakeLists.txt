@@ -14,13 +14,14 @@ set(EXE_NAME web_testing_server)
 
 option(LOG_ALL "Log everything" ON)
 
+set(ZLIB_BUILD_EXAMPLES OFF CACHE BOOL "disable zlib testing" FORCE)
+
 file(GLOB_RECURSE EXTERNAL_INCLUDE_DIRECTORIES_FULL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../external/*/include/*)
 
 file(GLOB_RECURSE BOOST_EXTERNAL_INCLUDE_DIRECTORIES_FULL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../external/boost/*/include/*)
 
 file(GLOB SOURCES "*.cpp")
 add_executable(${PROJECT_NAME} ${SOURCES})
-
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/.. build_ipc)
 
@@ -38,8 +39,7 @@ endforeach()
 #adding missing zlib include dir
 list(APPEND EXTERNAL_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/../../external/zlib-cmake)
 
-#zconf.h output from cmake compile needs to be added to include path
-list(APPEND XTERNAL_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/build/build_ipc/build_zlib/)
+
 foreach(item ${BOOST_EXTERNAL_INCLUDE_DIRECTORIES_FULL_PATH})
     string(FIND ${item} "include" index REVERSE)
     if(NOT ${index} EQUAL -1)
@@ -58,7 +58,7 @@ if (LOG_ALL)
     endforeach()
 endif()
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE ../../src PRIVATE ${EXTERNAL_INCLUDE_DIRECTORIES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE ../../src PRIVATE ${EXTERNAL_INCLUDE_DIRECTORIES} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/build_zlib)
 
 link_directories(${CMAKE_CURRENT_SOURCE_DIR}/build/build_ipc)
 

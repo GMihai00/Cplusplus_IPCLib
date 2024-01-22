@@ -1,5 +1,5 @@
 cd ./build 
 
-cmake -S .. -B . -DCMAKE_CXX_FLAGS="-std=c++17" -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_GENERATOR="Unix Makefiles"
+cmake -S .. -B . -DCMAKE_CXX_FLAGS="-std=c++17" -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_GENERATOR="Unix Makefiles" -DZLIB_BUILD_EXAMPLES=OFF
 
 mingw32-make.exe
