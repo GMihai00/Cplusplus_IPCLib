@@ -111,6 +111,9 @@
     <ClInclude Include="..\src\net\base_web_server.hpp">
       <Filter>Header Files\net</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\net\secure_web_server.hpp">
+      <Filter>Header Files\net</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\security\RSA.cpp">
@@ -141,6 +144,9 @@
       <Filter>Source Files\net</Filter>
     </ClCompile>
     <ClCompile Include="..\src\net\web_helpers.cpp">
+      <Filter>Source Files\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\net\secure_web_server.cpp">
       <Filter>Source Files\net</Filter>
     </ClCompile>
   </ItemGroup>

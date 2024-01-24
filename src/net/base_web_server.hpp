@@ -9,8 +9,6 @@
 #include <system_error>
 #include <optional>
 
-#include <boost/asio/ssl.hpp>
-
 #include "../utile/thread_safe_queue.hpp"
 
 #include "http_request.hpp"
@@ -148,23 +146,28 @@ namespace net
 			std::cout << "Client with ip: \"" << client->remote_endpoint().address().to_string() << "\" disconnected\n";
 #endif
 		}
+		void set_build_client_socket_function(std::function<std::shared_ptr<T>(boost::asio::io_context&)>& build_function) noexcept
+		{
+			m_build_client_socket_function = build_function;
+		}
 	private:
+
 		void wait_for_client_connection() noexcept
 		{
 			std::scoped_lock lock(m_mutex);
 
 			if (m_connection_accepter.is_open())
 			{
-				m_connection_accepter.async_accept(
-					[this](std::error_code errcode, T socket)
+				auto client_socket = m_build_client_socket_function(m_context);
+
+				m_connection_accepter.async_accept(client_socket->lowest_layer(),
+					[this, client_socket](std::error_code errcode)
 					{
 						if (!errcode)
 						{
-							// debug only
-							std::cout << "Connection attempt from " << socket.remote_endpoint() << std::endl;
-
-							auto client_socket = std::make_shared<T>(std::move(socket));
-
+#ifdef DEBUG
+							std::cout << "Connection attempt from " << client_socket.remote_endpoint() << std::endl;
+#endif
 							handle_client_connection(client_socket);
 						}
 						else
@@ -177,10 +180,15 @@ namespace net
 							std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 						}
 
+
 						wait_for_client_connection();
 					});
 			}
 		}
+
+		// TO DO
+		// aici basically mai trebuie o rubrica cu async_handshake, problema e ca vine asincrona toata faza,
+		// deci iar trebuie pasat ceva std::function si aci
 
 		void handle_client_connection(std::shared_ptr<T> client_socket) noexcept
 		{
@@ -216,7 +224,7 @@ namespace net
 							it->second.async_get_request(it2->second.first);
 						}
 					}
-					};
+				};
 
 				std::pair<async_get_callback, async_send_callback> callback_pair(get_callback, send_callback);
 
@@ -237,8 +245,9 @@ namespace net
 			}
 			else
 			{
-				// debug only
+#ifdef DEBUG
 				std::cout << "Connection has been denied\n";
+#endif
 			}
 		}
 
@@ -246,8 +255,9 @@ namespace net
 		{
 			if (!err)
 			{
-				// for debug only
+#ifdef DEBUG
 				std::cerr << err.message() << "\n";
+#endif
 
 				if (auto it = m_clients_controllers.find(client_id); it != m_clients_controllers.end())
 				{
@@ -314,8 +324,8 @@ namespace net
 
 			on_client_disconnect(socket);
 
-			if (socket->is_open())
-				socket->close();
+			if (socket->lowest_layer().is_open())
+				socket->lowest_layer().close();
 		}
 		catch (...)
 		{
@@ -364,5 +374,6 @@ namespace net
 		std::map<request_type, std::vector<std::pair<std::regex, async_req_regex_handle_callback>>> m_regex_mappings;
 		std::map<uint64_t, web_message_controller<T>> m_clients_controllers;
 		std::map<uint64_t, std::pair<async_get_callback, async_send_callback>> m_controllers_callbacks;
+		std::function<std::shared_ptr<T>(boost::asio::io_context&)> m_build_client_socket_function = nullptr;
 	};
 }

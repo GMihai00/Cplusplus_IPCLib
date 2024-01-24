@@ -173,6 +173,7 @@
     <ClInclude Include="..\src\net\ihttp_message.hpp" />
     <ClInclude Include="..\src\net\Message.hpp" />
     <ClInclude Include="..\src\net\secure_web_client.hpp" />
+    <ClInclude Include="..\src\net\secure_web_server.hpp" />
     <ClInclude Include="..\src\net\Server.hpp" />
     <ClInclude Include="..\src\net\web_client.hpp" />
     <ClInclude Include="..\src\net\web_helpers.hpp" />
@@ -195,6 +196,7 @@
     <ClCompile Include="..\src\net\http_response.cpp" />
     <ClCompile Include="..\src\net\ihttp_message.cpp" />
     <ClCompile Include="..\src\net\secure_web_client.cpp" />
+    <ClCompile Include="..\src\net\secure_web_server.cpp" />
     <ClCompile Include="..\src\net\web_client.cpp" />
     <ClCompile Include="..\src\net\web_helpers.cpp" />
     <ClCompile Include="..\src\net\web_server.cpp" />

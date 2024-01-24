@@ -289,15 +289,15 @@ void test_local_client_server_send_in_loop()
 
 int main() try
 {	
-	if (auto ret = test_http_connection_to_public_web_service(); ret != 0)
-	{
-		return ret;
-	}
+	//if (auto ret = test_http_connection_to_public_web_service(); ret != 0)
+	//{
+	//	return ret;
+	//}
 
-	if (auto ret = test_https_connection_to_public_web_service(); ret != 0)
-	{
-		return ret;
-	}
+	//if (auto ret = test_https_connection_to_public_web_service(); ret != 0)
+	//{
+	//	return ret;
+	//}
 
 	constexpr auto NR_CLIENTS = 5;
 

@@ -11,5 +11,7 @@ namespace net
 
 		web_server(const utile::IP_ADRESS& host, const utile::PORT port = 80, const uint64_t max_nr_connections = 1000, const uint64_t number_threads = 4);
 		virtual ~web_server() = default;
+	private:
+		std::function<std::shared_ptr<boost::asio::ip::tcp::socket>(boost::asio::io_context&)> m_build_client_socket_function = nullptr;
 	};
 } 
