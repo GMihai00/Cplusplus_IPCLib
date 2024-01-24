@@ -165,6 +165,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\net\base_web_client.hpp" />
+    <ClInclude Include="..\src\net\base_web_server.hpp" />
     <ClInclude Include="..\src\net\Client.hpp" />
     <ClInclude Include="..\src\net\Connection.hpp" />
     <ClInclude Include="..\src\net\http_request.hpp" />
@@ -178,6 +179,7 @@
     <ClInclude Include="..\src\net\web_message_controller.hpp" />
     <ClInclude Include="..\src\net\web_message_dispatcher.hpp" />
     <ClInclude Include="..\src\net\web_message_reciever.hpp" />
+    <ClInclude Include="..\src\net\web_server.hpp" />
     <ClInclude Include="..\src\security\RSA.hpp" />
     <ClInclude Include="..\src\utile\data_types.hpp" />
     <ClInclude Include="..\src\utile\finally.hpp" />

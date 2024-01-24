@@ -31,6 +31,7 @@ namespace net
 		{
 			m_ssl_context.set_verify_callback(m_verify_certificate_callback);
 		}
+
 	}
 
 
