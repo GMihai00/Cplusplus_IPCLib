@@ -175,7 +175,7 @@ void test_web_server_send_in_loop(T& web_client)
 	std::string url = "127.0.0.1";
 	std::string method = "/test";
 
-	if (!web_client.connect(url, 54321))
+	if (!web_client.connect(url, "54321"))
 	{
 		std::cerr << "Failed to connect to server";
 		return;
@@ -286,6 +286,13 @@ void test_local_client_server_send_in_loop()
 	test_web_server_send_in_loop(web_client);
 }
 
+void test_https_local_client_server_send_in_loop()
+{
+	net::secure_web_client web_client{ { R"(..\..\..\external\boost\asio\example\cpp11\ssl\ca.pem)"} };
+
+	test_web_server_send_in_loop(web_client);
+}
+
 
 int main() try
 {	
@@ -305,7 +312,8 @@ int main() try
 
 	for (int i = 0; i < NR_CLIENTS; i++)
 	{
-		m_worker_threads.create_thread(boost::bind(&test_local_client_server_send_in_loop));
+		//m_worker_threads.create_thread(boost::bind(&test_local_client_server_send_in_loop));
+		m_worker_threads.create_thread(boost::bind(&test_https_local_client_server_send_in_loop));
 	}
 
 	std::this_thread::sleep_for(std::chrono::seconds(10));

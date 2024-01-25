@@ -14,9 +14,11 @@ int main(int argc, char* argv[]) try
 	auto server_ip = std::string(get_option_or_quit(cmd_parser, "--ip"));
 	auto server_port = std::stoi(std::string(get_option_or_quit(cmd_parser, "--port")));
 
-	server_port = 443;
 	// net::web_server server(server_ip, server_port);
-	net::secure_web_server server(server_ip, server_port);
+	// type in test after beeing prompted to provide key
+	net::secure_web_server server(server_ip, 
+		{ R"(..\..\..\external\boost\asio\example\cpp11\ssl\server.pem)" }, 
+		{ R"(..\..\..\external\boost\asio\example\cpp11\ssl\dh4096.pem)" }, server_port);
 
 	// add callbacks	
 	net::async_req_handle_callback test_callback = [](std::shared_ptr<net::http_request> req) {
