@@ -269,7 +269,7 @@ int test_https_connection_to_public_web_service()
 {
 	int ret = 0;
 
-	net::secure_web_client web_client{ { R"(..\..\..\external\boost_asio\example\cpp11\ssl\ca.pem)"} };
+	net::secure_web_client web_client{ { R"(..\..\..\external\boost\asio\example\cpp11\ssl\ca.pem)"} };
 
 	if (ret = test_web_server_send_async(web_client, "www.dataaccess.com", "/webservicesserver/numberconversion.wso?WSDL"); ret != 0)
 	{
@@ -289,15 +289,15 @@ void test_local_client_server_send_in_loop()
 
 int main() try
 {	
-	//if (auto ret = test_http_connection_to_public_web_service(); ret != 0)
-	//{
-	//	return ret;
-	//}
+	if (auto ret = test_http_connection_to_public_web_service(); ret != 0)
+	{
+		return ret;
+	}
 
-	//if (auto ret = test_https_connection_to_public_web_service(); ret != 0)
-	//{
-	//	return ret;
-	//}
+	if (auto ret = test_https_connection_to_public_web_service(); ret != 0)
+	{
+		return ret;
+	}
 
 	constexpr auto NR_CLIENTS = 5;
 

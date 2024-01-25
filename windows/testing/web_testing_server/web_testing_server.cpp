@@ -14,6 +14,7 @@ int main(int argc, char* argv[]) try
 	auto server_ip = std::string(get_option_or_quit(cmd_parser, "--ip"));
 	auto server_port = std::stoi(std::string(get_option_or_quit(cmd_parser, "--port")));
 
+	server_port = 443;
 	// net::web_server server(server_ip, server_port);
 	net::secure_web_server server(server_ip, server_port);
 

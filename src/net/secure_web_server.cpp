@@ -17,6 +17,29 @@ namespace net
 			return std::make_shared<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>(context, m_ssl_context);
 		};
 
+		m_handshake_function = std::bind(&secure_web_server::handshake, this, std::placeholders::_1, std::placeholders::_2);
+
 		set_build_client_socket_function(m_build_client_socket_function);
+		set_handshake_function(m_handshake_function);
+
+	}
+
+	void secure_web_server::handshake(std::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> client_socket,
+		std::function<void(std::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>)> callback)
+	{
+		client_socket->async_handshake(boost::asio::ssl::stream_base::server,
+			[client_socket, callback](const boost::system::error_code& err) {
+				if (!err) 
+				{
+					callback(client_socket);
+					err.value();
+				}
+				else
+				{
+#ifdef DEBUG
+					std::cerr << "Failed to establish handshake err: " << err.message();
+#endif // DEBUG
+				}
+			});
 	}
 }

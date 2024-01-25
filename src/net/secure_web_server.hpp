@@ -14,8 +14,10 @@ namespace net
 		virtual ~secure_web_server() = default;
 		
 	private:
+		void handshake(std::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> client_socket, std::function<void(std::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>)> callback);
 
 		std::function<std::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>(boost::asio::io_context&)> m_build_client_socket_function = nullptr;
+		std::function<void(std::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>, std::function<void(std::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>)>)> m_handshake_function = nullptr;
 		boost::asio::ssl::context m_ssl_context;
 	};
 }

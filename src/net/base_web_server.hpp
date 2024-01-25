@@ -8,6 +8,7 @@
 #include <boost/thread/thread.hpp>
 #include <system_error>
 #include <optional>
+#include <functional>
 
 #include "../utile/thread_safe_queue.hpp"
 
@@ -31,6 +32,8 @@ namespace net
 		{
 			assert(max_nr_connections > 0);
 			assert(number_threads > 0);
+
+			m_client_connection_handle = std::bind(&base_web_server::handle_client_connection, this, std::placeholders::_1);
 
 			for (uint64_t it = 0; it < max_nr_connections; it++)
 				m_available_connection_ids.push_unsafe(it);
@@ -143,12 +146,17 @@ namespace net
 		virtual void on_client_disconnect(const std::shared_ptr<T> client) noexcept
 		{
 #ifdef DEBUG
-			std::cout << "Client with ip: \"" << client->remote_endpoint().address().to_string() << "\" disconnected\n";
+			std::cout << "Client with ip: \"" << client->lowest_layer().remote_endpoint().address().to_string() << "\" disconnected\n";
 #endif
 		}
-		void set_build_client_socket_function(std::function<std::shared_ptr<T>(boost::asio::io_context&)>& build_function) noexcept
+		void set_build_client_socket_function(const std::function<std::shared_ptr<T>(boost::asio::io_context&)>& build_function) noexcept
 		{
 			m_build_client_socket_function = build_function;
+		}
+
+		void set_handshake_function(const std::function<void(std::shared_ptr<T>, std::function<void(std::shared_ptr<T>)>)>& handshake_function) noexcept
+		{
+			m_handshake_function = handshake_function;
 		}
 	private:
 
@@ -161,14 +169,21 @@ namespace net
 				auto client_socket = m_build_client_socket_function(m_context);
 
 				m_connection_accepter.async_accept(client_socket->lowest_layer(),
-					[this, client_socket](std::error_code errcode)
+					[this, client_socket](const std::error_code& errcode)
 					{
 						if (!errcode)
 						{
 #ifdef DEBUG
-							std::cout << "Connection attempt from " << client_socket.remote_endpoint() << std::endl;
+							std::cout << "Connection attempt from " << client_socket->lowest_layer().remote_endpoint() << std::endl;
 #endif
-							handle_client_connection(client_socket);
+							if (m_handshake_function)
+							{
+								m_handshake_function(client_socket, m_client_connection_handle);
+							}
+							else
+							{
+								m_client_connection_handle(client_socket);
+							}
 						}
 						else
 						{
@@ -186,11 +201,7 @@ namespace net
 			}
 		}
 
-		// TO DO
-		// aici basically mai trebuie o rubrica cu async_handshake, problema e ca vine asincrona toata faza,
-		// deci iar trebuie pasat ceva std::function si aci
-
-		void handle_client_connection(std::shared_ptr<T> client_socket) noexcept
+		void handle_client_connection(std::shared_ptr<T> client_socket)
 		{
 			if (can_client_connect(client_socket))
 			{
@@ -228,7 +239,7 @@ namespace net
 
 				std::pair<async_get_callback, async_send_callback> callback_pair(get_callback, send_callback);
 
-				// to be seen when to remove this one, memory just stays there saddly for now until replaced 
+				// to be seen when to remove this one, memory just stays there sadly for now until replaced 
 				m_controllers_callbacks[client_id] = callback_pair;
 
 				if (auto ret = m_clients_controllers.emplace(client_id, client_socket); !ret.second)
@@ -374,6 +385,8 @@ namespace net
 		std::map<request_type, std::vector<std::pair<std::regex, async_req_regex_handle_callback>>> m_regex_mappings;
 		std::map<uint64_t, web_message_controller<T>> m_clients_controllers;
 		std::map<uint64_t, std::pair<async_get_callback, async_send_callback>> m_controllers_callbacks;
+		std::function<void(std::shared_ptr<T>)> m_client_connection_handle;
 		std::function<std::shared_ptr<T>(boost::asio::io_context&)> m_build_client_socket_function = nullptr;
+		std::function<void(std::shared_ptr<T>, std::function<void(std::shared_ptr<T>)>)> m_handshake_function = nullptr;
 	};
 }
