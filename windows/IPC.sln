@@ -30,7 +30,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libz-static", "..\external\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B8DD8D0C-B528-4E4E-8BBA-7D67AA1BD979}"
 	ProjectSection(SolutionItems) = preProject
-		TO_DO_LIST.txt = TO_DO_LIST.txt
+		..\src\TO_DO_LIST.txt = ..\src\TO_DO_LIST.txt
 	EndProjectSection
 EndProject
 Global

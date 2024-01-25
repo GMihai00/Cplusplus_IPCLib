@@ -87,6 +87,40 @@ catch (const std::exception& err)
 }
 ```
 
+HTTPS Server
+```cpp
+#include <iostream>
+
+#include "net/secure_web_server.hpp"
+
+constexpr auto HOST = "127.0.0.1";
+constexpr auto PORT = 54321;
+
+int main() try
+{
+	net::secure_web_server server(HOST, "server.pem", "dh4096.pem", PORT);
+
+	if (auto ret = server.start(); !ret)
+	{
+		std::cerr << ret.message();
+		return 1;
+	}
+
+    // infinite loop to prevent main thread exit
+    while (true)
+	{
+	  std::this_thread::sleep_for(std::chrono::seconds(1));
+	}
+
+    return 0;
+}
+catch (const std::exception& err)
+{
+	std::cerr << err.what();
+	return 1;
+}
+```
+
 **Adding mappings**
 
 **Note**: Mappings can be added even at runtime, there is no need to add them before starting the server, but it is recommended to do so before starting. 

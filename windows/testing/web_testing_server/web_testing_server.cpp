@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) try
 	auto server_port = std::stoi(std::string(get_option_or_quit(cmd_parser, "--port")));
 
 	// net::web_server server(server_ip, server_port);
-	// type in test after beeing prompted to provide key
+	// type in "test" after being prompted to provide key
 	net::secure_web_server server(server_ip, 
 		{ R"(..\..\..\external\boost\asio\example\cpp11\ssl\server.pem)" }, 
 		{ R"(..\..\..\external\boost\asio\example\cpp11\ssl\dh4096.pem)" }, server_port);
