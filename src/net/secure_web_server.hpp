@@ -19,5 +19,6 @@ namespace net
 		std::function<std::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>(boost::asio::io_context&)> m_build_client_socket_function = nullptr;
 		std::function<void(std::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>, std::function<void(std::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>)>)> m_handshake_function = nullptr;
 		boost::asio::ssl::context m_ssl_context;
+		std::function<bool(bool, boost::asio::ssl::verify_context& ctx)> m_verify_certificate_callback = nullptr;
 	};
 }

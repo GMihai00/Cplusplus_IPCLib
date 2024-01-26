@@ -2,8 +2,6 @@
 
 namespace net
 {
-
-
 	secure_web_server::secure_web_server(const utile::IP_ADRESS& host, const std::string& cert_file, 
 		const std::optional<std::string>& dh_file, const utile::PORT port,
 		const uint64_t max_nr_connections, const uint64_t number_threads) 
@@ -25,6 +23,18 @@ namespace net
 		set_build_client_socket_function(m_build_client_socket_function);
 		set_handshake_function(m_handshake_function);
 
+		m_verify_certificate_callback = [](bool preverified, boost::asio::ssl::verify_context& ctx)
+			{
+				char subject_name[256];
+				X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
+				X509_NAME_oneline(X509_get_subject_name(cert), subject_name, 256);
+				std::cout << "Verifying " << subject_name << " preverified: " << preverified << "\n";
+
+				return preverified;
+			};
+
+		if (m_verify_certificate_callback)
+			m_ssl_context.set_verify_callback(m_verify_certificate_callback);
 	}
 
 	void secure_web_server::handshake(std::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> client_socket,
