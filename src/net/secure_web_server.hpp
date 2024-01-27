@@ -13,6 +13,7 @@ namespace net
 		secure_web_server(const utile::IP_ADRESS& host, const std::string& cert_file, const std::optional<std::string>& dh_file = std::nullopt, const utile::PORT port = 443, const uint64_t max_nr_connections = 1000, const uint64_t number_threads = 4);
 		virtual ~secure_web_server() = default;
 		
+		void set_verify_certificate_callback(const std::function<bool(bool, boost::asio::ssl::verify_context& ctx)>& verify_certificate_callback);
 	private:
 		void handshake(std::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> client_socket, std::function<void(std::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>)> callback);
 

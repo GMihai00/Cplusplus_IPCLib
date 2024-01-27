@@ -2,7 +2,7 @@
 
 namespace net
 {
-	secure_web_client::secure_web_client(const std::vector<std::string>& cert_files, const std::function<bool(bool, boost::asio::ssl::verify_context& ctx)>& verify_certificate_callback) :
+	secure_web_client::secure_web_client(const std::vector<std::string>& pem_files, const std::function<bool(bool, boost::asio::ssl::verify_context& ctx)>& verify_certificate_callback) :
 		base_web_client(),
 		m_ssl_context(boost::asio::ssl::context::tlsv12_client),
 		m_verify_certificate_callback(verify_certificate_callback)
@@ -13,27 +13,28 @@ namespace net
 		m_ssl_context.set_default_verify_paths();
 		m_ssl_context.set_verify_mode(boost::asio::ssl::verify_peer);
 
-		for (const auto& cert_file : cert_files)
-			m_ssl_context.load_verify_file(cert_file);
-
-		// Load the server certificate and private key
-		//m_ssl_context.use_certificate_file("server_cert.pem", boost::asio::ssl::context::pem);
-		//m_ssl_context.use_private_key_file("server_key.pem", boost::asio::ssl::context::pem);
-
-		//// Set the passphrase for the private key
-		//m_ssl_context.set_password_callback([](std::size_t max_length, boost::asio::ssl::context::password_purpose purpose) {
-		//	return "test";  // Provide the passphrase here
-		//	});
-
-		// SSL_CTX_set_cipher_list(m_ssl_context.native_handle(), "AES128-SHA");
+		for (const auto& pem_file : pem_files)
+			m_ssl_context.load_verify_file(pem_file);
 
 		if (m_verify_certificate_callback != nullptr)
 		{
 			m_ssl_context.set_verify_callback(m_verify_certificate_callback);
 		}
-
 	}
 
+	void secure_web_client::set_verify_certificate_callback(const std::function<bool(bool, boost::asio::ssl::verify_context& ctx)>& verify_certificate_callback)
+	{
+		assert(verify_certificate_callback);
+
+		m_verify_certificate_callback = verify_certificate_callback;
+		m_ssl_context.set_verify_callback(m_verify_certificate_callback);
+	}
+
+	void secure_web_client::load_pem_files(const std::vector<std::string>& pem_files)
+	{
+		for (const auto& pem_file : pem_files)
+			m_ssl_context.load_verify_file(pem_file);
+	}
 
 	bool secure_web_client::connect(const std::string& url, const  std::optional<std::string>& port) noexcept try
 	{

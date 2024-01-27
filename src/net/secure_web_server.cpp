@@ -8,20 +8,21 @@ namespace net
 		: base_web_server(host, port, max_nr_connections, number_threads) 
 		, m_ssl_context(boost::asio::ssl::context::tlsv12_server)
 	{
-		if (dh_file)
-			m_ssl_context.use_tmp_dh_file(*dh_file);
-		
-		m_ssl_context.use_certificate_chain_file(cert_file);
-		m_ssl_context.use_private_key_file(cert_file, boost::asio::ssl::context::pem);
-
 		m_build_client_socket_function = [this](boost::asio::io_context& context) {
 			return std::make_shared<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>(context, m_ssl_context);
 		};
 
+		set_build_client_socket_function(m_build_client_socket_function);
+
 		m_handshake_function = std::bind(&secure_web_server::handshake, this, std::placeholders::_1, std::placeholders::_2);
 
-		set_build_client_socket_function(m_build_client_socket_function);
 		set_handshake_function(m_handshake_function);
+
+		if (dh_file)
+			m_ssl_context.use_tmp_dh_file(*dh_file);
+
+		m_ssl_context.use_certificate_chain_file(cert_file);
+		m_ssl_context.use_private_key_file(cert_file, boost::asio::ssl::context::pem);
 
 		m_verify_certificate_callback = [](bool preverified, boost::asio::ssl::verify_context& ctx)
 			{
@@ -35,6 +36,14 @@ namespace net
 
 		if (m_verify_certificate_callback)
 			m_ssl_context.set_verify_callback(m_verify_certificate_callback);
+	}
+
+	void secure_web_server::set_verify_certificate_callback(const std::function<bool(bool, boost::asio::ssl::verify_context& ctx)>& verify_certificate_callback)
+	{
+		assert(verify_certificate_callback);
+
+		m_verify_certificate_callback = verify_certificate_callback;
+		m_ssl_context.set_verify_callback(m_verify_certificate_callback);
 	}
 
 	void secure_web_server::handshake(std::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> client_socket,
