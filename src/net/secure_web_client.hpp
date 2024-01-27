@@ -17,6 +17,7 @@ namespace net
 	private:
 		boost::asio::ssl::context m_ssl_context;
 		std::function<bool(bool, boost::asio::ssl::verify_context& ctx)> m_verify_certificate_callback;
+		boost::asio::ip::tcp::resolver m_resolver;
 	};
 
 } // namespace net

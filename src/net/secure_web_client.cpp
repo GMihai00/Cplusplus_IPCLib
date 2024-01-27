@@ -5,7 +5,8 @@ namespace net
 	secure_web_client::secure_web_client(const std::vector<std::string>& pem_files, const std::function<bool(bool, boost::asio::ssl::verify_context& ctx)>& verify_certificate_callback) :
 		base_web_client(),
 		m_ssl_context(boost::asio::ssl::context::tlsv12_client),
-		m_verify_certificate_callback(verify_certificate_callback)
+		m_verify_certificate_callback(verify_certificate_callback),
+		m_resolver(m_io_service)
 	{
 		set_socket(std::make_shared<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>(
 			std::move(boost::asio::ssl::stream<boost::asio::ip::tcp::socket>(m_io_service, m_ssl_context))));

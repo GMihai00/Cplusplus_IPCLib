@@ -25,7 +25,6 @@ namespace net
 	public:
 		base_web_client() :
 			m_idle_work(m_io_service),
-			m_resolver(m_io_service),
 			m_controller(m_socket)
 		{
 			m_thread_context = std::thread([this]() { m_io_service.run(); });
@@ -49,36 +48,7 @@ namespace net
 			return connect(url, std::to_string(port));
 		}
 
-		virtual bool connect(const std::string& url, const std::optional<std::string>& port = std::nullopt) noexcept try
-		{
-			{
-				std::scoped_lock lock(m_mutex);
-				if (m_socket->lowest_layer().is_open())
-				{
-					return false;
-				}
-			}
-
-			std::string string_port = "http";
-
-			if (port != std::nullopt)
-			{
-				string_port = *port;
-			}
-
-			boost::asio::ip::tcp::resolver::query query(url, string_port);
-			boost::asio::connect(m_socket->lowest_layer(), m_resolver.resolve(query));
-			m_socket->lowest_layer().set_option(boost::asio::ip::tcp::no_delay(true));
-
-			m_host = url;
-
-			return true;
-		}
-		catch (const std::exception& err)
-		{
-			std::cerr << "Failed to connect to server, err: " << err.what();
-			return false;
-		}
+		virtual bool connect(const std::string& url, const std::optional<std::string>& port = std::nullopt) noexcept = 0;
 
 		// to be called if you want to cancel async request
 		void disconnect()
@@ -194,7 +164,6 @@ namespace net
 
 		boost::asio::io_service m_io_service;
 		boost::asio::io_context::work m_idle_work;
-		boost::asio::ip::tcp::resolver m_resolver;
 		std::string m_host{};
 		std::mutex m_mutex;
 		std::thread m_thread_context;

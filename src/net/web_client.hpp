@@ -9,6 +9,9 @@ namespace net
 	public:
 		web_client();
 		virtual ~web_client() = default;
+		virtual bool connect(const std::string& url, const std::optional<std::string>& port = std::nullopt) noexcept override;
 
+	private:
+		boost::asio::ip::tcp::resolver m_resolver;
 	};
 }
