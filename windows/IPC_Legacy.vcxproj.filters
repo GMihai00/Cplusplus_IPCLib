@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\net">
+      <UniqueIdentifier>{e5d1d064-39cc-4aff-a996-4f37694ad11b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\security">
+      <UniqueIdentifier>{0af5abdc-aeb3-4c63-9993-bef11ad0ab21}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\security">
+      <UniqueIdentifier>{c678ad38-cea3-486c-873d-92ccfb574153}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\utile">
+      <UniqueIdentifier>{a7e3b7d8-c23a-40fb-8138-7644341734be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\utile">
+      <UniqueIdentifier>{732074de-328f-46c3-a73d-8438a80b046f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\legacy\src\net\client.hpp">
+      <Filter>Header Files\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\legacy\src\net\connection.hpp">
+      <Filter>Header Files\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\legacy\src\net\message.hpp">
+      <Filter>Header Files\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\legacy\src\net\server.hpp">
+      <Filter>Header Files\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\legacy\src\security\rsa.hpp">
+      <Filter>Header Files\security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utile\data_types.hpp">
+      <Filter>Header Files\utile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utile\generic_error.hpp">
+      <Filter>Header Files\utile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utile\observer.hpp">
+      <Filter>Header Files\utile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utile\serializable_data.hpp">
+      <Filter>Header Files\utile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utile\thread_safe_queue.hpp">
+      <Filter>Header Files\utile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utile\timer.hpp">
+      <Filter>Header Files\utile</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\legacy\src\IPC.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\legacy\src\security\rsa.cpp">
+      <Filter>Source Files\security</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

@@ -5,19 +5,19 @@ VisualStudioVersion = 17.5.33530.505
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IPC", "IPC.vcxproj", "{DF49742E-E610-4153-A5CA-DCE52F361602}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testing", "testing\testing.vcxproj", "{BAAB0EA2-B8BF-4634-AC76-9E6DB353FAED}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "legacy_testing", "testing\testing.vcxproj", "{BAAB0EA2-B8BF-4634-AC76-9E6DB353FAED}"
 	ProjectSection(ProjectDependencies) = postProject
 		{5CA657A3-AF05-4F9D-9C41-C848C2136603} = {5CA657A3-AF05-4F9D-9C41-C848C2136603}
 		{C32E05D4-1933-47D6-820F-F76A7A200720} = {C32E05D4-1933-47D6-820F-F76A7A200720}
 		{DF49742E-E610-4153-A5CA-DCE52F361602} = {DF49742E-E610-4153-A5CA-DCE52F361602}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testing_client", "testing\testing_client\testing_client.vcxproj", "{C32E05D4-1933-47D6-820F-F76A7A200720}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "legacy_testing_client", "testing\testing_client\testing_client.vcxproj", "{C32E05D4-1933-47D6-820F-F76A7A200720}"
 	ProjectSection(ProjectDependencies) = postProject
 		{DF49742E-E610-4153-A5CA-DCE52F361602} = {DF49742E-E610-4153-A5CA-DCE52F361602}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testing_server", "testing\testing_server\testing_server.vcxproj", "{5CA657A3-AF05-4F9D-9C41-C848C2136603}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "legacy_testing_server", "testing\testing_server\testing_server.vcxproj", "{5CA657A3-AF05-4F9D-9C41-C848C2136603}"
 	ProjectSection(ProjectDependencies) = postProject
 		{DF49742E-E610-4153-A5CA-DCE52F361602} = {DF49742E-E610-4153-A5CA-DCE52F361602}
 	EndProjectSection
@@ -32,6 +32,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		..\src\TO_DO_LIST.txt = ..\src\TO_DO_LIST.txt
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IPC_Legacy", "IPC_Legacy.vcxproj", "{D988E454-D380-4773-BA1A-C12043CCB4F4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -97,6 +99,14 @@ Global
 		{B56D17BC-072B-42F3-844A-870A07AFBAAA}.Release|x64.Build.0 = Release|x64
 		{B56D17BC-072B-42F3-844A-870A07AFBAAA}.Release|x86.ActiveCfg = Release|Win32
 		{B56D17BC-072B-42F3-844A-870A07AFBAAA}.Release|x86.Build.0 = Release|Win32
+		{D988E454-D380-4773-BA1A-C12043CCB4F4}.Debug|x64.ActiveCfg = Debug|x64
+		{D988E454-D380-4773-BA1A-C12043CCB4F4}.Debug|x64.Build.0 = Debug|x64
+		{D988E454-D380-4773-BA1A-C12043CCB4F4}.Debug|x86.ActiveCfg = Debug|Win32
+		{D988E454-D380-4773-BA1A-C12043CCB4F4}.Debug|x86.Build.0 = Debug|Win32
+		{D988E454-D380-4773-BA1A-C12043CCB4F4}.Release|x64.ActiveCfg = Release|x64
+		{D988E454-D380-4773-BA1A-C12043CCB4F4}.Release|x64.Build.0 = Release|x64
+		{D988E454-D380-4773-BA1A-C12043CCB4F4}.Release|x86.ActiveCfg = Release|Win32
+		{D988E454-D380-4773-BA1A-C12043CCB4F4}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

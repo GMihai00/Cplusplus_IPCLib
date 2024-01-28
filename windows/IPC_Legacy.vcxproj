@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{df49742e-e610-4153-a5ca-dce52f361602}</ProjectGuid>
+    <ProjectGuid>{D988E454-D380-4773-BA1A-C12043CCB4F4}</ProjectGuid>
     <RootNamespace>IPC</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -97,7 +97,7 @@
       <PreprocessorDefinitions>DEBUG;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -114,7 +114,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -131,7 +131,7 @@
       <PreprocessorDefinitions>DEBUG;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -148,7 +148,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -164,39 +164,21 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\net\base_web_client.hpp" />
-    <ClInclude Include="..\src\net\base_web_server.hpp" />
-    <ClInclude Include="..\src\net\http_request.hpp" />
-    <ClInclude Include="..\src\net\http_response.hpp" />
-    <ClInclude Include="..\src\net\ihttp_message.hpp" />
-    <ClInclude Include="..\src\net\secure_web_client.hpp" />
-    <ClInclude Include="..\src\net\secure_web_server.hpp" />
-    <ClInclude Include="..\src\net\web_client.hpp" />
-    <ClInclude Include="..\src\net\web_helpers.hpp" />
-    <ClInclude Include="..\src\net\web_message_controller.hpp" />
-    <ClInclude Include="..\src\net\web_message_dispatcher.hpp" />
-    <ClInclude Include="..\src\net\web_message_reciever.hpp" />
-    <ClInclude Include="..\src\net\web_server.hpp" />
+    <ClInclude Include="..\legacy\src\net\client.hpp" />
+    <ClInclude Include="..\legacy\src\net\connection.hpp" />
+    <ClInclude Include="..\legacy\src\net\message.hpp" />
+    <ClInclude Include="..\legacy\src\net\server.hpp" />
+    <ClInclude Include="..\legacy\src\security\rsa.hpp" />
     <ClInclude Include="..\src\utile\data_types.hpp" />
-    <ClInclude Include="..\src\utile\finally.hpp" />
     <ClInclude Include="..\src\utile\generic_error.hpp" />
-    <ClInclude Include="..\src\utile\gzip_helpers.hpp" />
     <ClInclude Include="..\src\utile\observer.hpp" />
     <ClInclude Include="..\src\utile\serializable_data.hpp" />
     <ClInclude Include="..\src\utile\thread_safe_queue.hpp" />
     <ClInclude Include="..\src\utile\timer.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\net\http_request.cpp" />
-    <ClCompile Include="..\src\net\http_response.cpp" />
-    <ClCompile Include="..\src\net\ihttp_message.cpp" />
-    <ClCompile Include="..\src\net\secure_web_client.cpp" />
-    <ClCompile Include="..\src\net\secure_web_server.cpp" />
-    <ClCompile Include="..\src\net\web_client.cpp" />
-    <ClCompile Include="..\src\net\web_helpers.cpp" />
-    <ClCompile Include="..\src\net\web_server.cpp" />
-    <ClCompile Include="..\src\utile\finally.cpp" />
-    <ClCompile Include="..\src\utile\gzip_helpers.cpp" />
+    <ClCompile Include="..\legacy\src\IPC.cpp" />
+    <ClCompile Include="..\legacy\src\security\rsa.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

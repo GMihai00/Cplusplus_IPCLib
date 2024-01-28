@@ -25,25 +25,10 @@
     <Filter Include="Source Files\utile">
       <UniqueIdentifier>{69cc6b4a-3f65-4555-a622-355c93c5d682}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\security">
-      <UniqueIdentifier>{20132b4b-76dd-4bec-b0d2-365da40b3ed6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\security">
-      <UniqueIdentifier>{9da68ac1-d1c7-4384-9a09-34d6a4938f18}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\net\legacy_fast_ipc">
-      <UniqueIdentifier>{8427fb97-28e9-4f06-85ec-223b2dc9b0ae}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\net\Client.hpp">
-      <Filter>Header Files\net\legacy_fast_ipc</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\net\base_web_client.hpp">
       <Filter>Header Files\net</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\net\Connection.hpp">
-      <Filter>Header Files\net\legacy_fast_ipc</Filter>
     </ClInclude>
     <ClInclude Include="..\src\net\http_request.hpp">
       <Filter>Header Files\net</Filter>
@@ -53,12 +38,6 @@
     </ClInclude>
     <ClInclude Include="..\src\net\ihttp_message.hpp">
       <Filter>Header Files\net</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\net\Message.hpp">
-      <Filter>Header Files\net\legacy_fast_ipc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\net\Server.hpp">
-      <Filter>Header Files\net\legacy_fast_ipc</Filter>
     </ClInclude>
     <ClInclude Include="..\src\net\secure_web_client.hpp">
       <Filter>Header Files\net</Filter>
@@ -77,9 +56,6 @@
     </ClInclude>
     <ClInclude Include="..\src\net\web_message_reciever.hpp">
       <Filter>Header Files\net</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\security\RSA.hpp">
-      <Filter>Header Files\security</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utile\data_types.hpp">
       <Filter>Header Files\utile</Filter>
@@ -116,9 +92,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\security\RSA.cpp">
-      <Filter>Source Files\security</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\utile\finally.cpp">
       <Filter>Source Files\utile</Filter>
     </ClCompile>

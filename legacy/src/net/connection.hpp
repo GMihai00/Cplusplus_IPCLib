@@ -15,10 +15,10 @@
 #include <boost/asio/ts/internet.hpp>
 
 #include "message.hpp"
-#include "../utile/thread_safe_queue.hpp"
-#include "../utile/data_types.hpp"
-#include "../utile/observer.hpp"
-#include "../utile/timer.hpp"
+#include "utile/thread_safe_queue.hpp"
+#include "utile/data_types.hpp"
+#include "utile/observer.hpp"
+#include "utile/timer.hpp"
 
 
 namespace net

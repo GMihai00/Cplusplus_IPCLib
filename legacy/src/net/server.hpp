@@ -20,8 +20,8 @@
 #include "message.hpp"
 #include "connection.hpp"
 
-#include "../utile/data_types.hpp"
-#include "../utile/observer.hpp"
+#include "utile/data_types.hpp"
+#include "utile/observer.hpp"
 
 
 namespace net
