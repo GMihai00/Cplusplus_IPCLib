@@ -5,7 +5,6 @@
 #include "net/web_client.hpp"
 #include "net/secure_web_client.hpp"
 #include "utile/finally.hpp"
-#include "net/udp_web_client.hpp"
 
 void save_to_file(const std::string& data, const std::string& file_name)
 {
@@ -297,8 +296,6 @@ void test_https_local_client_server_send_in_loop()
 
 int main() try
 {	
-	// net::udp_web_client client;
-
 	if (auto ret = test_http_connection_to_public_web_service(); ret != 0)
 	{
 		return ret;

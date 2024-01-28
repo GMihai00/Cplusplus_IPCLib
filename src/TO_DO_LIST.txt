@@ -1,1 +1,4 @@
--udp client and server
+-udp client and server (boost::asio::ip::udp::socket), right now not suiting current infrastructure, will maybe add a separate 
+lib with udp communication, but for certain it will not be added in IPC one.
+-remove IPC legacy from solution and add a separate one. I think that UDP should of been used instead as the data being sent 
+over the network is not really private, at least for the vehicles traveling, for the cameras tcp is still the way to go.

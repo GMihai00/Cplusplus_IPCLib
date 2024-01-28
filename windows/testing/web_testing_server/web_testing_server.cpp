@@ -5,8 +5,6 @@
 
 #include "../common/command_line_parser.hpp"
 
-// boost::asio::ip::udp::socket; for udp sockets
-
 int main(int argc, char* argv[]) try
 {	
 	utile::command_line_parser cmd_parser(argc, argv);
