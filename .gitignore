@@ -45,3 +45,4 @@ cross-platform/build/*
 cross-platform/testing/build/*
 
 
+external/zlib-cmake
