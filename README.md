@@ -618,6 +618,8 @@ To run container:
 
 docker run -p 54321:54321 <image_name>
 
+Note: Change to root directory of the projects before running any kind of docker related commands. The server is build on a ubuntu revision and the project will be built inside the container, no need for manual building before running the commands.
+
 # Contributing
 
 1. Fork the repository
