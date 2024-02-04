@@ -46,3 +46,4 @@ cross-platform/testing_server/build/*
 cross-platform/testing_client/build/*
 
 
+external/zlib-cmake
