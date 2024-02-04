@@ -14,13 +14,13 @@ COPY . /app
 #list all files inside directory
 RUN ls
 
-WORKDIR /app/cross-platform/testing
+WORKDIR /app/cross-platform/testing_server
 
 RUN rm -rf build
 
 RUN mkdir build
 
-WORKDIR /app/cross-platform/testing/build
+WORKDIR /app/cross-platform/testing_server/build
 
 #generate make files
 RUN cmake -S .. -B . -DCMAKE_CXX_FLAGS="-std=c++17" -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_GENERATOR="Unix Makefiles"
