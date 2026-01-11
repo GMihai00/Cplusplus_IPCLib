@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) try
 			json_data["a"] = a;
 			json_data["b"] = b;
 
-			std::string dumped_json = json_data.dump();
+			std::string dumped_json = json_data.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
 
 			auto body_data = std::vector<uint8_t>(dumped_json.begin(), dumped_json.end());
 
@@ -104,7 +104,6 @@ int main(int argc, char* argv[]) try
 	while (true)
 	{
 		std::this_thread::sleep_for(std::chrono::seconds(1));
-		/*std::cout << "Running\n";*/
 	}
 
 	return 0;
