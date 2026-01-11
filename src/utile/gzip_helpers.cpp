@@ -3,12 +3,13 @@
 #include "zlib.h"
 #include "finally.hpp"
 
+#include <cstdint>
 namespace utile
 {
 	namespace gzip
 	{
-		std::vector<uint8_t> decompress(const std::vector<uint8_t>& compressed_data, gzip_error& err) noexcept {
-			std::vector<uint8_t> decompressed_data;
+		std::vector<std::uint8_t> decompress(const std::vector<std::uint8_t>& compressed_data, gzip_error& err) noexcept {
+			std::vector<std::uint8_t> decompressed_data;
 
 			z_stream stream;
 			stream.zalloc = Z_NULL;
@@ -24,10 +25,10 @@ namespace utile
 			}
 
 			stream.avail_in = static_cast<uInt>(compressed_data.size());
-			stream.next_in = reinterpret_cast<Bytef*>(const_cast<uint8_t*>(compressed_data.data()));
+			stream.next_in = reinterpret_cast<Bytef*>(const_cast<std::uint8_t*>(compressed_data.data()));
 
 			const size_t buffer_size = 4096;
-			std::vector<uint8_t> buffer(buffer_size);
+			std::vector<std::uint8_t> buffer(buffer_size);
 
 			auto end_inflate = utile::finally([&stream]() {
 					inflateEnd(&stream);
@@ -55,9 +56,9 @@ namespace utile
 			return decompressed_data;
 		}
 
-		std::vector<uint8_t> compress(const std::vector<uint8_t>& input_data, gzip_error& err) noexcept
+		std::vector<std::uint8_t> compress(const std::vector<std::uint8_t>& input_data, gzip_error& err) noexcept
 		{
-			std::vector<uint8_t> compressed_data;
+			std::vector<std::uint8_t> compressed_data;
 
 			z_stream deflate_stream;
 			deflate_stream.zalloc = Z_NULL;
@@ -72,10 +73,10 @@ namespace utile
 			}
 
 			const size_t buffer_size = 4096;
-			std::vector<uint8_t> buffer(buffer_size);
+			std::vector<std::uint8_t> buffer(buffer_size);
 
 			deflate_stream.avail_in = static_cast<uInt>(input_data.size());
-			deflate_stream.next_in = reinterpret_cast<Bytef*>(const_cast<uint8_t*>(input_data.data()));
+			deflate_stream.next_in = reinterpret_cast<Bytef*>(const_cast<std::uint8_t*>(input_data.data()));
 
 			auto end_deflate = utile::finally([&deflate_stream]() {
 				deflateEnd(&deflate_stream);
