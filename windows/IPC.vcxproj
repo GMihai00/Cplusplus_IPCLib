@@ -184,6 +184,7 @@
     <ClInclude Include="..\src\utile\observer.hpp" />
     <ClInclude Include="..\src\utile\serializable_data.hpp" />
     <ClInclude Include="..\src\utile\thread_safe_queue.hpp" />
+    <ClInclude Include="..\src\utile\thread_safe_map.hpp" />
     <ClInclude Include="..\src\utile\timer.hpp" />
   </ItemGroup>
   <ItemGroup>

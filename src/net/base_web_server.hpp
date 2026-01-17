@@ -11,6 +11,7 @@
 #include <functional>
 
 #include "../utile/thread_safe_queue.hpp"
+#include "../utile/thread_safe_map.hpp"
 
 #include "http_request.hpp"
 #include "web_message_controller.hpp"
@@ -98,10 +99,13 @@ namespace net
 
 			m_connection_accepter.close();
 
-			for (auto& [_, controller] : m_clients_controllers)
+			auto & locked = m_clients_controllers.lock();
+			for (auto& [_, controller] : locked)
 			{
-				disconnect(controller);
+				if (controller)
+					disconnect(*controller);
 			}
+			m_clients_controllers.unlock();
 
 			if (!m_context.stopped())
 				m_context.stop();
@@ -112,7 +116,11 @@ namespace net
 			async_send_callback empty_send_callback = [](utile::web_error err) {};
 			std::pair<async_get_callback, async_send_callback> empty_callback_pair(empty_get_callback, empty_send_callback);
 
-			for (auto& [id, cbpair] : m_controllers_callbacks) cbpair = empty_callback_pair;
+			std::shared_ptr<std::pair<async_get_callback, async_send_callback> > empty_callback_ptr = std::make_shared<std::pair<async_get_callback, async_send_callback>>(empty_callback_pair);
+
+			auto& locked_map = m_controllers_callbacks.lock();
+			for (auto& [id, cbpair] : locked_map) cbpair = empty_callback_ptr;
+			m_controllers_callbacks.unlock();
 
 			return utile::web_error();
 		}
@@ -216,30 +224,62 @@ namespace net
 				async_send_callback send_callback = [this, client_id](utile::web_error err) {
 					if (!err)
 					{
-						if (auto it = m_clients_controllers.find(client_id); it != m_clients_controllers.end())
+						auto& locked_map = m_clients_controllers.lock();
+						if (auto it = locked_map.find(client_id); it != locked_map.end())
 						{
-							disconnect(it->second);
-							m_clients_controllers.erase(it);
+							if (it->second)
+								disconnect(*(it->second));
+							locked_map.erase(it);
 							m_available_connection_ids.push(client_id);
 						}
+						m_clients_controllers.unlock();
 						return;
 					}
 
-					if (auto it = m_clients_controllers.find(client_id); it != m_clients_controllers.end())
+					auto& locked_map = m_clients_controllers.lock();
+					
+					std::shared_ptr<web_message_controller<T>> controller = nullptr;
+					
+					if (auto it = locked_map.find(client_id); it != locked_map.end())
 					{
-						if (auto it2 = m_controllers_callbacks.find(client_id); it2 != m_controllers_callbacks.end())
-						{
-							it->second.async_get_request(it2->second.first);
-						}
+						controller = it->second;
 					}
+					m_clients_controllers.unlock();
+					
+					
+					std::shared_ptr<std::pair<async_get_callback, async_send_callback>> controller_callbacks = nullptr;
+					
+					if (controller != nullptr)
+					{
+						auto locked_map2 = m_controllers_callbacks.lock();
+						if (auto it2 = locked_map2.find(client_id); it2 != locked_map2.end())
+						{
+							controller_callbacks = it2->second;
+						}
+						m_controllers_callbacks.unlock();
+						
+						if (controller_callbacks != nullptr)
+						{
+							controller->async_get_request(controller_callbacks->first);
+						}
+					
+					}
+					
 				};
 
-				std::pair<async_get_callback, async_send_callback> callback_pair(get_callback, send_callback);
-
+				std::shared_ptr<std::pair<async_get_callback, async_send_callback>> callback_pair = std::make_shared<std::pair<async_get_callback, async_send_callback>>(get_callback, send_callback);
+				
 				// to be seen when to remove this one, memory just stays there sadly for now until replaced 
-				m_controllers_callbacks[client_id] = callback_pair;
+				
+				auto& locked_callbacks = m_controllers_callbacks.lock();
+				locked_callbacks.emplace(client_id, callback_pair);
+				m_controllers_callbacks.unlock();
 
-				if (auto ret = m_clients_controllers.emplace(client_id, client_socket); !ret.second)
+				auto& locked = m_clients_controllers.lock();
+				auto ret = locked.emplace(client_id, std::make_shared<web_message_controller<T>>(client_socket));
+				m_clients_controllers.unlock();
+
+				if (!ret.second)
 				{
 					std::cerr << "Internal error";
 					return;
@@ -247,7 +287,7 @@ namespace net
 				else
 				{
 					// start listening to messages
-					ret.first->second.async_get_request(m_controllers_callbacks[client_id].first);
+					ret.first->second->async_get_request((*m_controllers_callbacks.get_copy(client_id))->first);
 					on_client_connect(client_socket);
 				}
 			}
@@ -266,18 +306,24 @@ namespace net
 #ifdef DEBUG
 				std::cerr << err.message() << "\n";
 #endif
-
-				if (auto it = m_clients_controllers.find(client_id); it != m_clients_controllers.end())
+				auto& locked = m_clients_controllers.lock();    
+				if (auto it = locked.find(client_id); it != locked.end())
 				{
-					signal_bad_request(it->second);
+					if (it->second) {
+						signal_bad_request(*(it->second));
+					}
 					async_get_callback empty_get_callback = [](std::shared_ptr<ihttp_message>, utile::web_error) {};
 					async_send_callback empty_send_callback = [](utile::web_error err) {};
-					std::pair<async_get_callback, async_send_callback> empty_callback_pair(empty_get_callback, empty_send_callback);
-					m_controllers_callbacks[client_id] = empty_callback_pair;
-					disconnect(it->second);
-					m_clients_controllers.erase(it);
+					std::shared_ptr<std::pair<async_get_callback, async_send_callback>> empty_callback_pair = std::make_shared<std::pair<async_get_callback, async_send_callback>>(empty_get_callback, empty_send_callback);
+					m_controllers_callbacks.insert_or_assign(client_id, empty_callback_pair);
+					
+					if (it->second) {
+						disconnect(*(it->second));
+					}
+					locked.erase(it);
 					m_available_connection_ids.push(client_id);
 				}
+				m_clients_controllers.unlock();
 				return;
 			}
 
@@ -291,30 +337,48 @@ namespace net
 
 			auto method = req->get_method();
 			auto type = req->get_type();
-
-			if (auto it = m_clients_controllers.find(client_id); it != m_clients_controllers.end())
+			
+			
+			std::shared_ptr<web_message_controller<T>> client_controller = nullptr;
+			
+			auto locked_map = m_clients_controllers.lock();
+			if (auto it = locked_map.find(client_id); it != locked_map.end())
 			{
-				if (auto it2 = m_controllers_callbacks.find(client_id); it2 != m_controllers_callbacks.end())
-				{
-					std::smatch matches;
+				client_controller = it->second;
+			}
+			m_clients_controllers.unlock();
+			
+			std::shared_ptr<std::pair<async_get_callback, async_send_callback>> controller_callbacks = nullptr;
+			
+			auto locked_map2 = m_controllers_callbacks.lock();
+			if (auto it2 = locked_map2.find(client_id); it2 != locked_map2.end())
+			{
+				controller_callbacks = it2->second;
+			}
+			m_controllers_callbacks.unlock();
+			
+			if (client_controller == nullptr || controller_callbacks == nullptr)
+			{
+				return;
+			}
+			
+			std::smatch matches;
 
-					if (auto handle = find_apropriate_handle(type, method); handle != std::nullopt)
-					{
-						auto reply = ((*handle)->second)(req);
+			if (auto handle = find_apropriate_handle(type, method); handle != std::nullopt)
+			{
+				auto reply = ((*handle)->second)(req);
 
-						it->second.reply_async(std::move(reply), it2->second.second);
-					}
-					else if (auto reqex_handle = find_apropriate_regex_handle(type, method, matches); reqex_handle != std::nullopt)
-					{
-						auto reply = ((*reqex_handle)->second)(req, matches);
+				client_controller->reply_async(std::move(reply), controller_callbacks->second);
+			}
+			else if (auto reqex_handle = find_apropriate_regex_handle(type, method, matches); reqex_handle != std::nullopt)
+			{
+				auto reply = ((*reqex_handle)->second)(req, matches);
 
-						it->second.reply_async(std::move(reply), it2->second.second);
-					}
-					else
-					{
-						signal_bad_request(it->second);
-					}
-				}
+				client_controller->reply_async(std::move(reply), controller_callbacks->second);
+			}
+			else
+			{
+				signal_bad_request(*client_controller);
 			}
 
 		}
@@ -380,8 +444,8 @@ namespace net
 		utile::thread_safe_queue<uint64_t> m_available_connection_ids;
 		std::map<request_type, std::map<std::string, async_req_handle_callback>> m_mappings;
 		std::map<request_type, std::vector<std::pair<std::regex, async_req_regex_handle_callback>>> m_regex_mappings;
-		std::map<uint64_t, web_message_controller<T>> m_clients_controllers;
-		std::map<uint64_t, std::pair<async_get_callback, async_send_callback>> m_controllers_callbacks;
+		utile::thread_safe_map<uint64_t, std::shared_ptr<web_message_controller<T>>> m_clients_controllers;
+		utile::thread_safe_map<uint64_t, std::shared_ptr<std::pair<async_get_callback, async_send_callback>>> m_controllers_callbacks;
 		std::function<void(std::shared_ptr<T>)> m_client_connection_handle;
 		std::function<std::shared_ptr<T>(boost::asio::io_context&)> m_build_client_socket_function = nullptr;
 		std::function<void(std::shared_ptr<T>, std::function<void(std::shared_ptr<T>)>)> m_handshake_function = nullptr;

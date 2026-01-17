@@ -60,6 +60,9 @@
     <ClInclude Include="..\src\utile\thread_safe_queue.hpp">
       <Filter>Header Files\utile</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utile\thread_safe_map.hpp">
+      <Filter>Header Files\utile</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\utile\timer.hpp">
       <Filter>Header Files\utile</Filter>
     </ClInclude>
