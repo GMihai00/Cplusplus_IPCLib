@@ -4,18 +4,20 @@ This project aims to provide an easier to use C++ IPC library. It's build to be 
 
 # Table of Contents
 
+- [Cplusplus\_IPCLib](#cplusplus_ipclib)
+- [Table of Contents](#table-of-contents)
 - [Installation](#installation)
-  - [MSVC-VCPKG](#msvc-vcpkg)
-  - [CMAKE](#cmake)
+	- [MSVC-VCPKG](#msvc-vcpkg)
+	- [CMAKE](#cmake)
 - [Usage](#usage)
-  - [Web-based](#web-based)
-    - [Creating a server](#creating-a-server)
-    - [Creating a client](#creating-a-client)
-  - [Legacy](#legacy)
-    - [Message format](#message-format)
-    - [Server](#server)
-    - [Client](#client)
-  - [Docker Test Image](#docker-test-image)
+	- [Web-based](#web-based)
+		- [Creating a server](#creating-a-server)
+		- [Creating a client](#creating-a-client)
+	- [Legacy](#legacy)
+		- [Message format](#message-format)
+		- [Server](#server)
+		- [Client](#client)
+	- [Docker Test Image](#docker-test-image)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -44,7 +46,7 @@ Requirements: openssl installed on system, cmake, make, gcc, g++
 3. Update submodules: git submodule update --init --recursive
 4. Install openssl if not already on system
 5. Change to cross-platform directory
-6. run cmake + run make to build IPC lib
+6. run cmake + run make to build IPC lib (sample can be found under {repo-root}/cross-platform/build.sh)
 7. Libraries to be added as Additional Dependencies: IPC and all other dependencies that can be found inside CMake depending on platform 
 8. Include headers depending on your needs (web_server.hpp/secure_web_client.hpp/web_client.hpp for web-based newer IPC client.hpp and server.hpp for older local IPC)
 

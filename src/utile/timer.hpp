@@ -44,7 +44,7 @@ namespace utile
 
 						if (m_paused)
 						{
-							m_cond_var_resume.wait(ulock, [this]() { return (m_paused == false); });
+							m_cond_var_resume.wait(ulock, [this]() { return (m_paused == false) || m_should_stop; });
 						}
 					}
 
@@ -65,12 +65,20 @@ namespace utile
 		timer(const timer&) = delete;
 		timer(const timer&&) = delete;
 
-		virtual ~timer() noexcept
+		void stop()
 		{
 			m_should_stop = true;
-			m_cond_var_resume.notify_one();
+			m_cond_var_resume.notify_all();
+		}
+
+		virtual ~timer() noexcept
+		{
+			stop();
+			
 			if (m_timer_thread.joinable())
 				m_timer_thread.join();
+				
+			std::cout << "Timer destroyed\n";
 		}
 
 		void resume()

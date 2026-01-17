@@ -41,6 +41,9 @@ namespace net
 
 			if (m_thread_context.joinable())
 				m_thread_context.join();
+#ifdef DEBUG		
+			std::cout << "Web client destroyed\n";
+#endif
 		}
 
 		bool connect(const std::string& url, const utile::PORT& port)
@@ -53,11 +56,7 @@ namespace net
 		// to be called if you want to cancel async request
 		void disconnect()
 		{
-			std::scoped_lock lock(m_mutex);
-			if (m_socket->lowest_layer().is_open())
-			{
-				m_socket->lowest_layer().close();
-			}
+			this->m_controller.disconnect();
 		}
 
 		std::pair<std::shared_ptr<http_response>, utile::web_error> send(http_request&& request, const uint16_t timeout = 0, const bool should_follow_redirects = false)

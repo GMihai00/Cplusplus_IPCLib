@@ -16,14 +16,21 @@ namespace net
 	typedef std::function<void(std::shared_ptr<ihttp_message>, utile::web_error)> async_get_callback;
 
 	template <typename T>
-	class web_message_reciever
+	class web_message_receiver
 	{
 	public:
-		web_message_reciever() = delete;
+		web_message_receiver() = delete;
 
-		web_message_reciever(std::shared_ptr<T>& socket)
+		web_message_receiver(std::shared_ptr<T>& socket)
 			: m_socket(socket)
 		{
+		}
+		
+		~web_message_receiver()
+		{
+#ifdef DEBUG
+			std::cout << "Web receiver destroyed\n";
+#endif
 		}
 
 		template <typename R>
@@ -254,7 +261,7 @@ namespace net
 				{
 					boost::asio::async_read(*m_socket, message->get_buffer(),
 						boost::asio::transfer_at_least(1), // Read at least 1 byte
-						boost::bind(&web_message_reciever::async_read_all_remaining_data,
+						boost::bind(&web_message_receiver::async_read_all_remaining_data,
 							this,
 							boost::asio::placeholders::error,
 							boost::asio::placeholders::bytes_transferred,
@@ -415,7 +422,7 @@ namespace net
 
 			boost::asio::async_read(*m_socket, message->get_buffer(),
 				boost::asio::transfer_at_least(1), // Read at least 1 byte
-				boost::bind(&web_message_reciever::async_read_all_remaining_data,
+				boost::bind(&web_message_receiver::async_read_all_remaining_data,
 					this,
 					boost::asio::placeholders::error,
 					boost::asio::placeholders::bytes_transferred,

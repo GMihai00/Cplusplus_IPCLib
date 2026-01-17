@@ -53,6 +53,42 @@ int main(int argc, char* argv[]) try
 			return net::http_response(400, std::string(err.what()));
 		}
 	};
+	
+		// add callbacks	
+	net::async_req_handle_callback test_callback2 = [](std::shared_ptr<net::http_request> req) {
+
+		auto req_data = req->to_string(req->is_body_encoded());
+
+		std::cout << "/////////////////////////////////////////\n";
+		std::cout << "Recieved request: " << req->to_string(req->is_body_encoded()) << "\n";
+		std::cout << "/////////////////////////////////////////\n";
+
+		try
+		{
+			auto json_data = req->get_json_body();
+
+			unsigned long long a = json_data["a"].get<unsigned long long>();
+			unsigned long long b = json_data["b"].get<unsigned long long>();
+			
+			auto c = a + b;
+			a = b;
+			b = c;
+
+			json_data["a"] = a;
+			json_data["b"] = b;
+
+			std::string dumped_json = json_data.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
+
+			auto body_data = std::vector<uint8_t>(dumped_json.begin(), dumped_json.end());
+
+
+			return net::http_response(200, "OK", nullptr, body_data);
+		}
+		catch(const std::exception& err)
+		{
+			return net::http_response(400, std::string(err.what()));
+		}
+	};
 
 	net::async_req_regex_handle_callback test_regex_callback = [](std::shared_ptr<net::http_request>, const std::smatch& matches) {
 
@@ -88,6 +124,7 @@ int main(int argc, char* argv[]) try
 	std::regex test_pattern(R"(^(/test/id=(\d+))$)");
 
 	server.add_mapping(net::request_type::GET, "/test", test_callback);
+	server.add_mapping(net::request_type::GET, "/test2", test_callback2);
 
 	server.add_regex_mapping(net::request_type::GET, test_pattern, test_regex_callback);
 

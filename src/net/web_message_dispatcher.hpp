@@ -25,6 +25,13 @@ namespace net
 		{
 
 		}
+		
+		~web_message_dispatcher()
+		{
+#ifdef DEBUG
+			std::cout << "Web dispatcher destroyed\n";
+#endif
+		}
 
 		template <typename M>
 		utile::web_error send(const M& message) noexcept try

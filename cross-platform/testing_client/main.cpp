@@ -1,6 +1,8 @@
 #include <iostream>
 #include <boost/thread/thread.hpp>
 #include "net/web_client.hpp"
+#include "utile/finally.hpp"
+
 
 namespace consts
 {
@@ -8,15 +10,26 @@ namespace consts
 	const std::string PORT = "54321";
 }
 
+std::atomic<int> nr_stoped_clients = 0;
+
+
+void stop_client_callback()
+{
+	std::cout << "Client stopping...\n";
+	
+	nr_stoped_clients += 1;
+}
+
 template <typename T>
-void test_web_server_send_in_loop(T& web_client)
+void test_web_server_send_in_loop(T& web_client, std::string path = "/test", std::string body_data = R"({"a": 1, "b": 1 })")
 {
 	std::string url = consts::URL;
-	std::string method = "/test";
+
+	utile::finally stop_client(stop_client_callback);
 
 	if (!web_client.connect(url, consts::PORT))
 	{
-		std::cerr << "Failed to connect to server";
+		std::cerr << "Failed to connect to server\n";
 		return;
 	}
 
@@ -26,24 +39,21 @@ void test_web_server_send_in_loop(T& web_client)
 		{"Accept-Encoding", "gzip, deflate, br"}
 		});
 
-	std::string body_data = R"({"a": 1, "b": 1 })";
-
 	net::http_request req(net::request_type::GET,
-		method, net::content_type::any,
+		path, net::content_type::any,
 		additional_header_data,
 		std::vector<uint8_t>(body_data.begin(), body_data.end()));
 
 	req.gzip_compress_body();
 
-	bool can_stop = false;
+	std::atomic<bool> can_stop = false;
 
 	net::async_get_callback req_callback;
 
-	req_callback = [&can_stop, &method, &web_client, &req_callback](std::shared_ptr<net::ihttp_message> response, utile::web_error err_msg) {
+	req_callback = [&can_stop, &path, &web_client, &req_callback](std::shared_ptr<net::ihttp_message> response, utile::web_error err_msg) {
 		if (!response)
 		{
-			std::cerr << "Failed: " << err_msg.message();
-			//exit(5);
+			std::cerr << "Failed: " << err_msg.message() << "\n";
 			can_stop = true;
 			return;
 		}
@@ -74,7 +84,7 @@ void test_web_server_send_in_loop(T& web_client)
 			std::string body_data = json_data.dump();
 
 			net::http_request req(net::request_type::GET,
-				method, net::content_type::any,
+				path, net::content_type::any,
 				additional_header_data,
 				std::vector<uint8_t>(body_data.begin(), body_data.end()));
 
@@ -92,7 +102,6 @@ void test_web_server_send_in_loop(T& web_client)
 	{
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
-
 }
 
 void test_local_client_server_send_in_loop()
@@ -101,6 +110,21 @@ void test_local_client_server_send_in_loop()
 
 	test_web_server_send_in_loop(web_client);
 }
+
+void test_local_client_server_big_data_send_in_loop()
+{
+	net::web_client web_client{};
+
+	std::string body_data = R"({"a": 1, "b": 1 , "data":")";
+	for (size_t i = 0; i < 10000; i++)
+	{
+		body_data += "0123456789";
+	}
+	body_data += R"("})";
+
+	test_web_server_send_in_loop(web_client, "/test2", body_data);
+}
+
 
 int main(int argc, char* argv[]) try
 {	
@@ -112,12 +136,22 @@ int main(int argc, char* argv[]) try
 	{
 		m_worker_threads.create_thread(boost::bind(&test_local_client_server_send_in_loop));
 	}
-
-	bool can_stop = false;
-	while (!can_stop)
+	
+	for (int i = 0; i < NR_CLIENTS; i++)
 	{
+		m_worker_threads.create_thread(boost::bind(&test_local_client_server_big_data_send_in_loop));
+	}
+
+	while (nr_stoped_clients < NR_CLIENTS * 2)
+	{
+		std::cout << "Main thread waiting for clients to stop. Stopped clients: " << nr_stoped_clients.load() << "\n";
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
+
+	std::cout << "All clients stopped. Exiting...\n";
+	
+
+	m_worker_threads.join_all();
 
 	return 0;
 }

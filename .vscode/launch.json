@@ -1,0 +1,80 @@
+
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Debug web_testing_server (gdb)",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/cross-platform/testing_server/build/web_testing_server",
+			"args": [
+				"--ip",
+				"0.0.0.0",
+				"--port",
+				"54321"
+			],
+			"cwd": "${workspaceFolder}/cross-platform/testing_server/build",
+			"stopAtEntry": false,
+			"externalConsole": false,
+			"MIMode": "gdb",
+			"setupCommands": [
+				{
+					"description": "Enable pretty-printing for gdb",
+					"text": "-enable-pretty-printing",
+					"ignoreFailures": true
+				},
+				{
+					"description": "Break on uncaught C++ exceptions (terminate)",
+					"text": "break __cxa_call_terminate",
+					"ignoreFailures": true
+				},
+				{
+					"description": "Break on uncaught C++ exceptions (verbose handler)",
+					"text": "break __gnu_cxx::__verbose_terminate_handler",
+					"ignoreFailures": true
+				},
+				{
+					"description": "Break on uncaught C++ exceptions (std::terminate)",
+					"text": "break std::terminate",
+					"ignoreFailures": true
+				}
+			]
+		},
+		{
+			"name": "Debug web_testing_client (gdb)",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/cross-platform/testing_client/build/web_testing_client",
+			"cwd": "${workspaceFolder}/cross-platform/testing_client/build",
+			"args": [
+				"--nr_clients",
+				"1"
+			],
+			"stopAtEntry": false,
+			"externalConsole": false,
+			"MIMode": "gdb",
+			"setupCommands": [
+				{
+					"description": "Enable pretty-printing for gdb",
+					"text": "-enable-pretty-printing",
+					"ignoreFailures": true
+				},
+				{
+					"description": "Break on uncaught C++ exceptions (terminate)",
+					"text": "break __cxa_call_terminate",
+					"ignoreFailures": true
+				},
+				{
+					"description": "Break on uncaught C++ exceptions (verbose handler)",
+					"text": "break __gnu_cxx::__verbose_terminate_handler",
+					"ignoreFailures": true
+				},
+				{
+					"description": "Break on uncaught C++ exceptions (std::terminate)",
+					"text": "break std::terminate",
+					"ignoreFailures": true
+				}
+			]
+		}
+	]
+}

@@ -3,7 +3,7 @@
 #include <set>
 
 #include "web_message_dispatcher.hpp"
-#include "web_message_reciever.hpp"
+#include "web_message_receiver.hpp"
 
 #include "../utile/observer.hpp"
 #include "../utile/timer.hpp"
@@ -18,7 +18,7 @@ namespace net
 		web_message_controller(std::shared_ptr<T>& socket)
 			: m_socket(socket)
 			, m_dispatcher(m_socket)
-			, m_reciever(m_socket)
+			, m_receiver(m_socket)
 			, m_cancel_timer(0)
 		{
 			m_base_timeout_callback = [this]()
@@ -32,6 +32,21 @@ namespace net
 			m_base_timeout_observer = std::make_shared<utile::observer<>>(m_base_timeout_callback);
 			m_cancel_timer.subscribe(m_base_timeout_observer);
 		}
+		
+		~web_message_controller()
+		{
+			m_cancel_timer.unsubscribe(m_base_timeout_observer);
+			m_cancel_timer.stop();
+			
+			if (m_socket && m_socket->lowest_layer().is_open())
+			{
+				disconnect();
+			}
+#ifdef DEBUG			
+			std::cout << "Web controller destroyed\n";
+#endif
+		}
+		
 
 		std::pair<std::shared_ptr<http_response>, utile::web_error> send(http_request&& request, const uint16_t timeout = 0, const bool should_follow_redirects = false) noexcept
 		{
@@ -50,7 +65,7 @@ namespace net
 				return { nullptr, err };
 			}
 
-			auto response = m_reciever.template get<http_response>();
+			auto response = m_receiver.template get<http_response>();
 
 			if (should_follow_redirects && response.second && response.first && response.first->get_status() == 301)
 			{
@@ -126,14 +141,14 @@ namespace net
 		{
 			assert(m_socket);
 
-			return m_reciever.template get<http_request>();
+			return m_receiver.template get<http_request>();
 		}
 
 		void async_get_request(async_get_callback& callback) noexcept
 		{
 			assert(m_socket);
 
-			return m_reciever.template async_get<http_request>(callback);
+			return m_receiver.template async_get<http_request>(callback);
 		}
 
 		utile::web_error reply(http_response& response) noexcept
@@ -185,7 +200,7 @@ namespace net
 		{
 			m_socket = socket;
 			m_dispatcher.set_socket(m_socket);
-			m_reciever.set_socket(m_socket);
+			m_receiver.set_socket(m_socket);
 		}
 
 		bool can_send() const
@@ -193,7 +208,17 @@ namespace net
 			return m_can_send;
 		}
 
+		void disconnect()
+		{
+			std::scoped_lock lock(m_mutex_stop);
+			if (m_socket->lowest_layer().is_open())
+			{
+				m_socket->lowest_layer().close();
+			}
+		}
+		
 	private:
+		
 		void get_response_post_async_send(utile::web_error err, http_request& request, async_get_callback& callback, const bool should_follow_redirects)
 		{
 			if (!err)
@@ -258,14 +283,15 @@ namespace net
 				callback(message, err);
 			};
 
-			m_reciever.template async_get<http_response>(m_get_callback);
+			m_receiver.template async_get<http_response>(m_get_callback);
 		}
 
 		web_message_dispatcher<T> m_dispatcher;
-		web_message_reciever<T> m_reciever;
+		web_message_receiver<T> m_receiver;
 		std::shared_ptr<T> m_socket = nullptr;
 		std::function<void()> m_base_timeout_callback;
 		std::mutex m_mutex;
+		std::mutex m_mutex_stop;
 		bool m_can_send = true;
 		utile::timer<> m_cancel_timer;
 		async_send_callback m_write_callback;

@@ -37,8 +37,6 @@ bin/*
 x64/
 .vs/
 
-.vscode/
-
 *.log
 
 cross-platform/build/*

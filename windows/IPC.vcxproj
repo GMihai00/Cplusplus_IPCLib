@@ -175,7 +175,7 @@
     <ClInclude Include="..\src\net\web_helpers.hpp" />
     <ClInclude Include="..\src\net\web_message_controller.hpp" />
     <ClInclude Include="..\src\net\web_message_dispatcher.hpp" />
-    <ClInclude Include="..\src\net\web_message_reciever.hpp" />
+    <ClInclude Include="..\src\net\web_message_receiver.hpp" />
     <ClInclude Include="..\src\net\web_server.hpp" />
     <ClInclude Include="..\src\utile\data_types.hpp" />
     <ClInclude Include="..\src\utile\finally.hpp" />

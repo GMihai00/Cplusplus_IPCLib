@@ -112,10 +112,7 @@ namespace net
 			async_send_callback empty_send_callback = [](utile::web_error err) {};
 			std::pair<async_get_callback, async_send_callback> empty_callback_pair(empty_get_callback, empty_send_callback);
 
-			for (const auto& [id, _] : m_controllers_callbacks)
-			{
-				m_controllers_callbacks[id] = empty_callback_pair;
-			}
+			for (auto& [id, cbpair] : m_controllers_callbacks) cbpair = empty_callback_pair;
 
 			return utile::web_error();
 		}
